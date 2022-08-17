@@ -9,11 +9,11 @@
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
 
-#ifndef LV_ATTRIBUTE_IMG_OXRS_SPLASH_2206_PNG
-#define LV_ATTRIBUTE_IMG_OXRS_SPLASH_2206_PNG
+#ifndef LV_ATTRIBUTE_IMG_OXRS_SPLASH_PNG
+#define LV_ATTRIBUTE_IMG_OXRS_SPLASH_PNG
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_OXRS_SPLASH_2206_PNG uint8_t oxrs_splash_2206_png_map[] = {
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_OXRS_SPLASH_PNG uint8_t oxrs_splash_png_map[] = {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 
     0x48, 0x44, 0x52, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00, 0x01, 0xe0, 0x08, 0x06, 
     0x00, 0x00, 0x00, 0xd4, 0x8c, 0xb4, 0x44, 0x00, 0x00, 0x00, 0x01, 0x73, 0x52, 
@@ -3700,12 +3700,12 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_OXRS_SPLA
     0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82
 };
 
-const lv_img_dsc_t oxrs_splash_2206_png = {
+const lv_img_dsc_t oxrs_splash_png = {
   .header.cf = LV_IMG_CF_RAW_ALPHA,
   .header.always_zero = 0,
   .header.reserved = 0,
   .header.w = 320,
   .header.h = 480,
   .data_size = 47890,
-  .data = oxrs_splash_2206_png_map,
+  .data = oxrs_splash_png_map,
 };
