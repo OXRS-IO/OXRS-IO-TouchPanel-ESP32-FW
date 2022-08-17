@@ -1702,7 +1702,7 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("image"))
   {
-    tile->setBgImage(decodeBase64ToImg(json["image"]), json["zoom"], json["posOffset"][0], json["posOffset"][1]);
+    tile->setBgImage(decodeBase64ToImg(json["image"]), json["zoom"], json["posOffset"][0], json["posOffset"][1], json["angle"]);
   }
 
   if (json.containsKey("dropDownList"))

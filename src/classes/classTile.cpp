@@ -259,7 +259,7 @@ void classTile::setNumber(const char *number, const char *units)
   lv_obj_align_to(_unitLabel, _numLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 }
 
-void classTile::setBgImage(lv_img_dsc_t *img, int zoom, int posOffsX, int posOffsY)
+void classTile::setBgImage(lv_img_dsc_t *img, int zoom, int posOffsX, int posOffsY, int angle)
 {
   if (zoom == 0)  zoom = 100;
   if (zoom > 200) zoom = 200;
@@ -277,6 +277,7 @@ void classTile::setBgImage(lv_img_dsc_t *img, int zoom, int posOffsX, int posOff
   lv_obj_clear_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
   lv_img_set_src(_imgBg, img);
   lv_img_set_zoom(_imgBg, (256 * zoom) / 100);
+  lv_img_set_angle(_imgBg, angle);
   lv_obj_set_size(_imgBg, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
   // aling image to tile edge if posOffsX / -Y  >= abs(100)
