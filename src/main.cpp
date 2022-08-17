@@ -53,6 +53,9 @@
 #define SERIAL_BAUD_RATE 115200
 
 /*--------------------------- Global Variables ---------------------------*/
+extern "C" const lv_img_dsc_t oxrs_splash_png;
+extern "C" const lv_img_dsc_t oxrs_settings_png;
+
 // iosicons
 extern "C" const lv_img_dsc_t ios_room_60;
 extern "C" const lv_img_dsc_t ios_up;
@@ -72,8 +75,6 @@ extern "C" const lv_img_dsc_t ios_back_25_l;
 extern "C" const lv_img_dsc_t ios_home_25;
 extern "C" const lv_img_dsc_t ios_home_25_l;
 extern "C" const lv_img_dsc_t ios_thermometer_60;
-extern "C" const lv_img_dsc_t ui_img_austins_black_320x70_png;
-extern "C" const lv_img_dsc_t splash;
 extern "C" const lv_img_dsc_t ios_onoff_60;
 extern "C" const lv_img_dsc_t ios_speaker_60;
 extern "C" const lv_img_dsc_t ios_t_60;
@@ -84,14 +85,15 @@ extern "C" const lv_img_dsc_t ios_pause_60;
 extern "C" const lv_img_dsc_t ios_music_60;
 extern "C" const lv_img_dsc_t ios_3dprint_60;
 extern "C" const lv_img_dsc_t ios_remote_60;
-extern "C" const lv_img_dsc_t oxrs_splash_2206_png;
-extern "C" const lv_img_dsc_t AustinsBlack_png;
 extern "C" const lv_img_dsc_t ios_locked_60;
 extern "C" const lv_img_dsc_t ios_unlocked_60;
 extern "C" const lv_img_dsc_t ios_ceiling_fan_60;
 extern "C" const lv_img_dsc_t ios_left_30;
 extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_circle_25;
+
+const void *imgOxrsSplash = &oxrs_splash_png;
+const void *imgOxrsSettings = &oxrs_settings_png;
 
 const void *imgBlind = &ios_blind_60;
 const void *imgBulb = &ios_bulb_60;
@@ -105,8 +107,6 @@ const void *imgBack = &ios_back_25_l;
 const void *imgHome = &ios_home_25_l;
 const void *imgRoom = &ios_room_60;
 const void *imgThermo = &ios_thermometer_60;
-const void *imgAustin = &AustinsBlack_png;
-const void *imgSplash = &oxrs_splash_2206_png;
 const void *imgOnOff = &ios_onoff_60;
 const void *imgSpeaker = &ios_speaker_60;
 const void *imgText = &ios_t_60;
@@ -1911,7 +1911,7 @@ void ui_init(void)
 
   // setup Settings Screen as screen[SCREEN_SETTINGS]
   classScreen &ref = screenVault.add(SCREEN_SETTINGS, 0);
-  screenSettings = classScreenSettings(ref.screen, imgAustin);
+  screenSettings = classScreenSettings(ref.screen, imgOxrsSettings);
   screenSettings.addEventHandler(backLightSliderEventHandler);
   ref.createHomeButton(footerButtonEventHandler, imgHome);
   ref.adScreenEventHandler(screenEventHandler);
@@ -1990,7 +1990,7 @@ void setup()
   // show splash screen
   _setBackLightLED(20);
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
-  lv_img_set_src(img1, imgSplash);
+  lv_img_set_src(img1, imgOxrsSplash);
   lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
   lv_timer_handler();
   _actBackLight = 50;

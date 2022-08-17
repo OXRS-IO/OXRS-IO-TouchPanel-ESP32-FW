@@ -9,11 +9,11 @@
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
 
-#ifndef LV_ATTRIBUTE_IMG_AUSTINSBLACK_PNG
-#define LV_ATTRIBUTE_IMG_AUSTINSBLACK_PNG
+#ifndef LV_ATTRIBUTE_IMG_OXRS_SETTINGS_PNG
+#define LV_ATTRIBUTE_IMG_OXRS_SETTINGS_PNG
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_AUSTINSBLACK_PNG uint8_t AustinsBlack_png_map[] = {
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_OXRS_SETTINGS_PNG uint8_t oxrs_settings_png_map[] = {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 
     0x48, 0x44, 0x52, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00, 0x00, 0x46, 0x08, 0x03, 
     0x00, 0x00, 0x00, 0x8a, 0x60, 0xbd, 0x31, 0x00, 0x00, 0x00, 0x01, 0x73, 0x52, 
@@ -181,12 +181,12 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_AUSTINSBL
     0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82
 };
 
-const lv_img_dsc_t AustinsBlack_png = {
+const lv_img_dsc_t oxrs_settings_png = {
   .header.cf = LV_IMG_CF_RAW_ALPHA,
   .header.always_zero = 0,
   .header.reserved = 0,
   .header.w = 320,
   .header.h = 70,
   .data_size = 2140,
-  .data = AustinsBlack_png_map,
+  .data = oxrs_settings_png_map,
 };
