@@ -16,9 +16,6 @@ private:
   lv_obj_t *_panelCCT = NULL;
   lv_obj_t *_btnExit = NULL;
   lv_obj_t *_colorWheel = NULL;
-  lv_obj_t *_labelRed = NULL;
-  lv_obj_t *_labelGreen = NULL;
-  lv_obj_t *_labelBlue = NULL;
   lv_obj_t *_labelKelvin = NULL;
   lv_obj_t *_labelKelvinValue = NULL;
   lv_obj_t *_labelBrightnessColor = NULL;
