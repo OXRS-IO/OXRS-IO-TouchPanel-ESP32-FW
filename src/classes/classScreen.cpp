@@ -132,18 +132,24 @@ void classScreen::setFooter(const char *left, const char *center, const char *ri
     lv_obj_add_flag(_labelFooter, LV_OBJ_FLAG_HIDDEN);
   }
 
-  if (!right)
+  // allow right footer updates only if no warning active
+  if (strlen(lv_label_get_text(_labelWarning)) == 0)
   {
-    lv_obj_add_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
-  }
-  else
-  {
-    lv_label_set_text(_labelRight, right);
-    lv_obj_clear_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
+    if (!right)
+    {
+      lv_obj_add_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_clear_flag(_labelRight, LV_OBJ_FLAG_USER_1);
+      lv_obj_clear_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_clear_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
+    }
+    else
+    {
+      lv_label_set_text(_labelRight, right);
+      lv_obj_clear_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(_labelRight, LV_OBJ_FLAG_USER_1);
+      lv_obj_add_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
+    }
   }
 }
 
@@ -189,12 +195,26 @@ void classScreen::showConnectionStatus(bool connected)
   if (connected)
   {
     lv_label_set_text(_labelWarning, "");
+    // show right footer label if enabled
+    if (lv_obj_has_flag(_labelRight, LV_OBJ_FLAG_USER_1))
+    {
+      lv_obj_clear_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
+    }
   }
   else
   {
     lv_obj_set_style_text_font(_labelWarning, &lv_font_montserrat_20, 0);
     lv_obj_set_style_text_color(_labelWarning, lv_color_make(180, 100, 10), 0);
     lv_label_set_text(_labelWarning, LV_SYMBOL_WARNING);
+    // hide right footer label if enabled to show warning and settings button
+    if (lv_obj_has_flag(_labelRight, LV_OBJ_FLAG_USER_1))
+    {
+      lv_obj_add_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_clear_flag(_btnSettings, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_clear_flag(_btnSettingsImg, LV_OBJ_FLAG_HIDDEN);
+    }
   }
 }
 
