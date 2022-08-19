@@ -1702,7 +1702,7 @@ void jsonTileCommand(JsonVariant json)
       {
         tile->setBgImage(decodeBase64ToImg(json["bgImage"]["base64"]));
       }
-      tile->alignBgImage(json["bgImage"]["zoom"], json["bgImage"]["posOffset"][0], json["bgImage"]["posOffset"][1], json["bgImage"]["angle"]);
+      tile->alignBgImage(json["bgImage"]["zoom"], json["bgImage"]["offset"][0], json["bgImage"]["offset"][1], json["bgImage"]["angle"]);
     }
   }
 

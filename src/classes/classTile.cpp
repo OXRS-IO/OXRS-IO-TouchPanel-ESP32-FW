@@ -270,7 +270,7 @@ void classTile::setBgImage(lv_img_dsc_t *img)
 }
 
 // align _imgBg
-void classTile::alignBgImage(int zoom, int posOffsX, int posOffsY, int angle)
+void classTile::alignBgImage(int zoom, int offsetX, int offsetY, int angle)
 {
   // return if no valid bg image exists
   if (!lv_img_get_src(_imgBg))
@@ -295,12 +295,12 @@ void classTile::alignBgImage(int zoom, int posOffsX, int posOffsY, int angle)
   imgH = (imgH * zoom) / 100;
   int tileW = lv_obj_get_width(_btn);
   int tileH = lv_obj_get_height(_btn);
-  if (posOffsX <= -100)    posOffsX = -(tileW / 2 - imgW / 2) - 1;    // left
-  if (posOffsX >= 100)     posOffsX = +(tileW / 2 - imgW / 2) + 1;    // right
-  if (posOffsY <= -100)    posOffsY = -(tileH / 2 - imgH / 2) - 1;    // bottom
-  if (posOffsY >= 100)     posOffsY = +(tileH / 2 - imgH / 2) + 1;    // top
+  if (offsetX <= -100)    offsetX = -(tileW / 2 - imgW / 2) - 1;    // left
+  if (offsetX >= 100)     offsetX = +(tileW / 2 - imgW / 2) + 1;    // right
+  if (offsetY <= -100)    offsetY = -(tileH / 2 - imgH / 2) - 1;    // bottom
+  if (offsetY >= 100)     offsetY = +(tileH / 2 - imgH / 2) + 1;    // top
 
-  lv_obj_align(_imgBg, LV_ALIGN_CENTER, posOffsX, posOffsY * -1);
+  lv_obj_align(_imgBg, LV_ALIGN_CENTER, offsetX, offsetY * -1);
   lv_obj_set_style_radius(_imgBg, 5, 0);
   lv_obj_set_style_clip_corner(_imgBg, true, 0);
 }
