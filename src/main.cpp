@@ -1741,21 +1741,21 @@ void jsonTileCommand(JsonVariant json)
       tile->setColorPickerBrightnessWhite(json["colorPicker"]["brightness"]);
     }
 
-    if (json["colorPicker"].containsKey("modeSelect"))
+    if (json["colorPicker"].containsKey("mode"))
     {
-      const char *modeSelect = json["colorPicker"]["modeSelect"];
-      if (strcmp(modeSelect, "temp") == 0)
+      const char *mode = json["colorPicker"]["mode"];
+      if (strcmp(mode, "colorKelvin") == 0)
       {
         tile->setColorPickerMode(CP_MODE_TEMP);
       }
-      else if (strcmp(modeSelect, "color") == 0)
+      else if (strcmp(mode, "colorRgb") == 0)
       {
         tile->setColorPickerMode(CP_MODE_COLOR);
       }
       else
       {
-        wt32.print(F("[tp32]] invalid modeSelect: "));
-        wt32.println(modeSelect);
+        wt32.print(F("[tp32]] invalid mode: "));
+        wt32.println(mode);
       }
     }
   }
