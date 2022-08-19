@@ -1,3 +1,3 @@
-# OXRS-IO-TouchPanel-ESP32-FW
+# WT32-SC01 Touch Panel firmware for [OXRS](https://oxrs.io)
 
-OXRS firmware for the WT32-SC01 touch screen with support for POE enabled shields.
+See [here](https://oxrs.io/docs/firmware/touch-panel-esp32.html) for documentation.
