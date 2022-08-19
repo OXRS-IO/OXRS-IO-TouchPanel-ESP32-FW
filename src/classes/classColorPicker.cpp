@@ -442,17 +442,18 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 
   // enable selected mode(s)
   if (cpMode & CP_MODE_COLOR)
-  {
     lv_obj_clear_flag(_btnColor, LV_OBJ_FLAG_HIDDEN);
-    switchMode(CP_MODE_COLOR);
-  }
+
   if (cpMode & CP_MODE_TEMP)
-  {
     lv_obj_clear_flag(_btnKelvin, LV_OBJ_FLAG_HIDDEN);
-    if (!(cpMode & CP_MODE_COLOR))
-      switchMode(CP_MODE_TEMP);
-  }
-  
+
+  // select desired mode 
+  if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_COLOR)
+    switchMode(CP_MODE_COLOR);
+  else if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_TEMP)
+    switchMode(CP_MODE_TEMP);
+  else
+    switchMode(_callingTile->getColorPickerMode());
 }
 
 // update variables from ui content
@@ -533,6 +534,8 @@ void classColorPicker::switchMode(int  cpMode)
     lv_obj_clear_flag(_panelCCT, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(_panelRGB, LV_OBJ_FLAG_HIDDEN);
   }
+
+  _callingTile->setColorPickerMode(cpMode);
 }
 
 bool classColorPicker::isActive(void)

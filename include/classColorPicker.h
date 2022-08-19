@@ -2,9 +2,6 @@
 #include <lvgl.h>
 #include <classTile.h>
 
-#define CP_MODE_COLOR   0x01
-#define CP_MODE_TEMP    0x02
-
 class classColorPicker
 
 {
