@@ -259,29 +259,40 @@ void classTile::setNumber(const char *number, const char *units)
   lv_obj_align_to(_unitLabel, _numLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 }
 
-void classTile::setBgImage(lv_img_dsc_t *img, int zoom, int posOffsX, int posOffsY)
+// update the _imBg object and hide it, will be shown with alignBgImage()
+void classTile::setBgImage(lv_img_dsc_t *img)
 {
-  if (zoom == 0)  zoom = 100;
-  if (zoom > 200) zoom = 200;
-  if (zoom < 50)  zoom = 50;
-
   // free old image if exist
   _freeImageHeap();
 
-  if (img == NULL)
-  {
-    lv_img_set_src(_imgBg, NULL);
-    lv_obj_add_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
-    return;
-  }
-  lv_obj_clear_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
   lv_img_set_src(_imgBg, img);
+}
+
+// align _imgBg
+void classTile::alignBgImage(int zoom, int posOffsX, int posOffsY, int angle)
+{
+  // return if no valid bg image exists
+  if (!lv_img_get_src(_imgBg))
+    return;
+
+  if (zoom == 0)   zoom = 100;
+  if (zoom > 200)  zoom = 200;
+  if (zoom < 50)   zoom = 50;
+
+  lv_obj_clear_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
   lv_img_set_zoom(_imgBg, (256 * zoom) / 100);
+  lv_img_set_angle(_imgBg, angle);
   lv_obj_set_size(_imgBg, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
   // aling image to tile edge if posOffsX / -Y  >= abs(100)
-  int imgW = (img->header.w * zoom) / 100;
-  int imgH = (img->header.h * zoom) / 100;
+  lv_area_t imgArea;
+  lv_obj_get_coords(_imgBg, &imgArea);
+
+  int imgW = (imgArea.x2 - imgArea.x1) + 1;
+  int imgH = (imgArea.y2 - imgArea.y1) + 1;
+  imgW = (imgW * zoom) / 100;
+  imgH = (imgH * zoom) / 100;
   int tileW = lv_obj_get_width(_btn);
   int tileH = lv_obj_get_height(_btn);
   if (posOffsX <= -100)    posOffsX = -(tileW / 2 - imgW / 2) - 1;    // left
@@ -336,7 +347,7 @@ int classTile::getStyle(void)
   return _style;
 }
 
-const char* classTile::getStyleStr(void)
+const char *classTile::getStyleStr(void)
 {
   return _styleStr.c_str();
 }
@@ -398,7 +409,7 @@ void classTile::setIconText(const char *iconText)
   }
 }
 
-void classTile::getImages(const void* &imgOff, const void* &imgOn)
+void classTile::getImages(const void *&imgOff, const void *&imgOn)
 {
   imgOff = _img;
   imgOn = _imgOn;
@@ -465,7 +476,7 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   // set button and label size from grid
   int width = (*lv_obj_get_style_grid_column_dsc_array(_parent, 0) - 10) / 2 + 1;
   int height = (*lv_obj_get_style_grid_row_dsc_array(_parent, 0) - 10) / 2 + 1;
- 
+
   // up / down  buttons
   _btnUp = lv_btn_create(_btn);
   lv_obj_set_size(_btnUp, width, height);
@@ -654,7 +665,7 @@ void classTile::showSelector(int index)
 }
 
 // set the selector list
-void classTile::setSelectorList( const char* list)
+void classTile::setSelectorList(const char *list)
 {
   _selectorList = string(list);
 }

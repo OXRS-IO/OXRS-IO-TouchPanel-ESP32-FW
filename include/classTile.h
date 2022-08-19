@@ -71,7 +71,8 @@ public :
   void setColor(int r, int g, int b);
   void setIcon(const void *imgIcon);
   void setNumber(const char *number, const char *units);
-  void setBgImage(lv_img_dsc_t *img, int zoom, int posOffsX, int posOffsY);
+  void setBgImage(lv_img_dsc_t *img);
+  void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setLink(int linkedScreen);
   void setKeyPadEnable(bool enable);
   void setIconForStateOn(const void* imgStateOn);
