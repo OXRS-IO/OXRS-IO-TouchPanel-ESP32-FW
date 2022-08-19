@@ -45,7 +45,7 @@ protected:
   lv_color32_t _colorPickerRGB32 = {255, 255, 255};
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
-  int _colorPickerMode = 0;
+  int _colorPickerMode = CP_MODE_COLOR;
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);

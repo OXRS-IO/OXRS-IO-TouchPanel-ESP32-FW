@@ -64,3 +64,7 @@ typedef union
 
 // radius of the color wheel
 #define CW_RADIUS         110
+
+// colorPicker modes
+#define CP_MODE_COLOR 0x01
+#define CP_MODE_TEMP 0x02

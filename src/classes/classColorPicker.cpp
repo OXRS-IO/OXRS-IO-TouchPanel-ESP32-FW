@@ -194,27 +194,6 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 
   lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
 
-  // _labelRed = lv_label_create(_panelRGB);
-  // lv_obj_set_size(_labelRed, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  // lv_obj_set_style_text_color(_labelRed, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-  // lv_label_set_text(_labelRed, "0");
-  // lv_obj_align(_labelRed, LV_ALIGN_TOP_LEFT, 260, 185);
-  // lv_obj_add_flag(_labelRed, LV_OBJ_FLAG_HIDDEN);
-
-  // _labelGreen = lv_label_create(_panelRGB);
-  // lv_obj_set_size(_labelGreen, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  // lv_obj_set_style_text_color(_labelGreen, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-  // lv_label_set_text(_labelGreen, "0");
-  // lv_obj_align(_labelGreen, LV_ALIGN_TOP_LEFT, 260, 205);
-  // lv_obj_add_flag(_labelGreen, LV_OBJ_FLAG_HIDDEN);
-
-  // _labelBlue = lv_label_create(_panelRGB);
-  // lv_obj_set_size(_labelBlue, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  // lv_obj_set_style_text_color(_labelBlue, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-  // lv_label_set_text(_labelBlue, "0");
-  // lv_obj_align(_labelBlue,  LV_ALIGN_TOP_LEFT, 260, 225);
-  // lv_obj_add_flag(_labelBlue, LV_OBJ_FLAG_HIDDEN);
-
   // frame for color wheel
   _panelCwFrame = lv_obj_create(_panelRGB);
   lv_obj_remove_style_all(_panelCwFrame);
@@ -463,17 +442,18 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 
   // enable selected mode(s)
   if (cpMode & CP_MODE_COLOR)
-  {
     lv_obj_clear_flag(_btnColor, LV_OBJ_FLAG_HIDDEN);
-    switchMode(CP_MODE_COLOR);
-  }
+
   if (cpMode & CP_MODE_TEMP)
-  {
     lv_obj_clear_flag(_btnKelvin, LV_OBJ_FLAG_HIDDEN);
-    if (!(cpMode & CP_MODE_COLOR))
-      switchMode(CP_MODE_TEMP);
-  }
-  
+
+  // select desired mode 
+  if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_COLOR)
+    switchMode(CP_MODE_COLOR);
+  else if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_TEMP)
+    switchMode(CP_MODE_TEMP);
+  else
+    switchMode(_callingTile->getColorPickerMode());
 }
 
 // update variables from ui content
@@ -516,13 +496,6 @@ void classColorPicker::updateCw(lv_point_t point, int mode)
   lv_color_t color = lv_color_hsv_to_rgb(_colorWheelHSV.h, _colorWheelHSV.s * 100, 100);
   lv_obj_align(_panelCursor, LV_ALIGN_CENTER, x, y);
   lv_obj_set_style_bg_color(_panelCursor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-  // lv_color32_t color32;
-  // color32.full = lv_color_to32(color);
-  // lv_label_set_text_fmt(_labelRed, "r: %3d", color32.ch.red);
-  // lv_label_set_text_fmt(_labelGreen, "g: %3d", color32.ch.green);
-  // lv_label_set_text_fmt(_labelBlue, "b: %3d", color32.ch.blue);
-
   lv_obj_set_style_bg_grad_color(_barBrightnessColor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
@@ -561,6 +534,8 @@ void classColorPicker::switchMode(int  cpMode)
     lv_obj_clear_flag(_panelCCT, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(_panelRGB, LV_OBJ_FLAG_HIDDEN);
   }
+
+  _callingTile->setColorPickerMode(cpMode);
 }
 
 bool classColorPicker::isActive(void)
