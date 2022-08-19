@@ -1690,9 +1690,20 @@ void jsonTileCommand(JsonVariant json)
     tile->setIconText(json["text"]);
   }
 
-  if (json.containsKey("image"))
+  if (json.containsKey("bgImage"))
   {
-    tile->setBgImage(decodeBase64ToImg(json["image"]), json["zoom"], json["posOffset"][0], json["posOffset"][1], json["angle"]);
+    if (json["bgImage"].size() == 0)
+    {
+      tile->setBgImage(NULL);
+    }
+    else
+    {
+      if (json["bgImage"].containsKey("base64"))
+      {
+        tile->setBgImage(decodeBase64ToImg(json["bgImage"]["base64"]));
+      }
+      tile->alignBgImage(json["bgImage"]["zoom"], json["bgImage"]["posOffset"][0], json["bgImage"]["posOffset"][1], json["bgImage"]["angle"]);
+    }
   }
 
   if (json.containsKey("dropDownList"))
