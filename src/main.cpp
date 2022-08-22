@@ -1693,19 +1693,21 @@ void jsonTileCommand(JsonVariant json)
     tile->setIconText(json["text"]);
   }
 
-  if (json.containsKey("bgImage"))
+  if (json.containsKey("backgroundImage"))
   {
-    if (json["bgImage"].size() == 0)
+    JsonVariant bgImage = json["backgroundImage"];
+
+    if (bgImage.size() == 0)
     {
       tile->setBgImage(NULL);
     }
     else
     {
-      if (json["bgImage"].containsKey("base64"))
+      if (bgImage.containsKey("imageBase64"))
       {
-        tile->setBgImage(decodeBase64ToImg(json["bgImage"]["base64"]));
+        tile->setBgImage(decodeBase64ToImg(bgImage["imageBase64"]));
       }
-      tile->alignBgImage(json["bgImage"]["zoom"], json["bgImage"]["offset"][0], json["bgImage"]["offset"][1], json["bgImage"]["angle"]);
+      tile->alignBgImage(bgImage["zoom"], bgImage["offset"][0], bgImage["offset"][1], bgImage["angle"]);
     }
   }
 
@@ -1823,13 +1825,13 @@ void jsonAddIcon(JsonVariant json)
   // TODO :
   //    check if ps_alloc successful
 
-  if (!json["name"] || !json["image"]) return;
+  if (!json["name"] || !json["imageBase64"]) return;
   
   // check if named icon exist, if yes -> get descriptor
   lv_img_dsc_t *oldIcon = (lv_img_dsc_t *)iconVault.getIcon(json["name"]);
 
   // decode new icon
-  lv_img_dsc_t *iconPng = decodeBase64ToImg(json["image"]);
+  lv_img_dsc_t *iconPng = decodeBase64ToImg(json["imageBase64"]);
 
   // add custom icon to iconVault (deletes possible existing one)
   string iconStr = json["name"];
