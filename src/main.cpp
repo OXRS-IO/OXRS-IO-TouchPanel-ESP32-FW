@@ -1544,6 +1544,17 @@ lv_img_dsc_t *decodeBase64ToImg(const char *imageBase64)
   return imgPng;
 }
 
+// convert json array of strings to single string
+void jsonArrayToString(JsonArray array, string *longString)
+{
+  for (JsonVariant s : array)
+  {
+    *longString += s.as<const char *>();
+    *longString += "\n";
+  }
+  longString->pop_back();
+}
+
 void jsonSetBackLightCommand(JsonVariant json)
 {
   int blValue = -1;
@@ -1713,7 +1724,9 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("dropDownList"))
   {
-    tile->setDropDownList(json["dropDownList"]);
+    string dropDownList = "";
+    jsonArrayToString(json["dropDownList"].as<JsonArray>(), &dropDownList);
+    tile->setDropDownList(dropDownList.c_str());
   }
 
   if (json.containsKey("dropDownSelect"))
@@ -1728,7 +1741,9 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("selectorList"))
   {
-    tile->setSelectorList(json["selectorList"]);
+    string selectorList = "";
+    jsonArrayToString(json["selectorList"].as<JsonArray>(), &selectorList);
+    tile->setSelectorList(selectorList.c_str());
   }
 
   if (json.containsKey("selectorSelect"))
