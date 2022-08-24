@@ -1694,9 +1694,9 @@ void jsonTileCommand(JsonVariant json)
     tile->setIcon(iconVault.getIcon(json["icon"]));
   }
 
-  if (json.containsKey("number") || json.containsKey("units"))
+  if (json.containsKey("value") || json.containsKey("units"))
   {
-    tile->setNumber(json["number"], json["units"]);
+    tile->setValue(json["value"], json["units"]);
   }
 
   if (json.containsKey("text"))
