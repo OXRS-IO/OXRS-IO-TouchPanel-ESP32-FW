@@ -41,6 +41,7 @@
 #include <classKeyPad.h>
 #include <classIconList.h>
 #include <classColorPicker.h>
+#include <classSetPoint.h>
 #include <base64.hpp>
 #include <TFT_eSPI.h>
 #include <lvgl.h>
@@ -166,6 +167,9 @@ classKeyPad keyPad = classKeyPad();
 classColorPicker colorPicker = classColorPicker();
 lv_obj_t *_canvasCw = NULL;
 
+// cset point overlay
+classSetPoint setPoint = classSetPoint();
+
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
 
 // Change to your screen resolution
@@ -262,6 +266,7 @@ void initStyleLut(void)
   styleLut[TS_COLOR_PICKER_RGB_CCT] = {TS_COLOR_PICKER_RGB_CCT, "colorPickerRgbCct"};
   styleLut[TS_COLOR_PICKER_RGB] = {TS_COLOR_PICKER_RGB, "colorPickerRgb"};
   styleLut[TS_COLOR_PICKER_CCT] = {TS_COLOR_PICKER_CCT, "colorPickerCct"};
+  styleLut[TS_SET_POINT] = {TS_SET_POINT, "setPoint"};
   styleLut[TS_DROPDOWN] = {TS_DROPDOWN, "dropDown"};
   styleLut[TS_KEYPAD] = {TS_KEYPAD, "keyPad"};
   styleLut[TS_KEYPAD_BLOCKING] = {TS_KEYPAD_BLOCKING, "keyPadBlocking"};
@@ -433,6 +438,21 @@ void publishSelectorEvent(classTile *tPtr, int index)
   wt32.publishStatus(json.as<JsonVariant>());
 }
 
+// publish setPoint (mode) change Event
+// {"screen":1, "tile":1, "style":"setPoint","type":"setPoint" | "mode", "event":"change" , "state":205}
+void publishSetPointEvent(classTile *tPtr, const char *type, int value)
+{
+  StaticJsonDocument<128> json;
+  json["screen"] = tPtr->getScreenIdx();
+  json["tile"] = tPtr->getTileIdx();
+  json["style"] = tPtr->getStyleStr();
+  json["type"] = type;
+  json["event"] = "change";
+  json["state"] = value;
+
+  wt32.publishStatus(json.as<JsonVariant>());
+}
+
 // publish Screen Event
 // {"screen":1, "type":"screen", "event":"change" , "state":"unloaded"}
 void publishScreenEvent(int screenIdx, const char *state)
@@ -556,6 +576,7 @@ void checkNoActivity(void)
       // check and close pop-ups first
       if (dropDownOverlay.isActive()) dropDownOverlay.close();
       if (colorPicker.isActive()) colorPicker.close();
+      if (setPoint.isActive()) setPoint.close();
       if (remoteControl.isActive()) remoteControl.close();
      // return to HomeScreen if keyPad is NOT active
       if (!keyPad.isActive())
@@ -903,14 +924,52 @@ static void colorPickerEventHandler(lv_event_t *e)
   }
 }
 
+// setPoint  arc event handler
+static void setPointEventHandler(lv_event_t *e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *obj = lv_event_get_target(e);
+
+  if (code == LV_EVENT_VALUE_CHANGED)
+  {
+    setPoint.updateAll();
+  }
+  if (code == LV_EVENT_RELEASED)
+  {
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1))
+    // setPoint arc released
+    {
+      classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+      publishSetPointEvent(tPtr, "setPoint", tPtr->getSetPointValue());
+    }
+  }
+  if (code == LV_EVENT_CLICKED)
+  {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_2))
+      // mode button
+      setPoint.showDropDown();
+  }
+  if (code == LV_EVENT_CANCEL)
+  {
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_3))
+    // drop down 
+    {
+      classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+      setPoint.closeDropDown();
+      publishSetPointEvent(tPtr, "mode", tPtr->getDropDownIndex());
+    }
+  }
+}
+
 // general Tile Event Handler
 static void tileEventHandler(lv_event_t * e)
 {
-  static uint32_t pressStarted;
+  static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
   if(code == LV_EVENT_PRESSED)
   {
-    pressStarted = lv_tick_get();
+    tilePressStarted = lv_tick_get();
   }
 
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
@@ -936,6 +995,11 @@ static void tileEventHandler(lv_event_t * e)
       else if (tPtr->getStyle() == TS_REMOTE)
       {
         remoteControl = classRemote(tPtr, navigationButtonEventHandler);
+      }
+      // button is style SETPOINT -> show setpoint overlay
+      else if (tPtr->getStyle() == TS_SET_POINT)
+      {
+        setPoint = classSetPoint(tPtr, setPointEventHandler);
       }
       // keypad is enabled for this tile
       else if (tPtr->getKeyPadEnable())
@@ -964,7 +1028,7 @@ static void tileEventHandler(lv_event_t * e)
   }
 
   // if pressed time > 500 ms -> looong press  ->  show colorPicker
-  if ((code == LV_EVENT_RELEASED) && (lv_tick_elaps(pressStarted) > 500))
+  if ((code == LV_EVENT_RELEASED) && (lv_tick_elaps(tilePressStarted) > 500))
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     // button is style COLOR_PICKER -> show color picker overlay
@@ -1161,7 +1225,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
   }
 
   // set levelrange
-  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN))
+  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN) || (style == TS_SET_POINT))
   {
     if ((levelStart != 0) || (levelStop != 0))
     {
@@ -1203,7 +1267,8 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
 
   // set indicator for modal pop up screen
   if ((style == TS_DROPDOWN) || (style == TS_REMOTE) || (style == TS_KEYPAD) || (style == TS_KEYPAD_BLOCKING) ||
-      (style == TS_COLOR_PICKER_RGB) || (style == TS_COLOR_PICKER_CCT) || (style == TS_COLOR_PICKER_RGB_CCT))
+      (style == TS_COLOR_PICKER_RGB) || (style == TS_COLOR_PICKER_CCT) || (style == TS_COLOR_PICKER_RGB_CCT) || 
+      (style == TS_SET_POINT))
   {
     ref.setDropDownIndicator();
   }
@@ -1789,6 +1854,28 @@ void jsonTileCommand(JsonVariant json)
         wt32.println(mode);
       }
     }
+  }
+
+  if (json.containsKey("setPointModeList"))
+  {
+    string setPointModeList = "";
+    jsonArrayToString(json["setPointModeList"].as<JsonArray>(), &setPointModeList);
+    tile->saveDropDownList(setPointModeList.c_str());
+  }
+
+  if (json.containsKey("setPointModeSelect"))
+  {
+    tile->saveDropDownIndex(json["setPointModeSelect"]);
+  }
+
+  if (json.containsKey("setPointRoomTemperature"))
+  {
+    tile->setSetPointRoomTemp(json["setPointRoomTemperature"].as<const char*>());
+  }
+
+  if (json.containsKey("setSetPoint"))
+  {
+    tile->setSetPointValue(json["setSetPoint"]);
   }
 }
 

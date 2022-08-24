@@ -46,6 +46,8 @@ protected:
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
   int _colorPickerMode = CP_MODE_COLOR;
+  int _setPointValue = 0;
+  string _setPointRoomTemp = "";
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
@@ -104,6 +106,8 @@ public :
   void setDropDownList(const char *list);
   void setDropDownIndex(uint16_t index);
   void setDropDownLabel(const char *label);
+  void saveDropDownList(const char *list);
+  void saveDropDownIndex(uint16_t index);
   const char *getDropDownList(void);
   uint16_t getDropDownIndex(void);
   const char *getDropDownLabel(void);
@@ -124,4 +128,9 @@ public :
   int getColorPickerKelvin(void);
   int getColorPickerBrightnessWhite(void);
   int getColorPickerMode(void);
+
+  void setSetPointValue(int setPointValue);
+  int getSetPointValue(void);
+  void setSetPointRoomTemp(const char* roomTemp);
+  const char* getSetPointRoomTemp(void);
 };

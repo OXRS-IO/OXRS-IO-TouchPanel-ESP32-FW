@@ -595,11 +595,23 @@ void classTile::setDropDownList(const char *list)
   _setIconTextFromIndex();
 }
 
-// store selected item index
+// store selected item index and show selected item as iconText
 void classTile::setDropDownIndex(uint16_t index)
 {
   _dropDownIndex = index;
   _setIconTextFromIndex();
+}
+
+// store drop down list for mode select with no further action
+void classTile::saveDropDownList(const char *list)
+{
+  lv_label_set_text(_dropDownList, list);
+}
+
+// store selected item index with no further action
+void classTile::saveDropDownIndex(uint16_t index)
+{
+  _dropDownIndex = index;
 }
 
 // store drop down label
@@ -735,4 +747,26 @@ int classTile::getColorPickerBrightnessWhite(void)
 int classTile::getColorPickerMode(void)
 {
   return _colorPickerMode;
+}
+
+void classTile::setSetPointValue(int setPointValue)
+{
+  _setPointValue = setPointValue;
+}
+
+void classTile::setSetPointRoomTemp(const char *roomTemp)
+{
+  if(!roomTemp)
+    _setPointRoomTemp = "";
+  else
+    _setPointRoomTemp = roomTemp;
+}
+
+int classTile::getSetPointValue(void)
+{
+  return _setPointValue;
+}
+const char* classTile::getSetPointRoomTemp(void)
+{
+  return _setPointRoomTemp.c_str();
 }
