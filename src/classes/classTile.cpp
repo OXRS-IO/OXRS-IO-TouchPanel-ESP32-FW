@@ -56,11 +56,11 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x808080), 0);
 
   // additional Label (placeholder)
-  _numLabel = lv_label_create(_btn);
-  lv_obj_set_size(_numLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  lv_label_set_text(_numLabel, "");
-  lv_obj_align(_numLabel, LV_ALIGN_TOP_LEFT, 8, 15);
-  lv_obj_set_style_text_color(_numLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  _valueLabel = lv_label_create(_btn);
+  lv_obj_set_size(_valueLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_label_set_text(_valueLabel, "");
+  lv_obj_align(_valueLabel, LV_ALIGN_TOP_LEFT, 8, 15);
+  lv_obj_set_style_text_color(_valueLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
 
   // additional Label (unit display)
   _unitLabel = lv_label_create(_btn);
@@ -122,7 +122,7 @@ void classTile::_setIconTextFromIndex()
 void classTile::_reColorAll(lv_color_t color, lv_style_selector_t selector)
 {
   lv_obj_set_style_img_recolor(_btn, color, selector);
-  lv_obj_set_style_text_color(_numLabel, color, selector);
+  lv_obj_set_style_text_color(_valueLabel, color, selector);
   lv_obj_set_style_text_color(_unitLabel, color, selector);
   lv_obj_set_style_text_color(_txtIconText, color, selector);
 }
@@ -250,13 +250,13 @@ void classTile::setColor(int r, int g, int b)
   }
 }
 
-void classTile::setNumber(const char *number, const char *units)
+void classTile::setValue(const char *value, const char *units)
 {
-  lv_obj_set_style_text_font(_numLabel, &number_OR_50, 0);
-  lv_label_set_text(_numLabel, number);
+  lv_obj_set_style_text_font(_valueLabel, &number_OR_50, 0);
+  lv_label_set_text(_valueLabel, value);
   lv_obj_set_style_text_font(_unitLabel, &lv_font_montserrat_20, 0);
   lv_label_set_text(_unitLabel, units);
-  lv_obj_align_to(_unitLabel, _numLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+  lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 }
 
 // update the _imBg object and hide it, will be shown with alignBgImage()
