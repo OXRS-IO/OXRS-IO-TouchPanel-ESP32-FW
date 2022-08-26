@@ -46,8 +46,9 @@ protected:
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
   int _colorPickerMode = CP_MODE_COLOR;
-  int _setPointValue = 0;
-  string _setPointRoomTemp = "";
+  int _thermostatTarget = 0;
+  int _thermostatCurrent = 0;
+  string _units = "";
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
@@ -129,8 +130,10 @@ public :
   int getColorPickerBrightnessWhite(void);
   int getColorPickerMode(void);
 
-  void setSetPointValue(int setPointValue);
-  int getSetPointValue(void);
-  void setSetPointRoomTemp(const char* roomTemp);
-  const char* getSetPointRoomTemp(void);
+  void setThermostatTarget(int target);
+  int getThermostatTarget(void);
+  void setThermostatCurrent(int current);
+  int getThermostatCurrent(void);
+  void setThermostatUnits(const char *units);
+  const char *getThermostatUnits(void);
 };

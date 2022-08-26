@@ -749,24 +749,35 @@ int classTile::getColorPickerMode(void)
   return _colorPickerMode;
 }
 
-void classTile::setSetPointValue(int setPointValue)
+void classTile::setThermostatTarget(int target)
 {
-  _setPointValue = setPointValue;
+  _thermostatTarget = target;
 }
 
-void classTile::setSetPointRoomTemp(const char *roomTemp)
+void classTile::setThermostatCurrent(int current)
 {
-  if(!roomTemp)
-    _setPointRoomTemp = "";
+  _thermostatCurrent = current;
+}
+
+void classTile::setThermostatUnits(const char *units)
+{
+  if (!units)
+    _units = "";
   else
-    _setPointRoomTemp = roomTemp;
+    _units = units;
 }
 
-int classTile::getSetPointValue(void)
+int classTile::getThermostatTarget(void)
 {
-  return _setPointValue;
+  return _thermostatTarget;
 }
-const char* classTile::getSetPointRoomTemp(void)
+
+int classTile::getThermostatCurrent(void)
 {
-  return _setPointRoomTemp.c_str();
+  return _thermostatCurrent;
+}
+
+const char *classTile::getThermostatUnits(void)
+{
+  return _units.c_str();
 }

@@ -1,12 +1,14 @@
-#include <classSetPoint.h>
+#include <classThermostat.h>
 #include <globalDefines.h>
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 extern "C" const lv_font_t number_OR_50;
 
+#define ARC_STEP 5
+
 // build the panels with all widgets
-void classSetPoint::_createSetPoint(void)
+void classThermostat::_createThermostat(void)
 {
   // full screen overlay / opaqe
   _ovlPanel = lv_obj_create(lv_scr_act());
@@ -40,63 +42,57 @@ void classSetPoint::_createSetPoint(void)
 
   lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
 
-  _arcSetPoint = lv_arc_create(_panel);
+  _arcTarget = lv_arc_create(_panel);
+  lv_obj_set_size(_arcTarget, 250, 250);
+  lv_obj_set_align(_arcTarget, LV_ALIGN_CENTER);
+  lv_arc_set_bg_angles(_arcTarget, 135, 45);
+  lv_arc_set_range(_arcTarget, _targetMin / ARC_STEP, _targetMax / ARC_STEP);
+  lv_arc_set_value(_arcTarget, 50);
 
-  lv_obj_set_size(_arcSetPoint, 250, 250);
-  lv_obj_set_align(_arcSetPoint, LV_ALIGN_CENTER);
-  lv_arc_set_bg_angles(_arcSetPoint, 135, 45);
+  lv_obj_set_style_pad_all(_arcTarget, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_width(_arcTarget, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
 
- // lv_arc_set_range(_arcSetPoint, _setPointMin / 5, _setPointMax / 5);
-  lv_arc_set_value(_arcSetPoint, 50);
+  lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_width(_arcTarget, 5, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-  lv_obj_set_style_pad_all(_arcSetPoint, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_arc_color(_arcSetPoint, lv_color_hex(0xC8C8C8), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_arc_opa(_arcSetPoint, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_arc_width(_arcSetPoint, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_width(_arcTarget, 3, LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_side(_arcTarget, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_all(_arcTarget, 7, LV_PART_KNOB | LV_STATE_DEFAULT);
 
-  lv_obj_set_style_arc_color(_arcSetPoint, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-  lv_obj_set_style_arc_opa(_arcSetPoint, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-  lv_obj_set_style_arc_width(_arcSetPoint, 5, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+  // label target
+  _labelTarget = lv_label_create(_panel);
+  lv_obj_set_size(_labelTarget, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelTarget, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_text_font(_labelTarget, &number_OR_50, 0);
+  lv_label_set_text(_labelTarget, "");
+  lv_obj_align(_labelTarget, LV_ALIGN_CENTER, -10, -10);
 
-  lv_obj_set_style_bg_color(_arcSetPoint, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_arcSetPoint, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_border_color(_arcSetPoint, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_border_opa(_arcSetPoint, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_border_width(_arcSetPoint, 3, LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_border_side(_arcSetPoint, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_all(_arcSetPoint, 7, LV_PART_KNOB | LV_STATE_DEFAULT);
+  // label target - units
+  _labelUnits = lv_label_create(_panel);
+  lv_obj_set_size(_labelUnits, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelUnits, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_text_font(_labelUnits, &lv_font_montserrat_20, 0);
+  lv_label_set_text(_labelUnits, "°C");
+  lv_obj_align_to(_labelUnits, _labelTarget, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 
-  // label set point
-  _labelSetPoint = lv_label_create(_panel);
-  lv_obj_set_size(_labelSetPoint, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  lv_obj_set_style_text_color(_labelSetPoint, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_text_font(_labelSetPoint, &number_OR_50, 0);
-  // lv_obj_set_style_text_font(_labelSetPoint, &lv_font_montserrat_20, 0);
-  lv_label_set_text(_labelSetPoint, "");
-  lv_obj_align(_labelSetPoint, LV_ALIGN_CENTER, -10, -10);
+  // label current temp
+  _labelCurrent = lv_label_create(_panel);
+  lv_obj_set_size(_labelCurrent, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelCurrent, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_label_set_text(_labelCurrent, "");
+  lv_obj_align(_labelCurrent, LV_ALIGN_CENTER, 00, 60);
 
-  // label set point
-  _labelSetPointUnits = lv_label_create(_panel);
-  lv_obj_set_size(_labelSetPointUnits, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  lv_obj_set_style_text_color(_labelSetPointUnits, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_text_font(_labelSetPointUnits, &lv_font_montserrat_20, 0);
-  lv_label_set_text(_labelSetPointUnits, "°C");
-  lv_obj_align_to(_labelSetPointUnits, _labelSetPoint, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
-  // lv_obj_align(_labelSetPointUnits, LV_ALIGN_CENTER, 0, 0);
-
-  // label room temp
-  _labelRoomTemp = lv_label_create(_panel);
-  lv_obj_set_size(_labelRoomTemp, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  lv_obj_set_style_text_color(_labelRoomTemp, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-  // lv_obj_set_style_text_font(_labelSetPoint, &lv_font_montserrat_20, 0);
-  lv_label_set_text(_labelRoomTemp, "");
-  lv_obj_align(_labelRoomTemp, LV_ALIGN_CENTER, 00, 60);
-
-  // label calling tile label
+  // label calling tile aat top
   _labelCallingTile = lv_label_create(_panel);
   lv_obj_set_size(_labelCallingTile, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelCallingTile, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  // lv_obj_set_style_text_font(_labelSetPoint, &lv_font_montserrat_20, 0);
   lv_label_set_text(_labelCallingTile, "");
   lv_obj_align(_labelCallingTile, LV_ALIGN_TOP_MID, 00, 20);
 
@@ -135,32 +131,36 @@ void classSetPoint::_createSetPoint(void)
   lv_obj_add_flag(_dropDown, LV_OBJ_FLAG_HIDDEN);
 }
 
-void classSetPoint::_exitButtonEventHandler(lv_event_t *e)
+void classThermostat::_exitButtonEventHandler(lv_event_t *e)
 {
   lv_obj_t *btn = lv_event_get_target(e);
   lv_obj_t *panel1 = lv_obj_get_parent(btn);
   lv_obj_del(panel1);
 }
 
-classSetPoint::classSetPoint(classTile *tile, lv_event_cb_t setPointEventHandler)
+classThermostat::classThermostat(classTile *tile, lv_event_cb_t thermostatEventHandler)
 {
   // layout the color picker pop up
-  _createSetPoint();
+  _createThermostat();
 
- _callingTile = tile;
+  _callingTile = tile;
   // get min/max from config
- if ((_callingTile->getLevelStart() != 0) || (_callingTile->getLevelStop() != 100))
- {
-   _setPointMin = _callingTile->getLevelStart();
-   _setPointMax = _callingTile->getLevelStop();
+  if ((_callingTile->getLevelStart() != 0) || (_callingTile->getLevelStop() != 100))
+  {
+    _targetMin = _callingTile->getLevelStart();
+    _targetMax = _callingTile->getLevelStop();
   }
-  lv_arc_set_range(_arcSetPoint, _setPointMin / 5, _setPointMax / 5);
+  lv_arc_set_range(_arcTarget, _targetMin / ARC_STEP, _targetMax / ARC_STEP);
 
   // update controls with stored values from calling tile
   lv_label_set_text(_labelCallingTile, _callingTile->getLabel());
-  updateSetPoint(_callingTile->getSetPointValue() / 5);
+  updateTarget(_callingTile->getThermostatTarget() / ARC_STEP);
   updateAll();
-  lv_label_set_text(_labelRoomTemp, _callingTile->getSetPointRoomTemp());
+  lv_label_set_text(_labelUnits, _callingTile->getThermostatUnits());
+
+  char buffer[10];
+  sprintf(buffer, "%2.1f %s", (float)_callingTile->getThermostatCurrent() / 10.0, _callingTile->getThermostatUnits());
+  lv_label_set_text(_labelCurrent, buffer);
   lv_dropdown_set_text(_dropDown, _callingTile->getDropDownLabel());
   lv_dropdown_set_options(_dropDown, _callingTile->getDropDownList());
   int index = _callingTile->getDropDownIndex();
@@ -172,66 +172,66 @@ classSetPoint::classSetPoint(classTile *tile, lv_event_cb_t setPointEventHandler
   lv_label_set_text(_labelMode, buf);
 
   // add event handler
-  lv_obj_add_flag(_arcSetPoint, LV_OBJ_FLAG_USER_1);
-  lv_obj_add_event_cb(_arcSetPoint, setPointEventHandler, LV_EVENT_ALL, _callingTile);
+  lv_obj_add_flag(_arcTarget, LV_OBJ_FLAG_USER_1);
+  lv_obj_add_event_cb(_arcTarget, thermostatEventHandler, LV_EVENT_ALL, _callingTile);
 
   lv_obj_add_flag(_btnMode, LV_OBJ_FLAG_USER_2);
-  lv_obj_add_event_cb(_btnMode, setPointEventHandler, LV_EVENT_ALL, _callingTile);
+  lv_obj_add_event_cb(_btnMode, thermostatEventHandler, LV_EVENT_ALL, _callingTile);
 
   lv_obj_add_flag(_dropDown, LV_OBJ_FLAG_USER_3);
-  lv_obj_add_event_cb(_dropDown, setPointEventHandler, LV_EVENT_ALL, _callingTile);
+  lv_obj_add_event_cb(_dropDown, thermostatEventHandler, LV_EVENT_ALL, _callingTile);
 }
 
 // update variables from ui content
-void classSetPoint::updateAll(void)
+void classThermostat::updateAll(void)
 {
-  int setPoint = lv_arc_get_value(_arcSetPoint) * 5;
+  int target = lv_arc_get_value(_arcTarget) * ARC_STEP;
   char buffer[10];
-  sprintf(buffer, "%2.1f", (float)setPoint / 10.0);
-  lv_label_set_text(_labelSetPoint, buffer);
-  _callingTile->setSetPointValue(setPoint);
-  lv_obj_align_to(_labelSetPointUnits, _labelSetPoint, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+  sprintf(buffer, "%2.1f", (float)target / 10.0);
+  lv_label_set_text(_labelTarget, buffer);
+  _callingTile->setThermostatTarget(target);
+  lv_obj_align_to(_labelUnits, _labelTarget, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 
   // calc hsv for coloring
-  int range = (_setPointMax - _setPointMin) / 2;
-  int mid = range + _setPointMin;
-  int s = 50 + (abs(mid -setPoint) * 50) / range;
+  int range = (_targetMax - _targetMin) / 2;
+  int mid = range + _targetMin;
+  int s = 50 + (abs(mid -target) * 50) / range;
   // red(360) or blue(240)
   int h = 360;
-  if (setPoint < mid)
+  if (target < mid)
     h = 240;
-  lv_obj_set_style_arc_color(_arcSetPoint, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+  lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 }
 
 // update panelRgb from stored values in callingTile
-void classSetPoint::updateSetPoint(int setPointValue)
+void classThermostat::updateTarget(int setPointValue)
 {
-  lv_arc_set_value(_arcSetPoint, setPointValue);
+  lv_arc_set_value(_arcTarget, setPointValue);
 }
 
-bool classSetPoint::isActive(void)
+bool classThermostat::isActive(void)
 {
   return lv_obj_is_valid(_ovlPanel);
 }
 
-void classSetPoint::close(void)
+void classThermostat::close(void)
 {
   lv_obj_del_delayed(_ovlPanel, 50);
 }
 
 // get reference of calling tile
-classTile *classSetPoint::getTile(void)
+classTile *classThermostat::getTile(void)
 {
   return _callingTile;
 }
 
-void classSetPoint::showDropDown(void)
+void classThermostat::showDropDown(void)
 {
   lv_obj_clear_flag(_dropDown, LV_OBJ_FLAG_HIDDEN);
   lv_dropdown_open(_dropDown);
 }
 
-void classSetPoint::closeDropDown(void)
+void classThermostat::closeDropDown(void)
 {
   char buf[64];
   lv_dropdown_get_selected_str(_dropDown, buf, sizeof(buf));
