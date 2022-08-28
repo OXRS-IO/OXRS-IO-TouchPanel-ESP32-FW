@@ -512,7 +512,8 @@ void classColorPicker::updatePanelRGB(lv_color32_t rgb)
   lv_color_t color = lv_color_hsv_to_rgb(_colorWheelHSV.h, _colorWheelHSV.s * 100, 100);
   lv_obj_set_style_bg_color(_panelCursor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_grad_color(_barBrightnessColor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_slider_set_value(_sliderBrightnessColor, _colorWheelHSV.v * 100, LV_ANIM_OFF);
+  lv_slider_set_value(_sliderBrightnessColor, (int)(_colorWheelHSV.v * 100.0), LV_ANIM_OFF);
+  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", (int)(_colorWheelHSV.v * 100.0));
 }
 
 // switch panel between color / Temperature 
