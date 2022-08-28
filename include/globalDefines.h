@@ -69,3 +69,6 @@ typedef union
 // colorPicker modes
 #define CP_MODE_COLOR 0x01
 #define CP_MODE_TEMP 0x02
+
+// pseudo icon images (NO image, special handling)
+#define WP_PSEUDO_THERMOSTAT LV_IMG_CF_USER_ENCODED_0

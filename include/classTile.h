@@ -22,6 +22,9 @@ protected:
   lv_obj_t *_dropDownLabel = NULL;
   lv_obj_t *_imgBg = NULL;
   lv_obj_t *_roller = NULL;
+  lv_obj_t *_arcTarget = NULL;
+  lv_obj_t *_labelArcSubValue = NULL;
+  lv_obj_t *_labelArcValue = NULL;
 
   int _screenIdx = 0;
   int _tileIdx = 0;

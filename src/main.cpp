@@ -86,6 +86,13 @@ extern "C" const lv_img_dsc_t ios_left_30;
 extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_slider_60;
 
+// pseudo icons
+const lv_img_dsc_t wp_pseudo_thermostat = 
+{
+  WP_PSEUDO_THERMOSTAT, 0, 0, 0, 0, 0, NULL
+};
+
+// image pointer for further reference
 const void *imgOxrsSplash = &oxrs_splash_png;
 const void *imgOxrsSettings = &oxrs_settings_png;
 
@@ -116,6 +123,7 @@ const void *imgCeilingFan = &ios_ceiling_fan_60;
 const void *imgLeft = &ios_left_30;
 const void *imgRight = &ios_right_30;
 const void *imgSlider = &ios_slider_60;
+const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 
 int _actBackLight;
 int _retainedBackLight;
@@ -250,10 +258,11 @@ void initIconVault(void)
   iconVault.add({string("_pause"), imgPause});
   iconVault.add({string("_thermometer"), imgThermo});
   iconVault.add({string("_slider"), imgSlider});
+  iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
-
 // initialise the tile_style_LUT
-void initStyleLut(void)
+void
+initStyleLut(void)
 {
   styleLut[TS_NONE] = {TS_NONE, ""};
   styleLut[TS_BUTTON] = {TS_BUTTON, "button"};
