@@ -20,14 +20,11 @@ protected:
   lv_obj_t *_ovlPanel = NULL;
   lv_obj_t *_bar = NULL;
   lv_obj_t *_txtIconText = NULL;
-  lv_obj_t *_dropDown = NULL;
-  lv_obj_t *_dropDownList = NULL;
-  lv_obj_t *_dropDownLabel = NULL;
   lv_obj_t *_imgBg = NULL;
   lv_obj_t *_roller = NULL;
   lv_obj_t *_arcTarget = NULL;
-  lv_obj_t *_labelArcSubValue = NULL;
   lv_obj_t *_labelArcValue = NULL;
+  lv_obj_t *_labelArcSubValue = NULL;
 
   int _screenIdx = 0;
   int _tileIdx = 0;
@@ -46,8 +43,8 @@ protected:
   const void *_imgConfig = NULL;
   const void *_imgOnConfig = NULL;
   uint16_t _dropDownIndex = 0;
-  int _selectorIndex = 0;
-  string _selectorList = "";
+  string _dropDownList;
+  string _dropDownLabel;
   lv_color32_t _colorPickerRGB32 = {255, 255, 255};
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
@@ -110,20 +107,20 @@ public :
   void showOvlBar(int level);
   void addUpDownControl(lv_event_cb_t upDownEventHandler, const void* imgUpperButton, const void* imgLowerButton);
  
-  void setDropDownList(const char *list);
+  void setDropDownList(string list);
   void setDropDownIndex(uint16_t index);
   void setDropDownLabel(const char *label);
-  void saveDropDownList(const char *list);
+  void saveDropDownList(string list);
   void saveDropDownIndex(uint16_t index);
   const char *getDropDownList(void);
   uint16_t getDropDownIndex(void);
   const char *getDropDownLabel(void);
   void setDropDownIndicator(void);
 
-  void setSelectorList(const char* list);
+ // void setSelectorList(const char* list);
   void showSelector(int index);
-  void setSelectorIndex(int index);
-  int getSelectorIndex(void);
+ // void setSelectorIndex(int index);
+ // int getSelectorIndex(void);
   bool getSelectorValid(void);
 
   void setColorPickerRGB(int r, int g, int b);

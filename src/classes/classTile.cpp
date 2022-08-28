@@ -135,15 +135,6 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_label_set_recolor(_txtIconText, true);
   lv_obj_add_flag(_txtIconText, LV_OBJ_FLAG_HIDDEN);
  
-  // placeholders for drop down
-  _dropDownList = lv_label_create(_btn);
-  lv_obj_add_flag(_dropDownList, LV_OBJ_FLAG_HIDDEN);
-  lv_label_set_text(_dropDownList, "");
-
-  _dropDownLabel = lv_label_create(_btn);
-  lv_obj_add_flag(_dropDownLabel, LV_OBJ_FLAG_HIDDEN);
-  lv_label_set_text(_dropDownLabel, "");
-
   // set button and label size from grid
   int width = *lv_obj_get_style_grid_column_dsc_array(parent, 0) - 10;
   int height = *lv_obj_get_style_grid_row_dsc_array(parent, 0) - 10;
@@ -160,14 +151,13 @@ void classTile::_button(lv_obj_t *parent, const void *img)
 
 void classTile::_setIconTextFromIndex()
 {
-  const char *text = lv_label_get_text(_dropDownList);
-  if (strlen(text) > 0)
+if (_dropDownList.length() > 0)
   {
     int index = _dropDownIndex;
     if (index > 0)
       index--;
     lv_obj_t *dd = lv_dropdown_create(_btn);
-    lv_dropdown_set_options(dd, text);
+    lv_dropdown_set_options(dd, _dropDownList.c_str());
     lv_dropdown_set_selected(dd, index);
     char buf[64];
     lv_dropdown_get_selected_str(dd, buf, sizeof(buf));
@@ -667,9 +657,9 @@ void classTile::showOvlBar(int level)
 // additional methods for drop down (interface)
 
 // store drop down list
-void classTile::setDropDownList(const char *list)
+void classTile::setDropDownList(string list)
 {
-  lv_label_set_text(_dropDownList, list);
+  _dropDownList = list;
   _setIconTextFromIndex();
 }
 
@@ -681,9 +671,9 @@ void classTile::setDropDownIndex(uint16_t index)
 }
 
 // store drop down list for mode select with no further action
-void classTile::saveDropDownList(const char *list)
+void classTile::saveDropDownList(string list)
 {
-  lv_label_set_text(_dropDownList, list);
+  _dropDownList = list;
 }
 
 // store selected item index with no further action
@@ -695,13 +685,13 @@ void classTile::saveDropDownIndex(uint16_t index)
 // store drop down label
 void classTile::setDropDownLabel(const char *label)
 {
-  lv_label_set_text(_dropDownLabel, label);
+  _dropDownLabel = label;
 }
 
 // get the stored list
 const char *classTile::getDropDownList(void)
 {
-  return lv_label_get_text(_dropDownList);
+  return _dropDownList.c_str();
 }
 
 // get the stored index
@@ -713,10 +703,7 @@ uint16_t classTile::getDropDownIndex(void)
 // get the stored label (NULL if "")
 const char *classTile::getDropDownLabel(void)
 {
-  if (strlen(lv_label_get_text(_dropDownLabel)) == 0)
-    return NULL;
-  else
-    return lv_label_get_text(_dropDownLabel);
+  return (_dropDownLabel.length() == 0) ? NULL : _dropDownLabel.c_str();
 }
 
 void classTile::setDropDownIndicator(void)
@@ -734,7 +721,7 @@ void classTile::showSelector(int index)
 
   _roller = lv_roller_create(_btn);
   lv_obj_set_style_border_width(_roller, 0, LV_PART_MAIN);
-  lv_roller_set_options(_roller, _selectorList.c_str(), LV_ROLLER_MODE_NORMAL);
+  lv_roller_set_options(_roller, _dropDownList.c_str(), LV_ROLLER_MODE_NORMAL);
   lv_roller_set_visible_row_count(_roller, 3);
 
   lv_obj_set_size(_roller, 70, 70);
@@ -749,33 +736,15 @@ void classTile::showSelector(int index)
 
   if (--index < 0) index = 0;
   lv_roller_set_selected(_roller, index, LV_ANIM_OFF);
-  _selectorIndex = lv_roller_get_selected(_roller) + 1;
+  setDropDownIndex(lv_roller_get_selected(_roller) + 1);
 
   lv_obj_del_delayed(_roller, 2000);
-}
-
-// set the selector list
-void classTile::setSelectorList(const char *list)
-{
-  _selectorList = string(list);
-}
-
-// set index to selector list
-void classTile::setSelectorIndex(int index)
-{
-  _selectorIndex = index;
-}
-
-// set index to selector list
-int classTile::getSelectorIndex(void)
-{
-  return _selectorIndex;
 }
 
 // check if valid list exist
 bool classTile::getSelectorValid(void)
 {
-  return (_selectorList.size() > 0);
+  return (_dropDownList.size() > 0);
 }
 
 // additional methods for color picker (interface)
@@ -841,7 +810,6 @@ void classTile::setThermostatTarget(int target)
     // red(360) or blue(240)
     int h = (target < mid) ? 240 : 360;
     lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-//    lv_obj_set_style_bg_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_KNOB | LV_STATE_DEFAULT);
   }
 }
 

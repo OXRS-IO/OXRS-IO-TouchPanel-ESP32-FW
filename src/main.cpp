@@ -775,10 +775,10 @@ static void prevNextEventHandler(lv_event_t * e)
     // has selector
     if (tPtr->getSelectorValid())
     {
-      int index = tPtr->getSelectorIndex();
+      int index = tPtr->getDropDownIndex();
       lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index-- : index++;
       tPtr->showSelector(index);
-      publishSelectorEvent(tPtr, tPtr->getSelectorIndex());
+      publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
     }
     // up / down events only
     else
@@ -1803,7 +1803,7 @@ void jsonTileCommand(JsonVariant json)
   {
     string dropDownList = "";
     jsonArrayToString(json["dropDownList"].as<JsonArray>(), &dropDownList);
-    tile->setDropDownList(dropDownList.c_str());
+    tile->setDropDownList(dropDownList);
   }
 
   if (json.containsKey("dropDownSelect"))
@@ -1820,12 +1820,12 @@ void jsonTileCommand(JsonVariant json)
   {
     string selectorList = "";
     jsonArrayToString(json["selectorList"].as<JsonArray>(), &selectorList);
-    tile->setSelectorList(selectorList.c_str());
+    tile->setDropDownList(selectorList);
   }
 
   if (json.containsKey("selectorSelect"))
   {
-    tile->setSelectorIndex(json["selectorSelect"].as<uint>());
+    tile->setDropDownIndex(json["selectorSelect"].as<uint>());
   }
 
   if (json.containsKey("colorPicker"))
@@ -1876,7 +1876,7 @@ void jsonTileCommand(JsonVariant json)
     {
       string modeList = "";
       jsonArrayToString(jsonThermostat["modeList"].as<JsonArray>(), &modeList);
-      tile->saveDropDownList(modeList.c_str());
+      tile->saveDropDownList(modeList);
     }
 
     if (jsonThermostat.containsKey("mode"))
