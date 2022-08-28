@@ -2,6 +2,8 @@
 #include <lvgl.h>
 #include <globalDefines.h>
 
+#define ARC_STEP 5
+
 class classTile
 {
 protected:
@@ -12,6 +14,7 @@ protected:
   lv_obj_t *_linkedLabel = NULL;
   lv_obj_t *_unitLabel = NULL;
   lv_obj_t *_valueLabel = NULL;
+  lv_obj_t *_subValueLabel = NULL;
   lv_obj_t *_btnUp = NULL;
   lv_obj_t *_btnDown = NULL;
   lv_obj_t *_ovlPanel = NULL;
@@ -76,7 +79,7 @@ public :
   void setColor(lv_color_t color);
   void setColor(int r, int g, int b);
   void setIcon(const void *imgIcon);
-  void setValue(const char *value, const char *units);
+  void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
   void setBgImage(lv_img_dsc_t *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setLink(int linkedScreen);

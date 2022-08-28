@@ -5,8 +5,6 @@ extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 extern "C" const lv_font_t number_OR_50;
 
-#define ARC_STEP 5
-
 // build the panels with all widgets
 void classThermostat::_createThermostat(void)
 {
@@ -86,6 +84,7 @@ void classThermostat::_createThermostat(void)
   _labelCurrent = lv_label_create(_panel);
   lv_obj_set_size(_labelCurrent, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelCurrent, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_text_font(_labelCurrent, &lv_font_montserrat_20, 0);
   lv_label_set_text(_labelCurrent, "");
   lv_obj_align(_labelCurrent, LV_ALIGN_CENTER, 00, 60);
 
@@ -197,9 +196,7 @@ void classThermostat::updateAll(void)
   int mid = range + _targetMin;
   int s = 50 + (abs(mid -target) * 50) / range;
   // red(360) or blue(240)
-  int h = 360;
-  if (target < mid)
-    h = 240;
+  int h = (target < mid) ? 240 : 360;
   lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 }
 

@@ -15,59 +15,59 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   _imgBg = lv_img_create(_btn);
 
   // check the icon image for special handling requirement
-  const lv_img_dsc_t *tImg = (lv_img_dsc_t *)img;
-  if (tImg->header.cf != WP_PSEUDO_THERMOSTAT)
+  if (img)
   {
-    _img = img;
-    _imgOn = img;
-    _imgConfig = img;
-    _imgOnConfig = img;
+    const lv_img_dsc_t *tImg = (lv_img_dsc_t *)img;
+    if (tImg->header.cf != WP_PSEUDO_THERMOSTAT)
+    {
+      _img = img;
+      _imgOn = img;
+      _imgConfig = img;
+      _imgOnConfig = img;
+    }
+    // create an arc widget as dynamic thumbnail icon
+    else
+    {
+      _arcTarget = lv_arc_create(_btn);
+      lv_obj_set_size(_arcTarget, 110, 110);
+      lv_obj_set_align(_arcTarget, LV_ALIGN_TOP_LEFT);
+      lv_arc_set_bg_angles(_arcTarget, 150, 30);
+      lv_arc_set_range(_arcTarget, 100, 300);
+      lv_arc_set_value(_arcTarget, 0);
+
+      lv_obj_set_style_pad_all(_arcTarget, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_MAIN | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_width(_arcTarget, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+      lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_width(_arcTarget, 4, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+      lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_border_width(_arcTarget, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_border_side(_arcTarget, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_pad_all(_arcTarget, 4, LV_PART_KNOB | LV_STATE_DEFAULT);
+
+      // label for target
+      _labelArcValue = lv_label_create(_arcTarget);
+      lv_obj_set_style_text_font(_labelArcValue, &lv_font_montserrat_20, 0);
+      lv_label_set_text(_labelArcValue, "");
+      lv_obj_align(_labelArcValue, LV_ALIGN_CENTER, 0, -5);
+      lv_obj_set_style_text_color(_labelArcValue, lv_color_hex(0x000000), LV_STATE_CHECKED);
+
+      // subTabel for current
+      _labelArcSubValue = lv_label_create(_arcTarget);
+      lv_label_set_text(_labelArcSubValue, "");
+      lv_obj_align(_labelArcSubValue, LV_ALIGN_CENTER, 0, 20);
+      lv_obj_set_style_text_color(_labelArcSubValue, lv_color_hex(0x808080), LV_STATE_DEFAULT);
+
+      lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_CLICKABLE);
+    }
   }
-  // create an arc widget as dynamic thumbnail icon
-  else
-  {
-    _arcTarget = lv_arc_create(_btn);
-    lv_obj_set_size(_arcTarget, 110, 110);
-    lv_obj_set_align(_arcTarget, LV_ALIGN_TOP_LEFT);
-    lv_arc_set_bg_angles(_arcTarget, 150, 30);
-    lv_arc_set_range(_arcTarget, 0, 100);
-    lv_arc_set_value(_arcTarget, 50);
-
-    lv_obj_set_style_pad_all(_arcTarget, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(_arcTarget, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(_arcTarget, 4, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(_arcTarget, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(_arcTarget, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(_arcTarget, 4, LV_PART_KNOB | LV_STATE_DEFAULT);
-
-    // label for target
-    _labelArcValue = lv_label_create(_arcTarget);
-  //  lv_obj_set_size(_labelSubNum, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_style_text_font(_labelArcValue, &lv_font_montserrat_20, 0);
-    lv_label_set_text(_labelArcValue, "23.5 °C");
-    lv_obj_align(_labelArcValue, LV_ALIGN_CENTER, 0, -10);
-    lv_obj_set_style_text_color(_labelArcValue, lv_color_hex(0x000000), LV_STATE_CHECKED);
-
-    // subTabel for current
-    _labelArcSubValue = lv_label_create(_arcTarget);
-  //  lv_obj_set_size(_labelSubNum2, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_label_set_text(_labelArcSubValue, "21.7 °C");
-    lv_obj_align(_labelArcSubValue, LV_ALIGN_CENTER, 0, 15);
-    lv_obj_set_style_text_color(_labelArcSubValue, lv_color_hex(0x808080), LV_STATE_DEFAULT);
-
-    lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_CLICKABLE);
-  }
-
   lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, img, NULL, NULL);
   lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
@@ -107,15 +107,24 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   // additional Label (placeholder)
   _valueLabel = lv_label_create(_btn);
   lv_obj_set_size(_valueLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_font(_valueLabel, &number_OR_50, 0);
   lv_label_set_text(_valueLabel, "");
-  lv_obj_align(_valueLabel, LV_ALIGN_TOP_LEFT, 8, 15);
+  lv_obj_align(_valueLabel, LV_ALIGN_TOP_LEFT, 8, 8);
   lv_obj_set_style_text_color(_valueLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
 
   // additional Label (unit display)
   _unitLabel = lv_label_create(_btn);
   lv_obj_set_size(_unitLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_font(_unitLabel, &lv_font_montserrat_20, 0);
   lv_label_set_text(_unitLabel, "");
   lv_obj_set_style_text_color(_unitLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+
+  // additional subLabel to value label
+  _subValueLabel = lv_label_create(_btn);
+  lv_obj_set_size(_subValueLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_font(_subValueLabel, &lv_font_montserrat_20, 0);
+  lv_label_set_text(_subValueLabel, "");
+  lv_obj_set_style_text_color(_subValueLabel, lv_color_hex(0x808080), LV_STATE_DEFAULT);
 
   // label for text to replace icon  (hide by default)
   _txtIconText = lv_label_create(_btn);
@@ -299,13 +308,24 @@ void classTile::setColor(int r, int g, int b)
   }
 }
 
-void classTile::setValue(const char *value, const char *units)
+void classTile::setNumber(const char *value, const char *units, const char *subValue, const char *subUnits)
 {
-  lv_obj_set_style_text_font(_valueLabel, &number_OR_50, 0);
-  lv_label_set_text(_valueLabel, value);
-  lv_obj_set_style_text_font(_unitLabel, &lv_font_montserrat_20, 0);
-  lv_label_set_text(_unitLabel, units);
-  lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+  // update number display
+  if (!_arcTarget)
+  {
+    lv_label_set_text(_valueLabel, value);
+    lv_label_set_text(_unitLabel, units);
+    lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+
+    lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
+    lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
+  }
+  // update thermostat thumbnail
+  else
+  {
+    lv_label_set_text_fmt(_labelArcValue, "%s %s", !value ? "" : value, !units ? "" : units);
+    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
+  }
 }
 
 // update the _imBg object and hide it, will be shown with alignBgImage()
@@ -484,6 +504,15 @@ void classTile::setLevelStartStop(int start, int stop)
   _levelLargeStep = ((stop - start) + 10) / 20;
   if (_levelLargeStep == 0) _levelLargeStep++;
   _level = _levelStart;
+
+  if (_arcTarget)
+  {
+    if ((_levelStart != 0) || (_levelStop != 100))
+    {
+      lv_arc_set_range(_arcTarget, _levelStart / ARC_STEP, _levelStop / ARC_STEP);
+      lv_arc_set_value(_arcTarget, _levelStart / ARC_STEP);
+    }
+  }
 }
 
 void classTile::setLevel(int level, bool force)
@@ -801,6 +830,19 @@ int classTile::getColorPickerMode(void)
 void classTile::setThermostatTarget(int target)
 {
   _thermostatTarget = target;
+  if(_arcTarget)
+  {
+    int target = _thermostatTarget / ARC_STEP;
+    lv_arc_set_value(_arcTarget, target);
+    // calc hsv for arc coloring
+    int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
+    int mid = range + lv_arc_get_min_value(_arcTarget);
+    int s = 50 + (abs(mid - target) * 50) / range;
+    // red(360) or blue(240)
+    int h = (target < mid) ? 240 : 360;
+    lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+//    lv_obj_set_style_bg_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_KNOB | LV_STATE_DEFAULT);
+  }
 }
 
 void classTile::setThermostatCurrent(int current)
@@ -810,10 +852,7 @@ void classTile::setThermostatCurrent(int current)
 
 void classTile::setThermostatUnits(const char *units)
 {
-  if (!units)
-    _units = "";
-  else
-    _units = units;
+  _units = !units ? "" : units;
 }
 
 int classTile::getThermostatTarget(void)

@@ -1236,7 +1236,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
   }
 
   // set levelrange
-  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN) || (style == TS_THERMOSTAT))
+//  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN) || (style == TS_THERMOSTAT))
   {
     if ((levelStart != 0) || (levelStop != 0))
     {
@@ -1770,9 +1770,10 @@ void jsonTileCommand(JsonVariant json)
     tile->setIcon(iconVault.getIcon(json["icon"]));
   }
 
-  if (json.containsKey("value") || json.containsKey("units"))
+  if (json.containsKey("number"))
   {
-    tile->setValue(json["value"], json["units"]);
+    JsonVariant jsonNumber = json["number"];
+    tile->setNumber(jsonNumber["value"], jsonNumber["units"], jsonNumber["subValue"], jsonNumber["subUnits"]);
   }
 
   if (json.containsKey("text"))
