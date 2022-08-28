@@ -11,7 +11,7 @@ protected:
   lv_obj_t *_subLabel = NULL;
   lv_obj_t *_linkedLabel = NULL;
   lv_obj_t *_unitLabel = NULL;
-  lv_obj_t *_numLabel = NULL;
+  lv_obj_t *_valueLabel = NULL;
   lv_obj_t *_btnUp = NULL;
   lv_obj_t *_btnDown = NULL;
   lv_obj_t *_ovlPanel = NULL;
@@ -76,7 +76,7 @@ public :
   void setColor(lv_color_t color);
   void setColor(int r, int g, int b);
   void setIcon(const void *imgIcon);
-  void setNumber(const char *number, const char *units);
+  void setValue(const char *value, const char *units);
   void setBgImage(lv_img_dsc_t *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setLink(int linkedScreen);
