@@ -1783,19 +1783,19 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("backgroundImage"))
   {
-    JsonVariant bgImage = json["backgroundImage"];
+    JsonVariant jsonBgImage = json["backgroundImage"];
 
-    if (bgImage.size() == 0)
+    if (jsonBgImage.size() == 0)
     {
       tile->setBgImage(NULL);
     }
     else
     {
-      if (bgImage.containsKey("imageBase64"))
+      if (jsonBgImage.containsKey("imageBase64"))
       {
-        tile->setBgImage(decodeBase64ToImg(bgImage["imageBase64"]));
+        tile->setBgImage(decodeBase64ToImg(jsonBgImage["imageBase64"]));
       }
-      tile->alignBgImage(bgImage["zoom"], bgImage["offset"][0], bgImage["offset"][1], bgImage["angle"]);
+      tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
     }
   }
 
@@ -1830,28 +1830,30 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("colorPicker"))
   {
-    if (json["colorPicker"].containsKey("colorRgb"))
+    JsonVariant jsonColorPicker = json["colorPicker"];
+
+    if (jsonColorPicker.containsKey("colorRgb"))
     {
-      r = (uint8_t)json["colorPicker"]["colorRgb"]["r"].as<int>();
-      g = (uint8_t)json["colorPicker"]["colorRgb"]["g"].as<int>();
-      b = (uint8_t)json["colorPicker"]["colorRgb"]["b"].as<int>();
+      r = (uint8_t)jsonColorPicker["colorRgb"]["r"].as<int>();
+      g = (uint8_t)jsonColorPicker["colorRgb"]["g"].as<int>();
+      b = (uint8_t)jsonColorPicker["colorRgb"]["b"].as<int>();
 
       tile->setColorPickerRGB(r, g, b);
     }
 
-    if (json["colorPicker"].containsKey("colorKelvin"))
+    if (jsonColorPicker.containsKey("colorKelvin"))
     {
-      tile->setColorPickerKelvin(json["colorPicker"]["colorKelvin"]);
+      tile->setColorPickerKelvin(jsonColorPicker["colorKelvin"]);
     }
 
-    if (json["colorPicker"].containsKey("brightness"))
+    if (jsonColorPicker.containsKey("brightness"))
     {
-      tile->setColorPickerBrightnessWhite(json["colorPicker"]["brightness"]);
+      tile->setColorPickerBrightnessWhite(jsonColorPicker["brightness"]);
     }
 
-    if (json["colorPicker"].containsKey("mode"))
+    if (jsonColorPicker.containsKey("mode"))
     {
-      const char *mode = json["colorPicker"]["mode"];
+      const char *mode = jsonColorPicker["mode"];
       if (strcmp(mode, "colorKelvin") == 0)
       {
         tile->setColorPickerMode(CP_MODE_TEMP);
