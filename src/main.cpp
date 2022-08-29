@@ -1879,6 +1879,7 @@ void jsonTileCommand(JsonVariant json)
       string modeList = "";
       jsonArrayToString(jsonThermostat["modeList"].as<JsonArray>(), &modeList);
       tile->saveDropDownList(modeList);
+      tile->setDropDownLabel("Select mode ...");
     }
 
     if (jsonThermostat.containsKey("mode"))

@@ -32,13 +32,14 @@ void classTile::_button(lv_obj_t *parent, const void *img)
       lv_obj_set_size(_arcTarget, 110, 110);
       lv_obj_set_align(_arcTarget, LV_ALIGN_TOP_LEFT);
       lv_arc_set_bg_angles(_arcTarget, 150, 30);
-      lv_arc_set_range(_arcTarget, 100, 300);
+      lv_arc_set_range(_arcTarget, 100 / ARC_STEP, 300 / ARC_STEP);
       lv_arc_set_value(_arcTarget, 0);
 
       lv_obj_set_style_pad_all(_arcTarget, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_MAIN | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_width(_arcTarget, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+      lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0x707070), LV_PART_MAIN | LV_STATE_CHECKED);
 
       lv_obj_set_style_arc_color(_arcTarget, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -51,13 +52,15 @@ void classTile::_button(lv_obj_t *parent, const void *img)
       lv_obj_set_style_border_width(_arcTarget, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_border_side(_arcTarget, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_pad_all(_arcTarget, 4, LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0x707070), LV_PART_KNOB | LV_STATE_CHECKED);
+      lv_obj_set_style_bg_color(_arcTarget, colorOn, LV_PART_KNOB | LV_STATE_CHECKED);
 
       // label for target
       _labelArcValue = lv_label_create(_arcTarget);
       lv_obj_set_style_text_font(_labelArcValue, &lv_font_montserrat_20, 0);
       lv_label_set_text(_labelArcValue, "");
       lv_obj_align(_labelArcValue, LV_ALIGN_CENTER, 0, -5);
-      lv_obj_set_style_text_color(_labelArcValue, lv_color_hex(0x000000), LV_STATE_CHECKED);
+      lv_obj_set_style_text_color(_labelArcValue, colorOn, LV_STATE_CHECKED);
 
       // subTabel for current
       _labelArcSubValue = lv_label_create(_arcTarget);
@@ -110,14 +113,14 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_obj_set_style_text_font(_valueLabel, &number_OR_50, 0);
   lv_label_set_text(_valueLabel, "");
   lv_obj_align(_valueLabel, LV_ALIGN_TOP_LEFT, 8, 8);
-  lv_obj_set_style_text_color(_valueLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(_valueLabel, colorOn, LV_STATE_CHECKED);
 
   // additional Label (unit display)
   _unitLabel = lv_label_create(_btn);
   lv_obj_set_size(_unitLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_font(_unitLabel, &lv_font_montserrat_20, 0);
   lv_label_set_text(_unitLabel, "");
-  lv_obj_set_style_text_color(_unitLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(_unitLabel, colorOn, LV_STATE_CHECKED);
 
   // additional subLabel to value label
   _subValueLabel = lv_label_create(_btn);
@@ -173,6 +176,11 @@ void classTile::_reColorAll(lv_color_t color, lv_style_selector_t selector)
   lv_obj_set_style_text_color(_valueLabel, color, selector);
   lv_obj_set_style_text_color(_unitLabel, color, selector);
   lv_obj_set_style_text_color(_txtIconText, color, selector);
+  if (_arcTarget)
+  {
+    lv_obj_set_style_text_color(_labelArcValue, color, selector);
+    lv_obj_set_style_bg_color(_arcTarget, color, LV_PART_KNOB | selector);
+  }
 }
 
 // free ps_ram heap used by old image if exist
@@ -248,10 +256,16 @@ void classTile::setState(bool state)
   _state = state;
   state == false ? lv_obj_clear_state(_btn, LV_STATE_CHECKED) : lv_obj_add_state(_btn, LV_STATE_CHECKED);
   state == false ? lv_obj_clear_state(_txtIconText, LV_STATE_CHECKED) : lv_obj_add_state(_txtIconText, LV_STATE_CHECKED);
+  state == false ? lv_obj_clear_state(_valueLabel, LV_STATE_CHECKED) : lv_obj_add_state(_valueLabel, LV_STATE_CHECKED);
+  state == false ? lv_obj_clear_state(_unitLabel, LV_STATE_CHECKED) : lv_obj_add_state(_unitLabel, LV_STATE_CHECKED);
+  if (_labelArcValue)
+    state == false ? lv_obj_clear_state(_labelArcValue, LV_STATE_CHECKED) : lv_obj_add_state(_labelArcValue, LV_STATE_CHECKED);
   if (_btnUp)
     state == false ? lv_obj_clear_state(_btnUp, LV_STATE_CHECKED) : lv_obj_add_state(_btnUp, LV_STATE_CHECKED);
   if (_btnDown)
     state == false ? lv_obj_clear_state(_btnDown, LV_STATE_CHECKED) : lv_obj_add_state(_btnDown, LV_STATE_CHECKED);
+  if (_arcTarget)
+    state == false ? lv_obj_clear_state(_arcTarget, LV_STATE_CHECKED) : lv_obj_add_state(_arcTarget, LV_STATE_CHECKED);
 }
 
 lv_color_t classTile::getColor()
@@ -737,7 +751,7 @@ void classTile::showSelector(int index)
   if (--index < 0) index = 0;
   lv_roller_set_selected(_roller, index, LV_ANIM_OFF);
   _dropDownIndex = lv_roller_get_selected(_roller) + 1;
-  
+
   lv_obj_del_delayed(_roller, 2000);
 }
 
