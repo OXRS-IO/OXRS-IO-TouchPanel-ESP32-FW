@@ -57,6 +57,7 @@ protected:
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
   void _setIconTextFromIndex(void);
   void _freeImageHeap();
+  void _hideIcon(bool hide);
 
 public :
   tileId_t tileId;

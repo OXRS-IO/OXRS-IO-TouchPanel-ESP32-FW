@@ -183,6 +183,25 @@ void classTile::_reColorAll(lv_color_t color, lv_style_selector_t selector)
   }
 }
 
+// hide/unhide icon if to be replaced by text or number
+void classTile::_hideIcon(bool hide)
+{
+  if (hide)
+  {
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, NULL, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, NULL, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, NULL, NULL);
+  }
+  else
+  {
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+  }
+}
+
 // free ps_ram heap used by old image if exist
 void classTile::_freeImageHeap(void)
 {
@@ -317,8 +336,10 @@ void classTile::setNumber(const char *value, const char *units, const char *subV
   // update number display
   if (!_arcTarget)
   {
-    lv_label_set_text(_valueLabel, value);
-    lv_label_set_text(_unitLabel, units);
+    _hideIcon(value || units || subValue || subUnits);
+
+    lv_label_set_text(_valueLabel, !value ? "" : value);
+    lv_label_set_text(_unitLabel, !units ? "" : units);
     lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 
     lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
@@ -466,17 +487,12 @@ void classTile::setIconText(const char *iconText)
 {
   if (strlen(iconText) == 0)
   {
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+    _hideIcon(false);
     lv_obj_add_flag(_txtIconText, LV_OBJ_FLAG_HIDDEN);
   }
   else
   {
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, NULL, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, NULL, NULL);
-
+    _hideIcon(true);
     lv_label_set_text(_txtIconText, iconText);
     lv_obj_clear_flag(_txtIconText, LV_OBJ_FLAG_HIDDEN);
   }
