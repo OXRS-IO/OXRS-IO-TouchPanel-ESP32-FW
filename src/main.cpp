@@ -1820,12 +1820,12 @@ void jsonTileCommand(JsonVariant json)
   {
     string selectorList = "";
     jsonArrayToString(json["selectorList"].as<JsonArray>(), &selectorList);
-    tile->setDropDownList(selectorList);
+    tile->saveDropDownList(selectorList);
   }
 
   if (json.containsKey("selectorSelect"))
   {
-    tile->setDropDownIndex(json["selectorSelect"].as<uint>());
+    tile->saveDropDownIndex(json["selectorSelect"].as<uint>());
   }
 
   if (json.containsKey("colorPicker"))

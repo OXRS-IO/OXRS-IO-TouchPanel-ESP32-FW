@@ -736,8 +736,8 @@ void classTile::showSelector(int index)
 
   if (--index < 0) index = 0;
   lv_roller_set_selected(_roller, index, LV_ANIM_OFF);
-  setDropDownIndex(lv_roller_get_selected(_roller) + 1);
-
+  _dropDownIndex = lv_roller_get_selected(_roller) + 1;
+  
   lv_obj_del_delayed(_roller, 2000);
 }
 
