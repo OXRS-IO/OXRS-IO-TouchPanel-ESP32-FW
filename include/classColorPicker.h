@@ -36,10 +36,12 @@ private:
   lv_obj_t *_panelCursor = NULL;
   lv_obj_t *_imgCw = NULL;
   lv_obj_t *_panelCwFrame = NULL;
+  lv_obj_t *_btn = NULL;
+  lv_obj_t *_imgBtn = NULL;
 
   void _createColorPicker(lv_img_dsc_t *imgCw);
   static void _exitButtonEventHandler(lv_event_t *e);
-
+  const void *_imgOff, *_imgOn;
 
 public:
   classColorPicker(void){};
@@ -51,4 +53,5 @@ public:
   void updateCw(lv_point_t point, int mode);
   void updatePanelRGB(lv_color32_t rgb);
   void switchMode(int cpMode);
+  void setButtonState(bool state);
 };

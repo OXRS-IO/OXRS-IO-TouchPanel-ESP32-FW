@@ -926,10 +926,16 @@ static void colorPickerEventHandler(lv_event_t *e)
   }
   if (code == LV_EVENT_SHORT_CLICKED)
   {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     lv_obj_t *obj = lv_event_get_target(e);
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_3))
     {
       colorPicker.switchMode(lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_4) ? CP_MODE_TEMP : CP_MODE_COLOR);
+    }
+    // must have been the button -> send tile event
+    else if (!lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1) && !lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_2))
+    {
+      publishTileEvent(tPtr, "single");
     }
   }
 }
@@ -977,10 +983,6 @@ static void tileEventHandler(lv_event_t * e)
 {
   static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
-  if(code == LV_EVENT_PRESSED)
-  {
-    tilePressStarted = lv_tick_get();
-  }
 
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
   {
@@ -1011,7 +1013,26 @@ static void tileEventHandler(lv_event_t * e)
       {
         keyPad = classKeyPad(tPtr, keyPadEventHandler);
       }
-      //  publish click event
+      // style colorpicker (3 different modes)
+      if (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
+      }
+      else if (tPtr->getStyle() == TS_COLOR_PICKER_RGB)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
+      }
+      else if (tPtr->getStyle() == TS_COLOR_PICKER_CCT)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
+      }
+      // button is style thermostat 
+      else if (tPtr->getStyle() == TS_THERMOSTAT)
+      {
+        thermostat = classThermostat(tPtr, thermostatEventHandler);
+      }
+
+      //  no special action -> publish click event
       else
       {
         publishTileEvent(tPtr, "single");
@@ -1020,40 +1041,8 @@ static void tileEventHandler(lv_event_t * e)
     // long press detected
     else
     {
-      if ((tPtr->getStyle() == TS_COLOR_PICKER_RGB) || (tPtr->getStyle() == TS_COLOR_PICKER_CCT) ||
-          (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT) || (tPtr->getStyle() == TS_THERMOSTAT))
-      {
-        lv_obj_clear_state(tPtr->btn, LV_STATE_PRESSED);
-      }
-      else
-      {
       // publish long press
       publishTileEvent(tPtr, "hold");
-      }
-    }
-  }
-
-  // if pressed time > 500 ms -> looong press  ->  show colorPicker
-  if ((code == LV_EVENT_RELEASED) && (lv_tick_elaps(tilePressStarted) > 500))
-  {
-    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
-    // button is style COLOR_PICKER -> show color picker overlay
-    if (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
-    }
-    else if (tPtr->getStyle() == TS_COLOR_PICKER_RGB)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
-    }
-    else if (tPtr->getStyle() == TS_COLOR_PICKER_CCT)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
-    }
-    // button is style thermostat -> show thermostat overlay
-    else if (tPtr->getStyle() == TS_THERMOSTAT)
-    {
-      thermostat = classThermostat(tPtr, thermostatEventHandler);
     }
   }
 }
@@ -1276,12 +1265,18 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.setKeyPadEnable(true);
   }
 
-  // set indicator for modal pop up screen
-  if ((style == TS_DROPDOWN) || (style == TS_REMOTE) || (style == TS_KEYPAD) || (style == TS_KEYPAD_BLOCKING) ||
-      (style == TS_COLOR_PICKER_RGB) || (style == TS_COLOR_PICKER_CCT) || (style == TS_COLOR_PICKER_RGB_CCT) || 
-      (style == TS_THERMOSTAT))
+  // set action indicator if required (depends on tile style)
+  switch (style)
   {
-    ref.setDropDownIndicator();
+    case TS_LINK: ref.setActionIndicator(WP_SYMBOL_CHEV_RIGHT); break;
+    case TS_DROPDOWN: ref.setActionIndicator(WP_SYMBOL_CHEV_DOWN); break;
+    case TS_COLOR_PICKER_CCT:
+    case TS_COLOR_PICKER_RGB:
+    case TS_COLOR_PICKER_RGB_CCT:
+    case TS_KEYPAD:
+    case TS_KEYPAD_BLOCKING:
+    case TS_REMOTE:
+    case TS_THERMOSTAT: ref.setActionIndicator(WP_SYMBOL_DOTS); break;
   }
 }
 
@@ -1866,6 +1861,24 @@ void jsonTileCommand(JsonVariant json)
       {
         wt32.print(F("[tp32]] invalid mode: "));
         wt32.println(mode);
+      }
+    }
+
+    if (jsonColorPicker.containsKey("buttonState"))
+    {
+      const char *state = jsonColorPicker["buttonState"];
+      if (strcmp(state, "on") == 0)
+      {
+        colorPicker.setButtonState(true);
+      }
+      else if (strcmp(state, "off") == 0)
+      {
+        colorPicker.setButtonState(false);
+      }
+      else
+      {
+        wt32.print(F("[tp32]] invalid state: "));
+        wt32.println(state);
       }
     }
   }

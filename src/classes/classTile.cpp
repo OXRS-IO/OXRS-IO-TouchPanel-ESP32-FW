@@ -4,6 +4,7 @@
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 extern "C" const lv_font_t number_OR_50;
+extern "C" const lv_font_t wp_symbol_font_15;
 
 // create the tile
 void classTile::_button(lv_obj_t *parent, const void *img)
@@ -96,6 +97,7 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   // additional Label (show sybol ">" if button liks to new screen)
   _linkedLabel = lv_label_create(_btn);
   lv_obj_set_size(_linkedLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_font(_linkedLabel, &wp_symbol_font_15, 0);
   lv_label_set_text(_linkedLabel, "");
   lv_obj_align(_linkedLabel, LV_ALIGN_TOP_RIGHT, -8, 5);
   lv_obj_set_style_text_color(_btn, lv_color_hex(0x000000), LV_STATE_CHECKED);
@@ -403,7 +405,6 @@ void classTile::alignBgImage(int zoom, int offsetX, int offsetY, int angle)
 void classTile::setLink(int linkScreen)
 {
   _linkedScreen = linkScreen;
-  lv_label_set_text(_linkedLabel, LV_SYMBOL_RIGHT);
 }
 
 int classTile::getLink(void)
@@ -736,9 +737,9 @@ const char *classTile::getDropDownLabel(void)
   return (_dropDownLabel.length() == 0) ? NULL : _dropDownLabel.c_str();
 }
 
-void classTile::setDropDownIndicator(void)
+void classTile::setActionIndicator(const char *symbol)
 {
-  lv_label_set_text(_linkedLabel, LV_SYMBOL_DOWN);
+  lv_label_set_text(_linkedLabel, symbol);
 }
 
 // methods for selector function

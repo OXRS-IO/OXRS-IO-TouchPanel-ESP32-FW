@@ -85,6 +85,7 @@ public :
   void setIconForStateOn(const void* imgStateOn);
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
+  void setActionIndicator(const char* symbol);
 
   int getLink(void);
   bool getKeyPadEnable(void);
@@ -116,7 +117,6 @@ public :
   const char *getDropDownList(void);
   uint16_t getDropDownIndex(void);
   const char *getDropDownLabel(void);
-  void setDropDownIndicator(void);
 
  // void setSelectorList(const char* list);
   void showSelector(int index);

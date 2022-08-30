@@ -72,3 +72,8 @@ typedef union
 
 // pseudo icon images (NO image, special handling)
 #define WP_PSEUDO_THERMOSTAT LV_IMG_CF_USER_ENCODED_0
+
+// symbols in wp_symbol_font_15
+#define WP_SYMBOL_DOTS "\xEF\x85\x82"
+#define WP_SYMBOL_CHEV_RIGHT "\xEF\x81\x94"
+#define WP_SYMBOL_CHEV_DOWN "\xEF\x81\xB8"

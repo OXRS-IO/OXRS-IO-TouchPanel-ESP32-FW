@@ -184,7 +184,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 
   // back button (closes pop up)
   _btnExit = lv_btn_create(_ovlPanel);
-  lv_obj_set_size(_btnExit, 80, 40);
+  lv_obj_set_size(_btnExit, 153, 40);
   lv_obj_align(_btnExit, LV_ALIGN_BOTTOM_LEFT, 5, -5);
   lv_obj_set_style_bg_color(_btnExit, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnExit, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -193,6 +193,23 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
   lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
+
+  // btn as "clone" from the calling tile
+  _btn = lv_btn_create(_ovlPanel);
+  lv_obj_set_size(_btn, 153, 40);
+  lv_obj_align(_btn, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
+  lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_ON, LV_PART_MAIN | LV_STATE_CHECKED);
+
+  _imgBtn = lv_img_create(_btn);
+  lv_obj_align(_imgBtn, LV_ALIGN_CENTER, 0, 0);
+  lv_img_set_zoom(_imgBtn, 140);
+  lv_obj_set_style_img_recolor(_imgBtn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_img_recolor_opa(_imgBtn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_img_recolor(_imgBtn, colorOn, LV_STATE_CHECKED);
+  lv_obj_set_style_img_recolor_opa(_imgBtn, 255, LV_STATE_CHECKED);
 
   // frame for color wheel
   _panelCwFrame = lv_obj_create(_panelRGB);
@@ -421,6 +438,11 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
   lv_label_set_text_fmt(_labelKelvinValue, "%d K", lv_slider_get_value(_sliderKelvin));
   lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", lv_slider_get_value(_sliderBrightnessWhite));
 
+  // update the button
+  _callingTile->getImages(_imgOff, _imgOn);
+  lv_img_set_src(_imgBtn, _imgOff);
+  setButtonState(_callingTile->getState());
+
   // add event handler
   lv_obj_add_event_cb(_panelCwFrame, ColorPickerCwEventHandler, LV_EVENT_ALL, _callingTile);
 
@@ -439,6 +461,8 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 
   lv_obj_add_flag(_sliderBrightnessColor, LV_OBJ_FLAG_USER_1);
   lv_obj_add_event_cb(_sliderBrightnessColor, colorPickerEventHandler, LV_EVENT_VALUE_CHANGED, _callingTile);
+
+  lv_obj_add_event_cb(_btn, colorPickerEventHandler, LV_EVENT_ALL, _callingTile);
 
   // enable selected mode(s)
   if (cpMode & CP_MODE_COLOR)
@@ -555,5 +579,17 @@ classTile *classColorPicker::getTile(void)
     return _callingTile;
 }
 
-
-
+void classColorPicker::setButtonState(bool state)
+{
+  if (state)
+  {
+    lv_obj_add_state(_btn, LV_STATE_CHECKED);
+    lv_obj_add_state(_imgBtn, LV_STATE_CHECKED);
+  }
+  else
+  {
+    lv_obj_clear_state(_btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(_imgBtn, LV_STATE_CHECKED);
+  }
+  _callingTile->setState(state);
+}
