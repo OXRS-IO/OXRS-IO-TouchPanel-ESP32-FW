@@ -412,16 +412,6 @@ int classTile::getLink(void)
   return _linkedScreen;
 }
 
-void classTile::setKeyPadEnable(bool enable)
-{
-  _keyPadEnable = enable;
-}
-
-bool classTile::getKeyPadEnable(void)
-{
-  return _keyPadEnable;
-}
-
 tileId_t classTile::getId(void)
 {
   return tileId;

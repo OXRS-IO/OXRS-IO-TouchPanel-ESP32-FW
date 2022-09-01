@@ -32,7 +32,6 @@ protected:
   string _styleStr;
   int _linkedScreen = 0;
   bool _state = false;
-  bool _keyPadEnable = false;
   int _levelStart = 0;
   int _levelStop = 100;
   int _levelLargeStep = 5;
@@ -81,14 +80,12 @@ public :
   void setBgImage(lv_img_dsc_t *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setLink(int linkedScreen);
-  void setKeyPadEnable(bool enable);
   void setIconForStateOn(const void* imgStateOn);
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
   void setActionIndicator(const char* symbol);
 
   int getLink(void);
-  bool getKeyPadEnable(void);
   tileId_t getId(void);
   int getScreenIdx(void);
   int getTileIdx(void);
