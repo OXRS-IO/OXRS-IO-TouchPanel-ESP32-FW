@@ -2,6 +2,8 @@
 #include <lvgl.h>
 #include <globalDefines.h>
 
+#define ARC_STEP 5
+
 class classTile
 {
 protected:
@@ -12,16 +14,17 @@ protected:
   lv_obj_t *_linkedLabel = NULL;
   lv_obj_t *_unitLabel = NULL;
   lv_obj_t *_valueLabel = NULL;
+  lv_obj_t *_subValueLabel = NULL;
   lv_obj_t *_btnUp = NULL;
   lv_obj_t *_btnDown = NULL;
   lv_obj_t *_ovlPanel = NULL;
   lv_obj_t *_bar = NULL;
   lv_obj_t *_txtIconText = NULL;
-  lv_obj_t *_dropDown = NULL;
-  lv_obj_t *_dropDownList = NULL;
-  lv_obj_t *_dropDownLabel = NULL;
   lv_obj_t *_imgBg = NULL;
   lv_obj_t *_roller = NULL;
+  lv_obj_t *_arcTarget = NULL;
+  lv_obj_t *_labelArcValue = NULL;
+  lv_obj_t *_labelArcSubValue = NULL;
 
   int _screenIdx = 0;
   int _tileIdx = 0;
@@ -40,17 +43,21 @@ protected:
   const void *_imgConfig = NULL;
   const void *_imgOnConfig = NULL;
   uint16_t _dropDownIndex = 0;
-  int _selectorIndex = 0;
-  string _selectorList = "";
+  string _dropDownList;
+  string _dropDownLabel;
   lv_color32_t _colorPickerRGB32 = {255, 255, 255};
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
   int _colorPickerMode = CP_MODE_COLOR;
+  int _thermostatTarget = 0;
+  int _thermostatCurrent = 0;
+  string _units = "";
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
   void _setIconTextFromIndex(void);
   void _freeImageHeap();
+  void _hideIcon(bool hide);
 
 public :
   tileId_t tileId;
@@ -70,7 +77,7 @@ public :
   void setColor(lv_color_t color);
   void setColor(int r, int g, int b);
   void setIcon(const void *imgIcon);
-  void setValue(const char *value, const char *units);
+  void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
   void setBgImage(lv_img_dsc_t *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setLink(int linkedScreen);
@@ -78,6 +85,7 @@ public :
   void setIconForStateOn(const void* imgStateOn);
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
+  void setActionIndicator(const char* symbol);
 
   int getLink(void);
   bool getKeyPadEnable(void);
@@ -101,18 +109,16 @@ public :
   void showOvlBar(int level);
   void addUpDownControl(lv_event_cb_t upDownEventHandler, const void* imgUpperButton, const void* imgLowerButton);
  
-  void setDropDownList(const char *list);
+  void setDropDownList(string list);
   void setDropDownIndex(uint16_t index);
   void setDropDownLabel(const char *label);
+  void saveDropDownList(string list);
+  void saveDropDownIndex(uint16_t index);
   const char *getDropDownList(void);
   uint16_t getDropDownIndex(void);
   const char *getDropDownLabel(void);
-  void setDropDownIndicator(void);
 
-  void setSelectorList(const char* list);
   void showSelector(int index);
-  void setSelectorIndex(int index);
-  int getSelectorIndex(void);
   bool getSelectorValid(void);
 
   void setColorPickerRGB(int r, int g, int b);
@@ -124,4 +130,11 @@ public :
   int getColorPickerKelvin(void);
   int getColorPickerBrightnessWhite(void);
   int getColorPickerMode(void);
+
+  void setThermostatTarget(int target);
+  int getThermostatTarget(void);
+  void setThermostatCurrent(int current);
+  int getThermostatCurrent(void);
+  void setThermostatUnits(const char *units);
+  const char *getThermostatUnits(void);
 };

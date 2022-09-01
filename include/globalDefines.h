@@ -12,6 +12,7 @@ enum tileType_t
   TS_BUTTON_UP_DOWN,
   TS_BUTTON_LEFT_RIGHT,
   TS_BUTTON_PREV_NEXT,
+  TS_BUTTON_SELECTOR,
   TS_INDICATOR,
   TS_COLOR_PICKER_RGB_CCT,
   TS_COLOR_PICKER_RGB,
@@ -20,6 +21,7 @@ enum tileType_t
   TS_KEYPAD,
   TS_KEYPAD_BLOCKING,
   TS_REMOTE,
+  TS_THERMOSTAT,
   TS_LINK,
   TS_STYLE_COUNT // must be the last element
 };
@@ -68,3 +70,11 @@ typedef union
 // colorPicker modes
 #define CP_MODE_COLOR 0x01
 #define CP_MODE_TEMP 0x02
+
+// pseudo icon images (NO image, special handling)
+#define WP_PSEUDO_THERMOSTAT LV_IMG_CF_USER_ENCODED_0
+
+// symbols in wp_symbol_font_15
+#define WP_SYMBOL_DOTS "\xEF\x85\x82"
+#define WP_SYMBOL_CHEV_RIGHT "\xEF\x81\x94"
+#define WP_SYMBOL_CHEV_DOWN "\xEF\x81\xB8"

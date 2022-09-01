@@ -41,6 +41,7 @@
 #include <classKeyPad.h>
 #include <classIconList.h>
 #include <classColorPicker.h>
+#include <classThermostat.h>
 #include <base64.hpp>
 #include <TFT_eSPI.h>
 #include <lvgl.h>
@@ -85,6 +86,13 @@ extern "C" const lv_img_dsc_t ios_left_30;
 extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_slider_60;
 
+// pseudo icons
+const lv_img_dsc_t wp_pseudo_thermostat = 
+{
+  WP_PSEUDO_THERMOSTAT, 0, 0, 0, 0, 0, NULL
+};
+
+// image pointer for further reference
 const void *imgOxrsSplash = &oxrs_splash_png;
 const void *imgOxrsSettings = &oxrs_settings_png;
 
@@ -115,6 +123,7 @@ const void *imgCeilingFan = &ios_ceiling_fan_60;
 const void *imgLeft = &ios_left_30;
 const void *imgRight = &ios_right_30;
 const void *imgSlider = &ios_slider_60;
+const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 
 int _actBackLight;
 int _retainedBackLight;
@@ -165,6 +174,9 @@ classKeyPad keyPad = classKeyPad();
 // color picker overlay
 classColorPicker colorPicker = classColorPicker();
 lv_obj_t *_canvasCw = NULL;
+
+// cset point overlay
+classThermostat thermostat = classThermostat();
 
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
 
@@ -246,10 +258,11 @@ void initIconVault(void)
   iconVault.add({string("_pause"), imgPause});
   iconVault.add({string("_thermometer"), imgThermo});
   iconVault.add({string("_slider"), imgSlider});
+  iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
-
 // initialise the tile_style_LUT
-void initStyleLut(void)
+void
+initStyleLut(void)
 {
   styleLut[TS_NONE] = {TS_NONE, ""};
   styleLut[TS_BUTTON] = {TS_BUTTON, "button"};
@@ -258,6 +271,7 @@ void initStyleLut(void)
   styleLut[TS_BUTTON_UP_DOWN] = {TS_BUTTON_UP_DOWN, "buttonUpDown"};
   styleLut[TS_BUTTON_LEFT_RIGHT] = {TS_BUTTON_LEFT_RIGHT, "buttonLeftRight"};
   styleLut[TS_BUTTON_PREV_NEXT] = {TS_BUTTON_PREV_NEXT, "buttonPrevNext"};
+  styleLut[TS_BUTTON_SELECTOR] = {TS_BUTTON_SELECTOR, "buttonSelector"};
   styleLut[TS_INDICATOR] = {TS_INDICATOR, "indicator"};
   styleLut[TS_COLOR_PICKER_RGB_CCT] = {TS_COLOR_PICKER_RGB_CCT, "colorPickerRgbCct"};
   styleLut[TS_COLOR_PICKER_RGB] = {TS_COLOR_PICKER_RGB, "colorPickerRgb"};
@@ -266,6 +280,7 @@ void initStyleLut(void)
   styleLut[TS_KEYPAD] = {TS_KEYPAD, "keyPad"};
   styleLut[TS_KEYPAD_BLOCKING] = {TS_KEYPAD_BLOCKING, "keyPadBlocking"};
   styleLut[TS_REMOTE] = {TS_REMOTE, "remote"};
+  styleLut[TS_THERMOSTAT] = {TS_THERMOSTAT, "thermostat"};
   styleLut[TS_LINK] = {TS_LINK, "link"};
 }
 
@@ -433,6 +448,22 @@ void publishSelectorEvent(classTile *tPtr, int index)
   wt32.publishStatus(json.as<JsonVariant>());
 }
 
+// publish thermostat (mode) change Event
+// {"screen":1, "tile":1, "style":"thermostat","type":"thermostat" | "mode", "event":"change" , "state":205}
+void publishThermostatEvent(classTile *tPtr, int mode, int target)
+{
+  StaticJsonDocument<128> json;
+  json["screen"] = tPtr->getScreenIdx();
+  json["tile"] = tPtr->getTileIdx();
+  json["style"] = tPtr->getStyleStr();
+  json["type"] = "thermostat";
+  json["event"] = "change";
+  json["state"]["mode"] = mode;
+  json["state"]["targetTemperature"] = target;
+
+  wt32.publishStatus(json.as<JsonVariant>());
+}
+
 // publish Screen Event
 // {"screen":1, "type":"screen", "event":"change" , "state":"unloaded"}
 void publishScreenEvent(int screenIdx, const char *state)
@@ -556,6 +587,7 @@ void checkNoActivity(void)
       // check and close pop-ups first
       if (dropDownOverlay.isActive()) dropDownOverlay.close();
       if (colorPicker.isActive()) colorPicker.close();
+      if (thermostat.isActive()) thermostat.close();
       if (remoteControl.isActive()) remoteControl.close();
      // return to HomeScreen if keyPad is NOT active
       if (!keyPad.isActive())
@@ -731,6 +763,22 @@ static void upDownEventHandler(lv_event_t * e)
   }
 }
 
+// Up / Down Button with selector Event Handler
+static void selectorEventHandler(lv_event_t *e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *btn = lv_event_get_target(e);
+
+  if (code == LV_EVENT_SHORT_CLICKED)
+  {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+    int index = tPtr->getDropDownIndex();
+    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index++ : index--;
+    tPtr->showSelector(index);
+    publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
+  }
+}
+
 // previous/next event handler
 static void prevNextEventHandler(lv_event_t * e)
 {
@@ -741,26 +789,15 @@ static void prevNextEventHandler(lv_event_t * e)
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED) || (code == LV_EVENT_LONG_PRESSED_REPEAT))
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
-    // has selector
-    if (tPtr->getSelectorValid())
-    {
-      int index = tPtr->getSelectorIndex();
-      lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index-- : index++;
-      tPtr->showSelector(index);
-      publishSelectorEvent(tPtr, tPtr->getSelectorIndex());
-    }
     // up / down events only
-    else
-    {
-      if (tPtr->getStyle() == TS_BUTTON_PREV_NEXT)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "prev" : "next";
-      if (tPtr->getStyle() == TS_BUTTON_LEFT_RIGHT)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "left" : "right";
-      if (tPtr->getStyle() == TS_BUTTON_UP_DOWN)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "up" : "down";
-      const char *event = (code == LV_EVENT_SHORT_CLICKED) ? "single" : "hold";
-      publishPrevNextEvent(tPtr, type, event);
-    }
+    if (tPtr->getStyle() == TS_BUTTON_PREV_NEXT)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "prev" : "next";
+    if (tPtr->getStyle() == TS_BUTTON_LEFT_RIGHT)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "left" : "right";
+    if (tPtr->getStyle() == TS_BUTTON_UP_DOWN)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "up" : "down";
+    const char *event = (code == LV_EVENT_SHORT_CLICKED) ? "single" : "hold";
+    publishPrevNextEvent(tPtr, type, event);
   }
 }
 
@@ -895,10 +932,54 @@ static void colorPickerEventHandler(lv_event_t *e)
   }
   if (code == LV_EVENT_SHORT_CLICKED)
   {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     lv_obj_t *obj = lv_event_get_target(e);
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_3))
     {
       colorPicker.switchMode(lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_4) ? CP_MODE_TEMP : CP_MODE_COLOR);
+    }
+    // must have been the button -> send tile event
+    else if (!lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1) && !lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_2))
+    {
+      publishTileEvent(tPtr, "single");
+    }
+  }
+}
+
+// thermostat  arc event handler
+static void thermostatEventHandler(lv_event_t *e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *obj = lv_event_get_target(e);
+
+  if (code == LV_EVENT_VALUE_CHANGED)
+  {
+    thermostat.updateAll();
+  }
+  if (code == LV_EVENT_RELEASED)
+  {
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1))
+    // thermostat arc released
+    {
+      classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+      publishThermostatEvent(tPtr, tPtr->getDropDownIndex(), tPtr->getThermostatTarget());
+    }
+  }
+  if (code == LV_EVENT_CLICKED)
+  {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_2))
+      // mode button
+      thermostat.showDropDown();
+  }
+  if (code == LV_EVENT_CANCEL)
+  {
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_3))
+    // drop down 
+    {
+      classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+      thermostat.closeDropDown();
+      publishThermostatEvent(tPtr, tPtr->getDropDownIndex(), tPtr->getThermostatTarget());
     }
   }
 }
@@ -906,12 +987,8 @@ static void colorPickerEventHandler(lv_event_t *e)
 // general Tile Event Handler
 static void tileEventHandler(lv_event_t * e)
 {
-  static uint32_t pressStarted;
+  static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
-  if(code == LV_EVENT_PRESSED)
-  {
-    pressStarted = lv_tick_get();
-  }
 
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
   {
@@ -942,7 +1019,26 @@ static void tileEventHandler(lv_event_t * e)
       {
         keyPad = classKeyPad(tPtr, keyPadEventHandler);
       }
-      //  publish click event
+      // style colorpicker (3 different modes)
+      if (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
+      }
+      else if (tPtr->getStyle() == TS_COLOR_PICKER_RGB)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
+      }
+      else if (tPtr->getStyle() == TS_COLOR_PICKER_CCT)
+      {
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
+      }
+      // button is style thermostat 
+      else if (tPtr->getStyle() == TS_THERMOSTAT)
+      {
+        thermostat = classThermostat(tPtr, thermostatEventHandler);
+      }
+
+      //  no special action -> publish click event
       else
       {
         publishTileEvent(tPtr, "single");
@@ -951,34 +1047,8 @@ static void tileEventHandler(lv_event_t * e)
     // long press detected
     else
     {
-      if ((tPtr->getStyle() == TS_COLOR_PICKER_RGB) || (tPtr->getStyle() == TS_COLOR_PICKER_CCT) || (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT))
-      {
-        lv_obj_clear_state(tPtr->btn, LV_STATE_PRESSED);
-      }
-      else
-      {
       // publish long press
       publishTileEvent(tPtr, "hold");
-      }
-    }
-  }
-
-  // if pressed time > 500 ms -> looong press  ->  show colorPicker
-  if ((code == LV_EVENT_RELEASED) && (lv_tick_elaps(pressStarted) > 500))
-  {
-    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
-    // button is style COLOR_PICKER -> show color picker overlay
-    if (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
-    }
-    else if (tPtr->getStyle() == TS_COLOR_PICKER_RGB)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
-    }
-    else if (tPtr->getStyle() == TS_COLOR_PICKER_CCT)
-    {
-      colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
     }
   }
 }
@@ -1160,8 +1230,13 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.addUpDownControl(upDownEventHandler, imgUp, imgDown);
   }
 
+  // enable on-tile selector control (roller)
+  if (style == TS_BUTTON_SELECTOR)
+  {
+    ref.addUpDownControl(selectorEventHandler, imgUp, imgDown);
+  }
+
   // set levelrange
-  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN))
   {
     if ((levelStart != 0) || (levelStop != 0))
     {
@@ -1201,11 +1276,18 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.setKeyPadEnable(true);
   }
 
-  // set indicator for modal pop up screen
-  if ((style == TS_DROPDOWN) || (style == TS_REMOTE) || (style == TS_KEYPAD) || (style == TS_KEYPAD_BLOCKING) ||
-      (style == TS_COLOR_PICKER_RGB) || (style == TS_COLOR_PICKER_CCT) || (style == TS_COLOR_PICKER_RGB_CCT))
+  // set action indicator if required (depends on tile style)
+  switch (style)
   {
-    ref.setDropDownIndicator();
+    case TS_LINK: ref.setActionIndicator(WP_SYMBOL_CHEV_RIGHT); break;
+    case TS_DROPDOWN: ref.setActionIndicator(WP_SYMBOL_CHEV_DOWN); break;
+    case TS_COLOR_PICKER_CCT:
+    case TS_COLOR_PICKER_RGB:
+    case TS_COLOR_PICKER_RGB_CCT:
+    case TS_KEYPAD:
+    case TS_KEYPAD_BLOCKING:
+    case TS_REMOTE:
+    case TS_THERMOSTAT: ref.setActionIndicator(WP_SYMBOL_DOTS); break;
   }
 }
 
@@ -1655,14 +1737,27 @@ void jsonTileCommand(JsonVariant json)
   if (json.containsKey("state"))
   {
     const char *state = json["state"];
-    if (strcmp(state, "on") == 0)
+    int iState = -1;
+    // decode state
+    if (strcmp(state, "off") == 0)
     {
-      tile->setState(true);
+      iState = 0;
     }
-    else if (strcmp(state, "off") == 0)
+    else if (strcmp(state, "on") == 0)
     {
-      tile->setState(false);
+      iState = 1;
     }
+    // send if valid
+    if(iState >= 0)
+    {
+      tile->setState(iState == 0 ? false : true);
+      // send to colorpicker if active and belongs to tile which the state is sent to
+      if(colorPicker.isActive() && (colorPicker.getTile()->tileId.id == tile->tileId.id))
+      {
+        colorPicker.setState(iState == 0 ? false : true);
+      }
+    }
+    // throw error
     else
     {
       wt32.print(F("[tp32]] invalid state: "));
@@ -1694,9 +1789,10 @@ void jsonTileCommand(JsonVariant json)
     tile->setIcon(iconVault.getIcon(json["icon"]));
   }
 
-  if (json.containsKey("value") || json.containsKey("units"))
+  if (json.containsKey("number"))
   {
-    tile->setValue(json["value"], json["units"]);
+    JsonVariant jsonNumber = json["number"];
+    tile->setNumber(jsonNumber["value"], jsonNumber["units"], jsonNumber["subValue"], jsonNumber["subUnits"]);
   }
 
   if (json.containsKey("text"))
@@ -1706,19 +1802,19 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("backgroundImage"))
   {
-    JsonVariant bgImage = json["backgroundImage"];
+    JsonVariant jsonBgImage = json["backgroundImage"];
 
-    if (bgImage.size() == 0)
+    if (jsonBgImage.size() == 0)
     {
       tile->setBgImage(NULL);
     }
     else
     {
-      if (bgImage.containsKey("imageBase64"))
+      if (jsonBgImage.containsKey("imageBase64"))
       {
-        tile->setBgImage(decodeBase64ToImg(bgImage["imageBase64"]));
+        tile->setBgImage(decodeBase64ToImg(jsonBgImage["imageBase64"]));
       }
-      tile->alignBgImage(bgImage["zoom"], bgImage["offset"][0], bgImage["offset"][1], bgImage["angle"]);
+      tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
     }
   }
 
@@ -1726,7 +1822,7 @@ void jsonTileCommand(JsonVariant json)
   {
     string dropDownList = "";
     jsonArrayToString(json["dropDownList"].as<JsonArray>(), &dropDownList);
-    tile->setDropDownList(dropDownList.c_str());
+    tile->setDropDownList(dropDownList);
   }
 
   if (json.containsKey("dropDownSelect"))
@@ -1743,38 +1839,40 @@ void jsonTileCommand(JsonVariant json)
   {
     string selectorList = "";
     jsonArrayToString(json["selectorList"].as<JsonArray>(), &selectorList);
-    tile->setSelectorList(selectorList.c_str());
+    tile->saveDropDownList(selectorList);
   }
 
   if (json.containsKey("selectorSelect"))
   {
-    tile->setSelectorIndex(json["selectorSelect"].as<uint>());
+    tile->saveDropDownIndex(json["selectorSelect"].as<uint>());
   }
 
   if (json.containsKey("colorPicker"))
   {
-    if (json["colorPicker"].containsKey("colorRgb"))
+    JsonVariant jsonColorPicker = json["colorPicker"];
+
+    if (jsonColorPicker.containsKey("colorRgb"))
     {
-      r = (uint8_t)json["colorPicker"]["colorRgb"]["r"].as<int>();
-      g = (uint8_t)json["colorPicker"]["colorRgb"]["g"].as<int>();
-      b = (uint8_t)json["colorPicker"]["colorRgb"]["b"].as<int>();
+      r = (uint8_t)jsonColorPicker["colorRgb"]["r"].as<int>();
+      g = (uint8_t)jsonColorPicker["colorRgb"]["g"].as<int>();
+      b = (uint8_t)jsonColorPicker["colorRgb"]["b"].as<int>();
 
       tile->setColorPickerRGB(r, g, b);
     }
 
-    if (json["colorPicker"].containsKey("colorKelvin"))
+    if (jsonColorPicker.containsKey("colorKelvin"))
     {
-      tile->setColorPickerKelvin(json["colorPicker"]["colorKelvin"]);
+      tile->setColorPickerKelvin(jsonColorPicker["colorKelvin"]);
     }
 
-    if (json["colorPicker"].containsKey("brightness"))
+    if (jsonColorPicker.containsKey("brightness"))
     {
-      tile->setColorPickerBrightnessWhite(json["colorPicker"]["brightness"]);
+      tile->setColorPickerBrightnessWhite(jsonColorPicker["brightness"]);
     }
 
-    if (json["colorPicker"].containsKey("mode"))
+    if (jsonColorPicker.containsKey("mode"))
     {
-      const char *mode = json["colorPicker"]["mode"];
+      const char *mode = jsonColorPicker["mode"];
       if (strcmp(mode, "colorKelvin") == 0)
       {
         tile->setColorPickerMode(CP_MODE_TEMP);
@@ -1788,6 +1886,39 @@ void jsonTileCommand(JsonVariant json)
         wt32.print(F("[tp32]] invalid mode: "));
         wt32.println(mode);
       }
+    }
+  }
+
+  if (json.containsKey("thermostat"))
+  {
+    JsonVariant jsonThermostat = json["thermostat"];
+
+    if (jsonThermostat.containsKey("modeList"))
+    {
+      string modeList = "";
+      jsonArrayToString(jsonThermostat["modeList"].as<JsonArray>(), &modeList);
+      tile->saveDropDownList(modeList);
+      tile->setDropDownLabel("Select mode ...");
+    }
+
+    if (jsonThermostat.containsKey("mode"))
+    {
+      tile->saveDropDownIndex(jsonThermostat["mode"]);
+    }
+
+    if (jsonThermostat.containsKey("currentTemperature"))
+    {
+      tile->setThermostatCurrent(jsonThermostat["currentTemperature"]);
+    }
+
+    if (jsonThermostat.containsKey("targetTemperature"))
+    {
+      tile->setThermostatTarget(jsonThermostat["targetTemperature"]);
+    }
+
+    if (jsonThermostat.containsKey("units"))
+    {
+      tile->setThermostatUnits(jsonThermostat["units"]);
     }
   }
 }

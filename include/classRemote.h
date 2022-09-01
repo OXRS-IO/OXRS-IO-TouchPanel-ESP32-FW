@@ -1,17 +1,13 @@
 ﻿#pragma once
-#include <lvgl.h>
-#include "classTile.h"
-#include "classScreen.h"
+#include <classPopUpContainer.h>
 
-class classRemote
+class classRemote : public classPopUpContainer
 
 {
 private:
-  classTile* _callingTile = NULL;
-  lv_obj_t* _parent = NULL;
-  lv_obj_t* _ovlPanel = NULL;
-  lv_obj_t* _ovlPanel2 = NULL;
-  lv_obj_t* _btnUp = NULL;
+  lv_obj_t *_labelCallingTile = NULL;
+  lv_obj_t *_panelRemote = NULL;
+  lv_obj_t *_btnUp = NULL;
   lv_obj_t* _btnDown = NULL;
   lv_obj_t* _btnLeft = NULL;
   lv_obj_t* _btnRight = NULL;
@@ -20,7 +16,6 @@ private:
   lv_obj_t* _btnList = NULL;
   lv_obj_t* _btnBack = NULL;
   lv_obj_t* _btnHome = NULL;
-  lv_obj_t* _btnExit = NULL;
 
   void _createRemote(void);
   void _setCommon(lv_obj_t *button, int btnIndex);
@@ -30,10 +25,4 @@ private:
 public:
   classRemote(void){};
   classRemote(classTile* tile, lv_event_cb_t navigationButtonEventHandler);
-  void close(void);
-  bool isActive(void);
-
-  classTile* getTile(void);
-  static void closeEvt(lv_event_t* e);
- 
 };
