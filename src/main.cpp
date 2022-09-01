@@ -1274,12 +1274,6 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.addUpDownControl(prevNextEventHandler, imgLeft, imgRight);
   }
 
-  // enable key pad popup, set img for state ON to imgLocked
-  if ((style == TS_KEYPAD) || (style == TS_KEYPAD_BLOCKING))
-  {
-    ref.setKeyPadEnable(true);
-  }
-
   // set action indicator if required (depends on tile style)
   switch (style)
   {
