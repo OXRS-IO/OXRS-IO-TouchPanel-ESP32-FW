@@ -6,35 +6,6 @@ extern lv_color_t colorBg;
 
 void classDropDown::_createDropDown(void)
 {
-  // full screen overlay / semi transparent
-  _ovlPanel = lv_obj_create(lv_scr_act());
-  lv_obj_remove_style_all(_ovlPanel);
-  lv_obj_set_size(_ovlPanel, SCREEN_WIDTH, SCREEN_HEIGHT);
-  lv_obj_set_align(_ovlPanel, LV_ALIGN_TOP_MID);
-  lv_obj_clear_flag(_ovlPanel, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(_ovlPanel, colorBg, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel, 150, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-  // active upper part / colorBg
-  _ovlPanel2 = lv_obj_create(_ovlPanel);
-  lv_obj_remove_style_all(_ovlPanel2);
-  lv_obj_set_size(_ovlPanel2, SCREEN_WIDTH, SCREEN_HEIGHT - 35);
-  lv_obj_set_align(_ovlPanel2, LV_ALIGN_TOP_MID);
-  lv_obj_clear_flag(_ovlPanel2, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(_ovlPanel2, colorBg, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-  // panel for active controls
-  lv_obj_t*  _panel = lv_obj_create(_ovlPanel2);
-  lv_obj_remove_style_all(_panel);
-
-  lv_obj_set_size(_panel, 310, SCREEN_HEIGHT - 35);
-  lv_obj_align(_panel, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_clear_flag(_panel, LV_OBJ_FLAG_SCROLLABLE);
-
-  lv_obj_set_style_bg_color(_panel, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_panel, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
-
   // configure the drop down 
   _dropDown = lv_dropdown_create(_panel);
   lv_obj_set_style_text_font(_dropDown, &lv_font_montserrat_20, 0);
@@ -46,7 +17,7 @@ void classDropDown::_createDropDown(void)
   lv_obj_set_style_bg_opa(_dropDown, 150, LV_PART_MAIN);
   lv_dropdown_set_options(_dropDown, "empty");
   lv_obj_t* list = lv_dropdown_get_list(_dropDown);
-  lv_obj_set_style_max_height(list, 370, LV_PART_MAIN);
+  lv_obj_set_style_max_height(list, 350, LV_PART_MAIN);
   lv_obj_set_style_max_width(list, 300, LV_PART_MAIN);
   lv_obj_set_style_border_width(list, 0, LV_PART_MAIN);
   lv_obj_set_style_text_line_space(list, 30, LV_PART_MAIN);
@@ -58,7 +29,7 @@ void classDropDown::_createDropDown(void)
   lv_obj_set_style_bg_color(list, colorOn, LV_PART_SELECTED | LV_STATE_CHECKED);
 }
 
-classDropDown::classDropDown(classTile *tile, lv_event_cb_t dropDownEventHandler)
+classDropDown::classDropDown(classTile *tile, lv_event_cb_t dropDownEventHandler) : classPopUpContainer(1)
 {
   // layout the drop down overlay
   _createDropDown();
@@ -77,21 +48,10 @@ classDropDown::classDropDown(classTile *tile, lv_event_cb_t dropDownEventHandler
   lv_obj_add_event_cb(_dropDown, dropDownEventHandler, LV_EVENT_ALL, _callingTile);
 }
 
-bool classDropDown::isActive(void)
-{
-  return lv_obj_is_valid(_ovlPanel);
-}
-
 // open the list
 void classDropDown::open(void)
 {
   lv_dropdown_open(_dropDown);
-}
-
-// close (destroy) the overlay panel
-void classDropDown::close(void)
-{
-  lv_obj_del_delayed(_ovlPanel, 50);
 }
 
 // populate drop down list
@@ -111,12 +71,3 @@ void classDropDown::setDropDownLabel(const char *label)
 {
   lv_dropdown_set_text(_dropDown, label);
 }
-
-// get reference of calling tile
-classTile* classDropDown::getTile(void)
-{
-  return _callingTile;
-}
-
-
-

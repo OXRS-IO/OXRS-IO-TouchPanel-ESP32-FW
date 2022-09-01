@@ -1,9 +1,10 @@
 ﻿#include <classColorPicker.h>
 #include <globalDefines.h>
 
+#define CP_BRIGHTNESS_COLOR_Y 320
 #define CP_BRIGHTNESS_WHITE_Y 250
 #define CP_KELVIN_Y           150
-
+ 
 typedef struct
 {
   float h;
@@ -125,14 +126,8 @@ lv_color32_t _HSVtoRGB(hsv_t hsv)
 // build the panels with all widgets
 void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 {
-  // full screen overlay / opaqe
-  _ovlPanel = lv_obj_create(lv_scr_act());
-  lv_obj_remove_style_all(_ovlPanel);
-  lv_obj_set_size(_ovlPanel, SCREEN_WIDTH, SCREEN_HEIGHT);
-  lv_obj_set_align(_ovlPanel, LV_ALIGN_TOP_MID);
-  lv_obj_clear_flag(_ovlPanel, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(_ovlPanel, colorBg, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  // delete _panel from base class, colorpicker has its own panels
+  lv_obj_del(_panel);
 
   _btnColor = lv_btn_create(_ovlPanel);
   lv_obj_align(_btnColor, LV_ALIGN_TOP_LEFT, 5, 5);
@@ -171,6 +166,13 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_style_bg_opa(_panelRGB, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_flag(_panelRGB, LV_OBJ_FLAG_HIDDEN);
 
+  // label calling tile aat top
+  _labelCallingTileRGB = lv_label_create(_panelRGB);
+  lv_obj_set_size(_labelCallingTileRGB, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelCallingTileRGB, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_label_set_text(_labelCallingTileRGB, "");
+  lv_obj_align(_labelCallingTileRGB, LV_ALIGN_TOP_MID, 00, 15);
+
   // CCT panel
   _panelCCT = lv_obj_create(_ovlPanel);
   lv_obj_remove_style_all(_panelCCT);
@@ -182,17 +184,12 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_style_bg_opa(_panelCCT, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_flag(_panelCCT, LV_OBJ_FLAG_HIDDEN);
 
-  // back button (closes pop up)
-  _btnExit = lv_btn_create(_ovlPanel);
-  lv_obj_set_size(_btnExit, 153, 40);
-  lv_obj_align(_btnExit, LV_ALIGN_BOTTOM_LEFT, 5, -5);
-  lv_obj_set_style_bg_color(_btnExit, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btnExit, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_t *label = lv_label_create(_btnExit);
-  lv_label_set_text(label, LV_SYMBOL_LEFT);
-  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-
-  lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
+  // label calling tile aat top
+  _labelCallingTileCCT = lv_label_create(_panelCCT);
+  lv_obj_set_size(_labelCallingTileCCT, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelCallingTileCCT, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_label_set_text(_labelCallingTileCCT, "");
+  lv_obj_align(_labelCallingTileCCT, LV_ALIGN_TOP_MID, 00, 15);
 
   // btn as "clone" from the calling tile
   _btn = lv_btn_create(_ovlPanel);
@@ -215,7 +212,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   _panelCwFrame = lv_obj_create(_panelRGB);
   lv_obj_remove_style_all(_panelCwFrame);
   lv_obj_set_size(_panelCwFrame, 300, 280);
-  lv_obj_align(_panelCwFrame, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_align(_panelCwFrame, LV_ALIGN_TOP_MID, 0, 25);
   lv_obj_clear_flag(_panelCwFrame, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_opa(_panelCwFrame, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -240,7 +237,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   _barBrightnessColor = lv_bar_create(_panelRGB);
   lv_bar_set_range(_barBrightnessColor, 0, 100);
   lv_obj_set_size(_barBrightnessColor, 290, 40);
-  lv_obj_align(_barBrightnessColor, LV_ALIGN_TOP_MID, 0, 310);
+  lv_obj_align(_barBrightnessColor, LV_ALIGN_TOP_MID, 0, CP_BRIGHTNESS_COLOR_Y);
   lv_obj_set_style_radius(_barBrightnessColor, 20, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_border_width(_barBrightnessColor, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_border_color(_barBrightnessColor, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -258,7 +255,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   _sliderBrightnessColor = lv_slider_create(_panelRGB);
   lv_slider_set_range(_sliderBrightnessColor, 0, 100);
   lv_obj_set_size(_sliderBrightnessColor, 260, 40);
-  lv_obj_align(_sliderBrightnessColor, LV_ALIGN_TOP_MID, 0, 310);
+  lv_obj_align(_sliderBrightnessColor, LV_ALIGN_TOP_MID, 0, CP_BRIGHTNESS_COLOR_Y);
   lv_obj_set_style_bg_opa(_sliderBrightnessColor, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_sliderBrightnessColor, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_sliderBrightnessColor, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -280,14 +277,14 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_labelBrightnessColorValue, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessColorValue, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessColorValue, "100 %");
-  lv_obj_align(_labelBrightnessColorValue, LV_ALIGN_TOP_RIGHT, -20, 290);
+  lv_obj_align(_labelBrightnessColorValue, LV_ALIGN_TOP_RIGHT, -20, CP_BRIGHTNESS_COLOR_Y - 20);
 
   // label Brightness Color text
   _labelBrightnessColor = lv_label_create(_panelRGB);
   lv_obj_set_size(_labelBrightnessColor, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessColor, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessColor, "Brightness Color");
-  lv_obj_align(_labelBrightnessColor, LV_ALIGN_TOP_LEFT, 20, 290);
+  lv_obj_align(_labelBrightnessColor, LV_ALIGN_TOP_LEFT, 20, CP_BRIGHTNESS_COLOR_Y - 20);
 
   // _barBrightness white
   _barBrightnessWhite = lv_bar_create(_panelCCT);
@@ -418,20 +415,17 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_align(_labelKelvin, LV_ALIGN_TOP_LEFT, 20, CP_KELVIN_Y-20);
 }
 
-void classColorPicker::_exitButtonEventHandler(lv_event_t *e)
-{
-  lv_obj_t *btn = lv_event_get_target(e);
-  lv_obj_t *panel1 = lv_obj_get_parent(btn);
-  lv_obj_del(panel1);
-}
-
-classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode)
+classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode) : classPopUpContainer(1)
 {
   // layout the color picker pop up
   _createColorPicker(imgCw);
 
   // update controls with stored values from calling tile
   _callingTile = tile;
+
+  lv_label_set_text(_labelCallingTileRGB, _callingTile->getLabel());
+  lv_label_set_text(_labelCallingTileCCT, _callingTile->getLabel());
+
   updatePanelRGB(_callingTile->getColorPickerRGB());
   lv_slider_set_value(_sliderKelvin, _callingTile->getColorPickerKelvin(), LV_ANIM_OFF);
   lv_slider_set_value(_sliderBrightnessWhite, _callingTile->getColorPickerBrightnessWhite(), LV_ANIM_OFF);
@@ -440,8 +434,7 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 
   // update the button
   _callingTile->getImages(_imgOff, _imgOn);
-  lv_img_set_src(_imgBtn, _imgOff);
-  setButtonState(_callingTile->getState());
+  setState(_callingTile->getState());
 
   // add event handler
   lv_obj_add_event_cb(_panelCwFrame, ColorPickerCwEventHandler, LV_EVENT_ALL, _callingTile);
@@ -563,33 +556,20 @@ void classColorPicker::switchMode(int  cpMode)
   _callingTile->setColorPickerMode(cpMode);
 }
 
-bool classColorPicker::isActive(void)
-{
-  return lv_obj_is_valid(_ovlPanel);
-}
-
-void classColorPicker::close(void)
-{
-  lv_obj_del_delayed(_ovlPanel, 50);
-}
-
-// get reference of calling tile
-classTile *classColorPicker::getTile(void)
-{
-    return _callingTile;
-}
-
-void classColorPicker::setButtonState(bool state)
+void classColorPicker::setState(bool state)
 {
   if (state)
   {
     lv_obj_add_state(_btn, LV_STATE_CHECKED);
     lv_obj_add_state(_imgBtn, LV_STATE_CHECKED);
+    lv_img_set_src(_imgBtn, _imgOn);
+    lv_obj_set_style_img_recolor(_imgBtn, _callingTile->getColor(), LV_STATE_CHECKED);
   }
   else
   {
     lv_obj_clear_state(_btn, LV_STATE_CHECKED);
     lv_obj_clear_state(_imgBtn, LV_STATE_CHECKED);
+    lv_img_set_src(_imgBtn, _imgOff);
+    lv_obj_set_style_img_recolor(_imgBtn, _callingTile->getColor(), LV_STATE_DEFAULT);
   }
-  _callingTile->setState(state);
 }

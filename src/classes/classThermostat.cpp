@@ -8,38 +8,14 @@ extern "C" const lv_font_t number_OR_50;
 // build the panels with all widgets
 void classThermostat::_createThermostat(void)
 {
-  // full screen overlay / opaqe
-  _ovlPanel = lv_obj_create(lv_scr_act());
-  lv_obj_remove_style_all(_ovlPanel);
-  lv_obj_set_size(_ovlPanel, SCREEN_WIDTH, SCREEN_HEIGHT);
-  lv_obj_set_align(_ovlPanel, LV_ALIGN_TOP_MID);
-  lv_obj_clear_flag(_ovlPanel, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(_ovlPanel, colorBg, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  // label calling tile aat top
+  _labelCallingTile = lv_label_create(_panel);
+  lv_obj_set_size(_labelCallingTile, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_text_color(_labelCallingTile, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_label_set_text(_labelCallingTile, "");
+  lv_obj_align(_labelCallingTile, LV_ALIGN_TOP_MID, 00, 20);
 
-
-  // base panel
-  _panel = lv_obj_create(_ovlPanel);
-  lv_obj_remove_style_all(_panel);
-  lv_obj_set_size(_panel, SCREEN_WIDTH - 10, 480 - 40 - 5 * 3);
-  lv_obj_align(_panel, LV_ALIGN_TOP_MID, 0, 5);
-  lv_obj_set_style_radius(_panel, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_clear_flag(_panel, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(_panel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_panel, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-  // back button (closes pop up)
-  _btnExit = lv_btn_create(_ovlPanel);
-  lv_obj_set_size(_btnExit, 80, 40);
-  lv_obj_align(_btnExit, LV_ALIGN_BOTTOM_LEFT, 5, -5);
-  lv_obj_set_style_bg_color(_btnExit, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btnExit, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_t *label = lv_label_create(_btnExit);
-  lv_label_set_text(label, LV_SYMBOL_LEFT);
-  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-
-  lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
-
+  // the arc
   _arcTarget = lv_arc_create(_panel);
   lv_obj_set_size(_arcTarget, 250, 250);
   lv_obj_set_align(_arcTarget, LV_ALIGN_CENTER);
@@ -88,13 +64,6 @@ void classThermostat::_createThermostat(void)
   lv_label_set_text(_labelCurrent, "");
   lv_obj_align(_labelCurrent, LV_ALIGN_CENTER, 00, 60);
 
-  // label calling tile aat top
-  _labelCallingTile = lv_label_create(_panel);
-  lv_obj_set_size(_labelCallingTile, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-  lv_obj_set_style_text_color(_labelCallingTile, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_label_set_text(_labelCallingTile, "");
-  lv_obj_align(_labelCallingTile, LV_ALIGN_TOP_MID, 00, 20);
-
   // mode button 
   _btnMode = lv_btn_create(_panel);
   lv_obj_set_size(_btnMode, 150, 40);
@@ -130,14 +99,7 @@ void classThermostat::_createThermostat(void)
   lv_obj_add_flag(_dropDown, LV_OBJ_FLAG_HIDDEN);
 }
 
-void classThermostat::_exitButtonEventHandler(lv_event_t *e)
-{
-  lv_obj_t *btn = lv_event_get_target(e);
-  lv_obj_t *panel1 = lv_obj_get_parent(btn);
-  lv_obj_del(panel1);
-}
-
-classThermostat::classThermostat(classTile *tile, lv_event_cb_t thermostatEventHandler)
+classThermostat::classThermostat(classTile *tile, lv_event_cb_t thermostatEventHandler) : classPopUpContainer(1)
 {
   // layout the color picker pop up
   _createThermostat();
@@ -204,22 +166,6 @@ void classThermostat::updateAll(void)
 void classThermostat::updateTarget(int setPointValue)
 {
   lv_arc_set_value(_arcTarget, setPointValue);
-}
-
-bool classThermostat::isActive(void)
-{
-  return lv_obj_is_valid(_ovlPanel);
-}
-
-void classThermostat::close(void)
-{
-  lv_obj_del_delayed(_ovlPanel, 50);
-}
-
-// get reference of calling tile
-classTile *classThermostat::getTile(void)
-{
-  return _callingTile;
 }
 
 void classThermostat::showDropDown(void)

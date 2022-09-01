@@ -118,10 +118,7 @@ public :
   uint16_t getDropDownIndex(void);
   const char *getDropDownLabel(void);
 
- // void setSelectorList(const char* list);
   void showSelector(int index);
- // void setSelectorIndex(int index);
- // int getSelectorIndex(void);
   bool getSelectorValid(void);
 
   void setColorPickerRGB(int r, int g, int b);

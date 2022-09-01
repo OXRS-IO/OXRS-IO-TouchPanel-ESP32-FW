@@ -1726,14 +1726,27 @@ void jsonTileCommand(JsonVariant json)
   if (json.containsKey("state"))
   {
     const char *state = json["state"];
-    if (strcmp(state, "on") == 0)
+    int iState = -1;
+    // decode state
+    if (strcmp(state, "off") == 0)
     {
-      tile->setState(true);
+      iState = 0;
     }
-    else if (strcmp(state, "off") == 0)
+    else if (strcmp(state, "on") == 0)
     {
-      tile->setState(false);
+      iState = 1;
     }
+    // send if valid
+    if(iState >= 0)
+    {
+      tile->setState(iState == 0 ? false : true);
+      // send to colorpicker if active and belongs to tile which the state is sent to
+      if(colorPicker.isActive() && (colorPicker.getTile()->tileId.id == tile->tileId.id))
+      {
+        colorPicker.setState(iState == 0 ? false : true);
+      }
+    }
+    // throw error
     else
     {
       wt32.print(F("[tp32]] invalid state: "));
@@ -1861,24 +1874,6 @@ void jsonTileCommand(JsonVariant json)
       {
         wt32.print(F("[tp32]] invalid mode: "));
         wt32.println(mode);
-      }
-    }
-
-    if (jsonColorPicker.containsKey("buttonState"))
-    {
-      const char *state = jsonColorPicker["buttonState"];
-      if (strcmp(state, "on") == 0)
-      {
-        colorPicker.setButtonState(true);
-      }
-      else if (strcmp(state, "off") == 0)
-      {
-        colorPicker.setButtonState(false);
-      }
-      else
-      {
-        wt32.print(F("[tp32]] invalid state: "));
-        wt32.println(state);
       }
     }
   }

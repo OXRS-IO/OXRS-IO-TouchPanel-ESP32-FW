@@ -1,17 +1,14 @@
 ﻿#pragma once
-#include <lvgl.h>
-#include <classTile.h>
+#include <classPopUpContainer.h>
 
-class classColorPicker
+class classColorPicker : public classPopUpContainer
 
 {
 private:
-  classTile* _callingTile = NULL;
-  lv_obj_t* _parent = NULL;
-  lv_obj_t *_ovlPanel = NULL;
+  lv_obj_t *_labelCallingTileRGB = NULL;
+  lv_obj_t *_labelCallingTileCCT = NULL;
   lv_obj_t *_panelRGB = NULL;
   lv_obj_t *_panelCCT = NULL;
-  lv_obj_t *_btnExit = NULL;
   lv_obj_t *_colorWheel = NULL;
   lv_obj_t *_labelKelvin = NULL;
   lv_obj_t *_labelKelvinValue = NULL;
@@ -32,7 +29,6 @@ private:
   lv_obj_t *_imgCursor = NULL;
   lv_obj_t *_btnColor = NULL;
   lv_obj_t *_btnKelvin = NULL;
-  lv_obj_t *canvas = NULL;
   lv_obj_t *_panelCursor = NULL;
   lv_obj_t *_imgCw = NULL;
   lv_obj_t *_panelCwFrame = NULL;
@@ -40,18 +36,14 @@ private:
   lv_obj_t *_imgBtn = NULL;
 
   void _createColorPicker(lv_img_dsc_t *imgCw);
-  static void _exitButtonEventHandler(lv_event_t *e);
   const void *_imgOff, *_imgOn;
 
 public:
-  classColorPicker(void){};
+  classColorPicker(void) : classPopUpContainer() {};
   classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode);
-  classTile* getTile(void);
-  void close(void);
-  bool isActive(void);
   void updateAll(void);
   void updateCw(lv_point_t point, int mode);
   void updatePanelRGB(lv_color32_t rgb);
   void switchMode(int cpMode);
-  void setButtonState(bool state);
+  void setState(bool state);
 };

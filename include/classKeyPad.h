@@ -1,16 +1,10 @@
 #pragma once
-#include <lvgl.h>
-#include "classTile.h"
-#include "classScreen.h"
+#include <classPopUpContainer.h>
 
-class classKeyPad
+class classKeyPad : public classPopUpContainer
 
 {
 private:
-  classTile *_callingTile = NULL;
-  lv_obj_t *_parent = NULL;
-  lv_obj_t *_ovlPanel = NULL;
-  lv_obj_t *_ovlPanel2 = NULL;
   lv_obj_t *_btnm1 = NULL;
   lv_obj_t *_imgLockState = NULL;
   lv_obj_t *_label = NULL;
@@ -32,9 +26,5 @@ public:
   void setFailed(lv_color_t color, const char *text);
   void setState(const void *img, lv_color_t color, const char *text);
 
-  bool isActive(void);
-  void close(void);
-
   const char *getKey(void);
-  classTile *getTile(void);
 };
