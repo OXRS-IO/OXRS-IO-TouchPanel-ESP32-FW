@@ -271,6 +271,7 @@ initStyleLut(void)
   styleLut[TS_BUTTON_UP_DOWN] = {TS_BUTTON_UP_DOWN, "buttonUpDown"};
   styleLut[TS_BUTTON_LEFT_RIGHT] = {TS_BUTTON_LEFT_RIGHT, "buttonLeftRight"};
   styleLut[TS_BUTTON_PREV_NEXT] = {TS_BUTTON_PREV_NEXT, "buttonPrevNext"};
+  styleLut[TS_BUTTON_SELECTOR] = {TS_BUTTON_SELECTOR, "buttonSelector"};
   styleLut[TS_INDICATOR] = {TS_INDICATOR, "indicator"};
   styleLut[TS_COLOR_PICKER_RGB_CCT] = {TS_COLOR_PICKER_RGB_CCT, "colorPickerRgbCct"};
   styleLut[TS_COLOR_PICKER_RGB] = {TS_COLOR_PICKER_RGB, "colorPickerRgb"};
@@ -762,6 +763,22 @@ static void upDownEventHandler(lv_event_t * e)
   }
 }
 
+// Up / Down Button with selector Event Handler
+static void selectorEventHandler(lv_event_t *e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *btn = lv_event_get_target(e);
+
+  if (code == LV_EVENT_SHORT_CLICKED)
+  {
+    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+    int index = tPtr->getDropDownIndex();
+    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index++ : index--;
+    tPtr->showSelector(index);
+    publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
+  }
+}
+
 // previous/next event handler
 static void prevNextEventHandler(lv_event_t * e)
 {
@@ -772,26 +789,15 @@ static void prevNextEventHandler(lv_event_t * e)
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED) || (code == LV_EVENT_LONG_PRESSED_REPEAT))
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
-    // has selector
-    if (tPtr->getSelectorValid())
-    {
-      int index = tPtr->getDropDownIndex();
-      lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index-- : index++;
-      tPtr->showSelector(index);
-      publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
-    }
     // up / down events only
-    else
-    {
-      if (tPtr->getStyle() == TS_BUTTON_PREV_NEXT)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "prev" : "next";
-      if (tPtr->getStyle() == TS_BUTTON_LEFT_RIGHT)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "left" : "right";
-      if (tPtr->getStyle() == TS_BUTTON_UP_DOWN)
-        type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "up" : "down";
-      const char *event = (code == LV_EVENT_SHORT_CLICKED) ? "single" : "hold";
-      publishPrevNextEvent(tPtr, type, event);
-    }
+    if (tPtr->getStyle() == TS_BUTTON_PREV_NEXT)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "prev" : "next";
+    if (tPtr->getStyle() == TS_BUTTON_LEFT_RIGHT)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "left" : "right";
+    if (tPtr->getStyle() == TS_BUTTON_UP_DOWN)
+      type = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? "up" : "down";
+    const char *event = (code == LV_EVENT_SHORT_CLICKED) ? "single" : "hold";
+    publishPrevNextEvent(tPtr, type, event);
   }
 }
 
@@ -1224,8 +1230,13 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.addUpDownControl(upDownEventHandler, imgUp, imgDown);
   }
 
+  // enable on-tile selector control (roller)
+  if (style == TS_BUTTON_SELECTOR)
+  {
+    ref.addUpDownControl(selectorEventHandler, imgUp, imgDown);
+  }
+
   // set levelrange
-//  if ((style == TS_BUTTON_LEVEL_UP) || (style == TS_BUTTON_LEVEL_DOWN) || (style == TS_THERMOSTAT))
   {
     if ((levelStart != 0) || (levelStop != 0))
     {
