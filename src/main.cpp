@@ -994,60 +994,64 @@ static void tileEventHandler(lv_event_t * e)
   {
     // get tile* of clicked tile from USER_DATA
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
-    tileId_t tileId = tPtr->getId();
-    int linkedScreen = tPtr->getLink();
     if (code == LV_EVENT_SHORT_CLICKED)
     {
-      // button has link -> call linked screen
-      if (linkedScreen > 0)
+      if (tPtr->getLink() > 0)
       {
-        screenVault.show(linkedScreen);
-      }
-      // button is style DROPDOWN -> show drop down overlay
-      else if (tPtr->getStyle() == TS_DROPDOWN)
-      {
-        dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
-        dropDownOverlay.open();
-      }
-      // button is style REMOTE -> show remote overlay
-      else if (tPtr->getStyle() == TS_REMOTE)
-      {
-        remoteControl = classRemote(tPtr, navigationButtonEventHandler);
-      }
-      // keypad is enabled for this tile
-      else if (tPtr->getKeyPadEnable())
-      {
-        keyPad = classKeyPad(tPtr, keyPadEventHandler);
-      }
-      // style colorpicker (3 different modes)
-      if (tPtr->getStyle() == TS_COLOR_PICKER_RGB_CCT)
-      {
-        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
-      }
-      else if (tPtr->getStyle() == TS_COLOR_PICKER_RGB)
-      {
-        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
-      }
-      else if (tPtr->getStyle() == TS_COLOR_PICKER_CCT)
-      {
-        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
-      }
-      // button is style thermostat 
-      else if (tPtr->getStyle() == TS_THERMOSTAT)
-      {
-        thermostat = classThermostat(tPtr, thermostatEventHandler);
+        // button has link -> call linked screen
+        screenVault.show(tPtr->getLink());
+        return;
       }
 
-      //  no special action -> publish click event
-      else
+      // handle the different button styles
+      switch (tPtr->getStyle())
       {
-        publishTileEvent(tPtr, "single");
+        case TS_DROPDOWN:
+          // button is style DROPDOWN -> show drop down overlay
+          dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
+          dropDownOverlay.open();
+          break;
+
+        case TS_REMOTE:
+          // button is style REMOTE -> show remote overlay
+          remoteControl = classRemote(tPtr, navigationButtonEventHandler);
+          break;
+
+        case TS_KEYPAD:
+        case TS_KEYPAD_BLOCKING:
+          // button is style keypad
+          keyPad = classKeyPad(tPtr, keyPadEventHandler);
+          break;
+
+        case TS_COLOR_PICKER_RGB_CCT:
+          // style colorpicker (RGB + CCT)
+          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
+          break;
+
+        case TS_COLOR_PICKER_RGB:
+          // style colorpicker (RGB only)
+          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
+          break;
+
+        case TS_COLOR_PICKER_CCT:
+          // style colorpicker (CCT only)
+          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
+          break;
+
+        case TS_THERMOSTAT:
+          // button is style thermostat 
+          thermostat = classThermostat(tPtr, thermostatEventHandler);
+          break;
+
+        default:
+          // no special action -> publish click event
+          publishTileEvent(tPtr, "single");
+          break;
       }
     }
-    // long press detected
     else
     {
-      // publish long press
+      // publish long press event
       publishTileEvent(tPtr, "hold");
     }
   }
