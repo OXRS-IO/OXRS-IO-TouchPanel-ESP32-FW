@@ -32,7 +32,6 @@ protected:
   string _styleStr;
   int _linkedScreen = 0;
   bool _state = false;
-  bool _keyPadEnable = false;
   int _levelStart = 0;
   int _levelStop = 100;
   int _levelLargeStep = 5;
