@@ -336,23 +336,14 @@ void classTile::setColor(int r, int g, int b)
 void classTile::setNumber(const char *value, const char *units, const char *subValue, const char *subUnits)
 {
   // update number display
-  if (!_arcTarget)
-  {
-    _hideIcon(value || units || subValue || subUnits);
+  _hideIcon(value || units || subValue || subUnits);
 
-    lv_label_set_text(_valueLabel, !value ? "" : value);
-    lv_label_set_text(_unitLabel, !units ? "" : units);
-    lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+  lv_label_set_text(_valueLabel, !value ? "" : value);
+  lv_label_set_text(_unitLabel, !units ? "" : units);
+  lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 
-    lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
-    lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
-  }
-  // update thermostat thumbnail
-  else
-  {
-    lv_label_set_text_fmt(_labelArcValue, "%s %s", !value ? "" : value, !units ? "" : units);
-    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
-  }
+  lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
+  lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
 }
 
 // update the _imBg object and hide it, will be shown with alignBgImage()
@@ -820,28 +811,19 @@ int classTile::getColorPickerMode(void)
 void classTile::setThermostatTarget(int target)
 {
   _thermostatTarget = target;
-  if(_arcTarget)
-  {
-    int target = _thermostatTarget / ARC_STEP;
-    lv_arc_set_value(_arcTarget, target);
-    // calc hsv for arc coloring
-    int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
-    int mid = range + lv_arc_get_min_value(_arcTarget);
-    int s = 50 + (abs(mid - target) * 50) / range;
-    // red(360) or blue(240)
-    int h = (target < mid) ? 240 : 360;
-    lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-  }
+  updateThermostatDisplay();
 }
 
 void classTile::setThermostatCurrent(int current)
 {
   _thermostatCurrent = current;
+  updateThermostatDisplay();
 }
 
 void classTile::setThermostatUnits(const char *units)
 {
   _units = !units ? "" : units;
+  updateThermostatDisplay();
 }
 
 int classTile::getThermostatTarget(void)
@@ -857,4 +839,32 @@ int classTile::getThermostatCurrent(void)
 const char *classTile::getThermostatUnits(void)
 {
   return _units.c_str();
+}
+
+void classTile::updateThermostatDisplay(void)
+{
+  String targetDisplay = String((float)_thermostatTarget / 10, 1);
+  String currentDisplay = String((float)_thermostatCurrent / 10, 1);
+
+  if(_arcTarget)
+  {
+    int target = _thermostatTarget / ARC_STEP;
+    lv_arc_set_value(_arcTarget, target);
+    // calc hsv for arc coloring
+    int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
+    int mid = range + lv_arc_get_min_value(_arcTarget);
+    int s = 50 + (abs(mid - target) * 50) / range;
+    // red(360) or blue(240)
+    int h = (target < mid) ? 240 : 360;
+    lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+    // update the target/current values
+    lv_label_set_text_fmt(_labelArcValue, "%s %s", targetDisplay.c_str(), _units.c_str());
+    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", currentDisplay.c_str(), _units.c_str());
+  }
+  else
+  {
+    // no thermostat arc, so display temps as "indicator" values
+    setNumber(targetDisplay.c_str(), _units.c_str(), currentDisplay.c_str(), _units.c_str());
+  }
 }

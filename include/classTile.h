@@ -134,4 +134,5 @@ public :
   int getThermostatCurrent(void);
   void setThermostatUnits(const char *units);
   const char *getThermostatUnits(void);
+  void updateThermostatDisplay(void);
 };
