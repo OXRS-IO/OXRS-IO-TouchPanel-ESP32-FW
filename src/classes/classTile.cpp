@@ -843,8 +843,13 @@ const char *classTile::getThermostatUnits(void)
 
 void classTile::updateThermostatDisplay(void)
 {
-  String targetDisplay = String((float)_thermostatTarget / 10, 1);
-  String currentDisplay = String((float)_thermostatCurrent / 10, 1);
+  char displayTarget[10];
+  char displayCurrent[10];
+
+  sprintf(displayTarget, "%2.1f", (float)_thermostatTarget / 10.0);
+  sprintf(displayCurrent, "%2.1f", (float)_thermostatCurrent / 10.0);
+
+  const char * displayUnits = _units.c_str();
 
   if(_arcTarget)
   {
@@ -859,12 +864,12 @@ void classTile::updateThermostatDisplay(void)
     lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     // update the target/current values
-    lv_label_set_text_fmt(_labelArcValue, "%s %s", targetDisplay.c_str(), _units.c_str());
-    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", currentDisplay.c_str(), _units.c_str());
+    lv_label_set_text_fmt(_labelArcValue, "%s %s", displayTarget, displayUnits);
+    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", displayCurrent, displayUnits);
   }
   else
   {
     // no thermostat arc, so display temps as "indicator" values
-    setNumber(targetDisplay.c_str(), _units.c_str(), currentDisplay.c_str(), _units.c_str());
+    setNumber(displayTarget, displayUnits, displayCurrent, displayUnits);
   }
 }
