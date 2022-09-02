@@ -851,19 +851,21 @@ void classTile::updateThermostatDisplay(void)
 
   const char * displayUnits = _units.c_str();
 
-  if(_arcTarget)
+  if (_arcTarget)
   {
     int target = _thermostatTarget / ARC_STEP;
     lv_arc_set_value(_arcTarget, target);
+
     // calc hsv for arc coloring
     int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
     int mid = range + lv_arc_get_min_value(_arcTarget);
     int s = 50 + (abs(mid - target) * 50) / range;
+
     // red(360) or blue(240)
     int h = (target < mid) ? 240 : 360;
     lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    // update the target/current values
+    // update the target/current display values
     lv_label_set_text_fmt(_labelArcValue, "%s %s", displayTarget, displayUnits);
     lv_label_set_text_fmt(_labelArcSubValue, "%s %s", displayCurrent, displayUnits);
   }
