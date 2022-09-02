@@ -1773,11 +1773,11 @@ void jsonTileCommand(JsonVariant json)
     tile->setLevel(json["level"].as<int>(), false);
   }
 
-  if (json.containsKey("colorRgb"))
+  if (json.containsKey("iconColorRgb"))
   {
-    r = (uint8_t)json["colorRgb"]["r"].as<int>();
-    g = (uint8_t)json["colorRgb"]["g"].as<int>();
-    b = (uint8_t)json["colorRgb"]["b"].as<int>();
+    r = (uint8_t)json["iconColorRgb"]["r"].as<int>();
+    g = (uint8_t)json["iconColorRgb"]["g"].as<int>();
+    b = (uint8_t)json["iconColorRgb"]["b"].as<int>();
 
     tile->setColor(r, g, b);
   }
