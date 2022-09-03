@@ -57,8 +57,10 @@ protected:
   void _setIconTextFromIndex(void);
   void _freeImageHeap();
   void _hideIcon(bool hide);
+  bool _isThumbNail(const void *img);
+  void _hideThumbNail(bool hide);
 
-public :
+public : 
   tileId_t tileId;
   lv_obj_t *btn = NULL;
 
@@ -134,4 +136,5 @@ public :
   int getThermostatCurrent(void);
   void setThermostatUnits(const char *units);
   const char *getThermostatUnits(void);
+  void updateThermostatDisplay(void);
 };

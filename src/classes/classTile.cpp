@@ -18,16 +18,12 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   // check the icon image for special handling requirement
   if (img)
   {
-    const lv_img_dsc_t *tImg = (lv_img_dsc_t *)img;
-    if (tImg->header.cf != WP_PSEUDO_THERMOSTAT)
-    {
-      _img = img;
-      _imgOn = img;
-      _imgConfig = img;
-      _imgOnConfig = img;
-    }
+    _img = img;
+    _imgOn = img;
+    _imgConfig = img;
+    _imgOnConfig = img;
     // create an arc widget as dynamic thumbnail icon
-    else
+    if (_isThumbNail(img))
     {
       _arcTarget = lv_arc_create(_btn);
       lv_obj_set_size(_arcTarget, 110, 110);
@@ -194,6 +190,7 @@ void classTile::_hideIcon(bool hide)
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, NULL, NULL, NULL);
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, NULL, NULL);
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, NULL, NULL);
+    _hideThumbNail(true);
   }
   else
   {
@@ -201,6 +198,8 @@ void classTile::_hideIcon(bool hide)
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+    if (_isThumbNail(_state ? _imgOn : _img))
+      _hideThumbNail(false);
   }
 }
 
@@ -217,6 +216,23 @@ void classTile::_freeImageHeap(void)
       free(oldImg);
     }
   }
+}
+
+bool classTile::_isThumbNail(const void *img)
+{
+  if (img)
+  {
+    const lv_img_dsc_t *tImg = (lv_img_dsc_t *)img;
+    if (tImg->data_size < 10)
+      return true;
+  }
+  return false;
+}
+
+void classTile::_hideThumbNail(bool hide)
+{
+if (_arcTarget)
+  hide ? lv_obj_add_flag(_arcTarget, LV_OBJ_FLAG_HIDDEN) : lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_HIDDEN);
 }
 
 classTile::classTile(lv_obj_t *parent, const void *img)
@@ -274,19 +290,28 @@ void classTile::setSubLabel(const char *subLabelText)
 
 void classTile::setState(bool state)
 {
+  if (_isThumbNail(_state ? _imgOn : _img))
+    _hideThumbNail(true);
+
   _state = state;
   state == false ? lv_obj_clear_state(_btn, LV_STATE_CHECKED) : lv_obj_add_state(_btn, LV_STATE_CHECKED);
   state == false ? lv_obj_clear_state(_txtIconText, LV_STATE_CHECKED) : lv_obj_add_state(_txtIconText, LV_STATE_CHECKED);
   state == false ? lv_obj_clear_state(_valueLabel, LV_STATE_CHECKED) : lv_obj_add_state(_valueLabel, LV_STATE_CHECKED);
   state == false ? lv_obj_clear_state(_unitLabel, LV_STATE_CHECKED) : lv_obj_add_state(_unitLabel, LV_STATE_CHECKED);
-  if (_labelArcValue)
-    state == false ? lv_obj_clear_state(_labelArcValue, LV_STATE_CHECKED) : lv_obj_add_state(_labelArcValue, LV_STATE_CHECKED);
   if (_btnUp)
     state == false ? lv_obj_clear_state(_btnUp, LV_STATE_CHECKED) : lv_obj_add_state(_btnUp, LV_STATE_CHECKED);
   if (_btnDown)
     state == false ? lv_obj_clear_state(_btnDown, LV_STATE_CHECKED) : lv_obj_add_state(_btnDown, LV_STATE_CHECKED);
   if (_arcTarget)
     state == false ? lv_obj_clear_state(_arcTarget, LV_STATE_CHECKED) : lv_obj_add_state(_arcTarget, LV_STATE_CHECKED);
+  if (_labelArcValue)
+    state == false ? lv_obj_clear_state(_labelArcValue, LV_STATE_CHECKED) : lv_obj_add_state(_labelArcValue, LV_STATE_CHECKED);
+    
+  if (_isThumbNail(state ? _imgOn : _img))
+  {
+    if (lv_imgbtn_get_src_left(_btn, _state ? LV_IMGBTN_STATE_CHECKED_RELEASED :  LV_IMGBTN_STATE_RELEASED))
+        _hideThumbNail(false);
+  }
 }
 
 lv_color_t classTile::getColor()
@@ -336,23 +361,14 @@ void classTile::setColor(int r, int g, int b)
 void classTile::setNumber(const char *value, const char *units, const char *subValue, const char *subUnits)
 {
   // update number display
-  if (!_arcTarget)
-  {
-    _hideIcon(value || units || subValue || subUnits);
+  _hideIcon(value || units || subValue || subUnits);
 
-    lv_label_set_text(_valueLabel, !value ? "" : value);
-    lv_label_set_text(_unitLabel, !units ? "" : units);
-    lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
+  lv_label_set_text(_valueLabel, !value ? "" : value);
+  lv_label_set_text(_unitLabel, !units ? "" : units);
+  lv_obj_align_to(_unitLabel, _valueLabel, LV_ALIGN_OUT_RIGHT_BOTTOM, 5, 5);
 
-    lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
-    lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
-  }
-  // update thermostat thumbnail
-  else
-  {
-    lv_label_set_text_fmt(_labelArcValue, "%s %s", !value ? "" : value, !units ? "" : units);
-    lv_label_set_text_fmt(_labelArcSubValue, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
-  }
+  lv_label_set_text_fmt(_subValueLabel, "%s %s", !subValue ? "" : subValue, !subUnits ? "" : subUnits);
+  lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
 }
 
 // update the _imBg object and hide it, will be shown with alignBgImage()
@@ -470,6 +486,8 @@ void classTile::setIcon(const void *imgIcon)
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img, NULL, NULL);
     lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
   }
+
+  _hideThumbNail(_isThumbNail(imgIcon) ? false : true);
   lv_obj_invalidate(_btn);
 }
 
@@ -820,28 +838,19 @@ int classTile::getColorPickerMode(void)
 void classTile::setThermostatTarget(int target)
 {
   _thermostatTarget = target;
-  if(_arcTarget)
-  {
-    int target = _thermostatTarget / ARC_STEP;
-    lv_arc_set_value(_arcTarget, target);
-    // calc hsv for arc coloring
-    int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
-    int mid = range + lv_arc_get_min_value(_arcTarget);
-    int s = 50 + (abs(mid - target) * 50) / range;
-    // red(360) or blue(240)
-    int h = (target < mid) ? 240 : 360;
-    lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-  }
+  updateThermostatDisplay();
 }
 
 void classTile::setThermostatCurrent(int current)
 {
   _thermostatCurrent = current;
+  updateThermostatDisplay();
 }
 
 void classTile::setThermostatUnits(const char *units)
 {
   _units = !units ? "" : units;
+  updateThermostatDisplay();
 }
 
 int classTile::getThermostatTarget(void)
@@ -857,4 +866,28 @@ int classTile::getThermostatCurrent(void)
 const char *classTile::getThermostatUnits(void)
 {
   return _units.c_str();
+}
+
+void classTile::updateThermostatDisplay(void)
+{
+  if (_arcTarget)
+  {
+    int target = _thermostatTarget / ARC_STEP;
+    lv_arc_set_value(_arcTarget, target);
+
+    // calc hsv for arc coloring
+    int range = (lv_arc_get_max_value(_arcTarget) - lv_arc_get_min_value(_arcTarget)) / 2;
+    int mid = range + lv_arc_get_min_value(_arcTarget);
+    int s = 50 + (abs(mid - target) * 50) / range;
+    // red(360) or blue(240)
+    int h = (target < mid) ? 240 : 360;
+    lv_obj_set_style_arc_color(_arcTarget, lv_color_hsv_to_rgb(h, s, 100), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+    // update the target/current display values
+    char buffer[10];
+    sprintf(buffer, "%2.1f %s", (float)_thermostatTarget / 10.0, _units.c_str());
+    lv_label_set_text(_labelArcValue, buffer);
+    sprintf(buffer, "%2.1f %s", (float)_thermostatCurrent / 10.0, _units.c_str());
+    lv_label_set_text(_labelArcSubValue, buffer);
+  }
 }
