@@ -87,9 +87,10 @@ extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_slider_60;
 
 // pseudo icons
-const lv_img_dsc_t wp_pseudo_thermostat = 
+uint8_t nullImg[] = {0, 0, 0};
+const lv_img_dsc_t wp_pseudo_thermostat =
 {
-  WP_PSEUDO_THERMOSTAT, 0, 0, 0, 0, 0, NULL
+  LV_IMG_CF_TRUE_COLOR_ALPHA, 0, 0, 1, 1, sizeof(nullImg), nullImg
 };
 
 // image pointer for further reference
