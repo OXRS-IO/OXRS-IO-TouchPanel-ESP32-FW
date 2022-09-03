@@ -8,6 +8,7 @@ class classTile
 {
 protected:
   lv_obj_t *_parent = NULL;
+  lv_obj_t *_tileBg;
   lv_obj_t *_btn = NULL;
   lv_obj_t *_label = NULL;
   lv_obj_t *_subLabel = NULL;
@@ -51,6 +52,7 @@ protected:
   int _thermostatTarget = 0;
   int _thermostatCurrent = 0;
   string _units = "";
+  lv_color_t _tileBgColor = {0, 0, 0};
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
@@ -77,6 +79,7 @@ public :
   lv_color_t getColor();
   void setColor(lv_color_t color);
   void setColor(int r, int g, int b);
+  void setBgColor(int r, int g, int b);
   void setIcon(const void *imgIcon);
   void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
   void setBgImage(lv_img_dsc_t *img);

@@ -1783,6 +1783,15 @@ void jsonTileCommand(JsonVariant json)
     tile->setColor(r, g, b);
   }
 
+  if (json.containsKey("backgroundColorRgb"))
+  {
+    r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
+    g = (uint8_t)json["backgroundColorRgb"]["g"].as<int>();
+    b = (uint8_t)json["backgroundColorRgb"]["b"].as<int>();
+
+    tile->setBgColor(r, g, b);
+  }
+
   if (json.containsKey("icon"))
   {
     tile->setIcon(iconVault.getIcon(json["icon"]));

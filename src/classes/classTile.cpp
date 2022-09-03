@@ -10,8 +10,16 @@ extern "C" const lv_font_t wp_symbol_font_15;
 void classTile::_button(lv_obj_t *parent, const void *img)
 {
   _parent = parent;
+  _tileBgColor = colorBg;
+  // create a background layer to opional configle tile backgroung
+  _tileBg = lv_obj_create(_parent);
+  lv_obj_remove_style_all(_tileBg);
+  lv_obj_set_style_radius(_tileBg, 5, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
+
   // create the image button as root parent for all content
-  _btn = lv_imgbtn_create(_parent);
+  _btn = lv_imgbtn_create(_tileBg);
   // placeholder for full image
   _imgBg = lv_img_create(_btn);
 
@@ -42,7 +50,7 @@ void classTile::_button(lv_obj_t *parent, const void *img)
       lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_width(_arcTarget, 4, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-      lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -136,9 +144,12 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_label_set_recolor(_txtIconText, true);
   lv_obj_add_flag(_txtIconText, LV_OBJ_FLAG_HIDDEN);
  
-  // set button and label size from grid
+  // set tile bg, button and label size from grid
   int width = *lv_obj_get_style_grid_column_dsc_array(parent, 0) - 10;
   int height = *lv_obj_get_style_grid_row_dsc_array(parent, 0) - 10;
+
+  lv_obj_set_width(_tileBg, width);
+  lv_obj_set_height(_tileBg, height);
 
   lv_obj_set_width(_btn, width);
   lv_obj_set_height(_btn, height);
@@ -275,7 +286,7 @@ void classTile::registerTile(int screenIdx, int tileIdx, int style, const char* 
   // position tile in grid after tile and screen are known
   int row = (tileIdx - 1) / 2;
   int col = (tileIdx - 1) % 2;
-  lv_obj_set_grid_cell(_btn, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+  lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
 }
 
 void classTile::setLabel(const char *labelText)
@@ -356,6 +367,25 @@ void classTile::setColor(int r, int g, int b)
   {
     setColor(lv_color_make(r, g, b));
   }
+}
+
+void classTile::setBgColor(int r, int g, int b)
+{
+  if ((r + g + b) == 0)
+  {
+    // if all zero reset to default background
+    lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
+    _tileBgColor = colorBg;
+  }
+  else
+  {
+    lv_obj_set_style_bg_color(_tileBg, lv_color_make(r, g, b), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(_tileBg, 255, LV_PART_MAIN);
+    _tileBgColor = lv_color_make(r, g, b);
+  }
+  if (_arcTarget)
+    lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
 }
 
 void classTile::setNumber(const char *value, const char *units, const char *subValue, const char *subUnits)
@@ -657,10 +687,10 @@ void classTile::showOvlBar(int level)
   // set mode to bottom-up(default)  or top-down
   if (!_topDownMode)
   {
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorBg, 200), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorBg, 50), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 50), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 150), LV_PART_MAIN | LV_STATE_CHECKED);
@@ -674,10 +704,10 @@ void classTile::showOvlBar(int level)
   }
   else
   {
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorBg, 50), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 50), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorBg, 200), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 200), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 0), LV_PART_MAIN | LV_STATE_CHECKED);
@@ -765,7 +795,7 @@ void classTile::showSelector(int index)
 
   lv_obj_set_size(_roller, 70, 70);
   lv_obj_set_style_text_line_space(_roller, 8, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(_roller, lv_color_lighten(colorBg, 50), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(_roller, lv_color_lighten(_tileBgColor, 50), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_roller, 255, LV_PART_MAIN);
 
   lv_obj_set_style_bg_color(_roller, colorOn, LV_PART_SELECTED);
