@@ -8,7 +8,8 @@ class classTile
 {
 protected:
   lv_obj_t *_parent = NULL;
-  lv_obj_t *_tileBg;
+  lv_obj_t *_tileBg = NULL;
+  lv_obj_t *_tileFg = NULL;
   lv_obj_t *_btn = NULL;
   lv_obj_t *_label = NULL;
   lv_obj_t *_subLabel = NULL;
@@ -89,6 +90,7 @@ public :
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
   void setActionIndicator(const char* symbol);
+  void setTileDisabled(bool disable);
 
   int getLink(void);
   tileId_t getId(void);

@@ -1808,6 +1808,11 @@ void jsonTileCommand(JsonVariant json)
     tile->setIconText(json["text"]);
   }
 
+  if (json.containsKey("disable"))
+  {
+    tile->setTileDisabled(json["disable"]);
+  }
+
   if (json.containsKey("backgroundImage"))
   {
     JsonVariant jsonBgImage = json["backgroundImage"];

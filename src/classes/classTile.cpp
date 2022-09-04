@@ -148,11 +148,8 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   int width = *lv_obj_get_style_grid_column_dsc_array(parent, 0) - 10;
   int height = *lv_obj_get_style_grid_row_dsc_array(parent, 0) - 10;
 
-  lv_obj_set_width(_tileBg, width);
-  lv_obj_set_height(_tileBg, height);
-
-  lv_obj_set_width(_btn, width);
-  lv_obj_set_height(_btn, height);
+  lv_obj_set_size(_tileBg, width, height);
+  lv_obj_set_size(_btn, width, height);
 
   lv_obj_set_size(_label, width - 10, LV_SIZE_CONTENT);
   lv_obj_set_size(_subLabel, width - 10, LV_SIZE_CONTENT);
@@ -287,6 +284,33 @@ void classTile::registerTile(int screenIdx, int tileIdx, int style, const char* 
   int row = (tileIdx - 1) / 2;
   int col = (tileIdx - 1) % 2;
   lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+}
+
+// cover tile with grey semi transparent layer to put into disabled state 
+void classTile::setTileDisabled(bool disable)
+{
+  if (disable)
+  {
+    int row = (tileId.idx.tile - 1) / 2;
+    int col = (tileId.idx.tile - 1) % 2;
+
+    _tileFg = lv_obj_create(_btn);
+    lv_obj_remove_style_all(_tileFg);
+    lv_obj_set_size(_tileFg, lv_obj_get_width(_btn), lv_obj_get_height(_btn));
+    lv_obj_set_style_radius(_tileFg, 5, LV_PART_MAIN);
+    lv_obj_set_grid_cell(_tileFg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+    lv_obj_set_style_bg_color(_tileFg, lv_color_hex(0x606060), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(_tileFg, 160, LV_PART_MAIN);
+    lv_obj_move_foreground(_tileFg);
+  } 
+  else
+  {
+    if (_tileFg)
+    {
+    lv_obj_del(_tileFg);
+    _tileFg = NULL;
+    }
+  }
 }
 
 void classTile::setLabel(const char *labelText)
