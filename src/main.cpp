@@ -997,57 +997,55 @@ static void tileEventHandler(lv_event_t * e)
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     if (code == LV_EVENT_SHORT_CLICKED)
     {
-      if (tPtr->getLink() > 0)
-      {
-        // button has link -> call linked screen
-        screenVault.show(tPtr->getLink());
-        return;
-      }
-
       // handle the different button styles
       switch (tPtr->getStyle())
       {
-        case TS_DROPDOWN:
-          // button is style DROPDOWN -> show drop down overlay
-          dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
-          dropDownOverlay.open();
-          break;
+      case TS_LINK:
+        // button is style LINK -> switch to linked screen
+        screenVault.show(tPtr->getLink());
+        break;
 
-        case TS_REMOTE:
-          // button is style REMOTE -> show remote overlay
-          remoteControl = classRemote(tPtr, navigationButtonEventHandler);
-          break;
+      case TS_DROPDOWN:
+        // button is style DROPDOWN -> show drop down overlay
+        dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
+        dropDownOverlay.open();
+        break;
 
-        case TS_KEYPAD:
-        case TS_KEYPAD_BLOCKING:
-          // button is style keypad
-          keyPad = classKeyPad(tPtr, keyPadEventHandler);
-          break;
+      case TS_REMOTE:
+        // button is style REMOTE -> show remote overlay
+        remoteControl = classRemote(tPtr, navigationButtonEventHandler);
+        break;
 
-        case TS_COLOR_PICKER_RGB_CCT:
-          // style colorpicker (RGB + CCT)
-          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
-          break;
+      case TS_KEYPAD:
+      case TS_KEYPAD_BLOCKING:
+        // button is style keypad
+        keyPad = classKeyPad(tPtr, keyPadEventHandler);
+        break;
 
-        case TS_COLOR_PICKER_RGB:
-          // style colorpicker (RGB only)
-          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
-          break;
+      case TS_COLOR_PICKER_RGB_CCT:
+        // style colorpicker (RGB + CCT)
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
+        break;
 
-        case TS_COLOR_PICKER_CCT:
-          // style colorpicker (CCT only)
-          colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
-          break;
+      case TS_COLOR_PICKER_RGB:
+        // style colorpicker (RGB only)
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
+        break;
 
-        case TS_THERMOSTAT:
-          // button is style thermostat 
-          thermostat = classThermostat(tPtr, thermostatEventHandler);
-          break;
+      case TS_COLOR_PICKER_CCT:
+        // style colorpicker (CCT only)
+        colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
+        break;
 
-        default:
-          // no special action -> publish click event
-          publishTileEvent(tPtr, "single");
-          break;
+      case TS_THERMOSTAT:
+        // button is style thermostat
+        thermostat = classThermostat(tPtr, thermostatEventHandler);
+        break;
+
+      default:
+        // no special action -> publish click event
+        publishTileEvent(tPtr, "single");
+        break;
       }
     }
     else
