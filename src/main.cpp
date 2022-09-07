@@ -1926,11 +1926,11 @@ void jsonTileCommand(JsonVariant json)
 
       uint8_t r, g, b;
 
-      if (jsonKeyPad.containsKey("colorRgb"))
+      if (jsonKeyPad.containsKey("iconColorRgb"))
       {
-        r = (uint8_t)jsonKeyPad["colorRgb"]["r"].as<int>();
-        g = (uint8_t)jsonKeyPad["colorRgb"]["g"].as<int>();
-        b = (uint8_t)jsonKeyPad["colorRgb"]["b"].as<int>();
+        r = (uint8_t)jsonKeyPad["iconColorRgb"]["r"].as<int>();
+        g = (uint8_t)jsonKeyPad["iconColorRgb"]["g"].as<int>();
+        b = (uint8_t)jsonKeyPad["iconColorRgb"]["b"].as<int>();
       }
       
       lv_color_t color = lv_color_make(r, g, b);
