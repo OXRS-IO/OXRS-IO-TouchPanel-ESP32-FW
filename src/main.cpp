@@ -1757,7 +1757,7 @@ void jsonTileCommand(JsonVariant json)
     // throw error
     else
     {
-      wt32.print(F("[tp32]] invalid state: "));
+      wt32.print(F("[tp32] invalid state: "));
       wt32.println(state);
     }
   }
@@ -1894,9 +1894,48 @@ void jsonTileCommand(JsonVariant json)
       }
       else
       {
-        wt32.print(F("[tp32]] invalid mode: "));
+        wt32.print(F("[tp32] invalid mode: "));
         wt32.println(mode);
       }
+    }
+  }
+
+  if (json.containsKey("keyPad"))
+  {
+    // exit early if no active keypad
+    if (!keyPad.isActive())
+      return;
+
+    // exit early if not addressed to the active keypad
+    if (keyPad.getTile()->tileId.id != tile->tileId.id)
+      return;
+
+    JsonVariant jsonKeyPad = json["keyPad"];
+
+    const char * state = jsonKeyPad["state"];
+
+    // close keypad and exit early
+    if (strcmp(state, "close") == 0)
+    {
+      keyPad.close();
+    }
+    else
+    {
+      const void * icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
+      const char * text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
+
+      uint8_t r, g, b;
+
+      if (jsonKeyPad.containsKey("colorRgb"))
+      {
+        r = (uint8_t)jsonKeyPad["colorRgb"]["r"].as<int>();
+        g = (uint8_t)jsonKeyPad["colorRgb"]["g"].as<int>();
+        b = (uint8_t)jsonKeyPad["colorRgb"]["b"].as<int>();
+      }
+      
+      lv_color_t color = lv_color_make(r, g, b);
+
+      keyPad.setState(state, icon, color, text);
     }
   }
 
@@ -1931,47 +1970,6 @@ void jsonTileCommand(JsonVariant json)
     {
       tile->setThermostatUnits(jsonThermostat["units"]);
     }
-  }
-}
-
-void jsonKeyPadCommand(JsonVariant json)
-{
-  // early exit if no valid keypad exist
-  if (!keyPad.isActive())
-    return;
-
-  const char * state = json["state"];
-  const char * text = json.containsKey("text") ? json["text"] : json["state"];
-
-  uint8_t r, g, b;
-
-  if (json.containsKey("colorRgb"))
-  {
-    r = (uint8_t)json["colorRgb"]["r"].as<int>();
-    g = (uint8_t)json["colorRgb"]["g"].as<int>();
-    b = (uint8_t)json["colorRgb"]["b"].as<int>();
-  }
-  
-  lv_color_t color = lv_color_make(r, g, b);
-
-  if (strcmp(state, "locked") == 0)
-  {
-    if ((r + g + b) == 0) color = colorOn;
-    keyPad.setLocked(color, text);
-  }
-  else if (strcmp(state, "unlocked") == 0)
-  {
-    if ((r + g + b) == 0) color = lv_color_hex(0xffffff);
-    keyPad.setUnlocked(color, text);
-  }
-  else if (strcmp(state, "failed") == 0)
-  {
-    if ((r + g + b) == 0) color = lv_color_hex(0xff0000);
-    keyPad.setFailed(color, text);
-  }
-  else if (strcmp(state, "close") == 0)
-  {
-    keyPad.close();
   }
 }
 
@@ -2036,11 +2034,6 @@ void jsonCommand(JsonVariant json)
     {
       jsonTileCommand(tile);
     }
-  }
-
-  if (json.containsKey("keyPad"))
-  {
-    jsonKeyPadCommand(json["keyPad"]);
   }
 
   if (json.containsKey("addIcon"))

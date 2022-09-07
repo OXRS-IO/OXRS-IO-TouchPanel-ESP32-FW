@@ -9,10 +9,9 @@ private:
   lv_obj_t *_imgLockState = NULL;
   lv_obj_t *_label = NULL;
   lv_obj_t *pwd_ta = NULL;
-  const void *_imgLocked;
-  const void *_imgUnLocked;
 
   void _createKeyPad(void);
+  const void *_imgUnLocked, *_imgLocked;
 
 public:
   classKeyPad(void){};
@@ -21,10 +20,7 @@ public:
   void addChar(char value);
   void delChar(void);
 
-  void setLocked(lv_color_t color, const char *text);
-  void setUnlocked(lv_color_t color, const char *text);
-  void setFailed(lv_color_t color, const char *text);
-  void setState(const void *img, lv_color_t color, const char *text);
+  void setState(const char *state, const void *icon, lv_color_t color, const char *text);
 
   const char *getKey(void);
 };

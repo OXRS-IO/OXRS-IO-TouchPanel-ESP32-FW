@@ -57,7 +57,7 @@ void classKeyPad::_createKeyPad(void)
   lv_obj_set_style_text_color(_label, lv_color_hex(0x000000), LV_STATE_CHECKED);
   lv_label_set_text(_label, _callingTile->getLabel());
 
-  setState(_callingTile->getState() ? _imgLocked : _imgUnLocked, _callingTile->getColor(), "enter code");
+  setState(_callingTile->getState() ? "locked" : "unlocked", NULL, _callingTile->getColor(), "enter code");
 }
 
 classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler) : classPopUpContainer(1)
@@ -84,26 +84,38 @@ void classKeyPad::delChar(void)
   lv_textarea_del_char(pwd_ta);
 }
 
-void classKeyPad::setLocked(lv_color_t color, const char *text)
+void classKeyPad::setState(const char *state, const void *icon, lv_color_t color, const char *text)
 {
-  setState(_imgLocked, color, text);
-}
-
-void classKeyPad::setUnlocked(lv_color_t color, const char *text)
-{
-  setState(_imgUnLocked, color, text);
-}
-
-void classKeyPad::setFailed(lv_color_t color, const char *text)
-{
-  setState(NULL, color, text);
-}
-
-void classKeyPad::setState(const void *img, lv_color_t color, const char *text)
-{
-  if (img != NULL)
+  if (icon != NULL)
   {
-    lv_img_set_src(_imgLockState, img);
+    lv_img_set_src(_imgLockState, icon);
+  }
+  else 
+  {
+    if (strcmp(state, "locked") == 0)
+    {
+      lv_img_set_src(_imgLockState, _imgLocked);
+    }
+    else if (strcmp(state, "unlocked") == 0)
+    {
+      lv_img_set_src(_imgLockState, _imgUnLocked);
+    }
+  }
+
+  if ((color.ch.red + color.ch.blue + color.ch.green) == 0)
+  {
+    if (strcmp(state, "locked") == 0)
+    {
+      color = colorOn;
+    }
+    else if (strcmp(state, "unlocked") == 0)
+    {
+      color = lv_color_hex(0xffffff);
+    }
+    else if (strcmp(state, "failed") == 0)
+    {
+      color = lv_color_hex(0xff0000);
+    }
   }
 
   lv_obj_set_style_img_recolor(_imgLockState, color, LV_PART_MAIN);
