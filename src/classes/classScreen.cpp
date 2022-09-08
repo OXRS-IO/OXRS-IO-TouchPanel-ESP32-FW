@@ -22,9 +22,7 @@ classScreen::classScreen(int number, int style)
 
   screen = lv_obj_create(NULL);
   lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-
-  _screenBgColor = colorBg;
-  lv_obj_set_style_bg_color(screen, _screenBgColor, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(screen, colorBg, LV_PART_MAIN);
 
   if (style == 1)
   {
@@ -155,19 +153,9 @@ void classScreen::setFooter(const char *left, const char *center, const char *ri
   }
 }
 
-void classScreen::setBgColor(int r, int g, int b)
+void classScreen::updateBgColor(void)
 {
-  if ((r + g + b) == 0)
-  {
-    // if all zero reset to default background
-    _screenBgColor = colorBg;
-  }
-  else
-  {
-    _screenBgColor = lv_color_make(r, g, b);
-  }
-
-  lv_obj_set_style_bg_color(screen, _screenBgColor, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(screen, colorBg, LV_PART_MAIN);
 }
 
 void classScreen::createHomeButton(lv_event_cb_t callBack, const void *img)

@@ -16,7 +16,6 @@ private:
   lv_obj_t *_labelCenter = NULL;
   lv_obj_t *_labelRight = NULL;
 
-  lv_color_t _screenBgColor = {0, 0, 0};
   bool _hidden = false;
 
 public:
@@ -35,8 +34,8 @@ public:
   const char *getLabel(void);
   
   void setFooter(const char *left, const char *center, const char *right);
-  void setBgColor(int r, int g, int b);
 
+  void updateBgColor(void);
   void createHomeButton(lv_event_cb_t callBack, const void *img);
   void createSettingsButton(lv_event_cb_t callBack, const void *img);
   void showConnectionStatus(bool connected);
