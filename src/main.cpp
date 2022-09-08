@@ -262,8 +262,7 @@ void initIconVault(void)
   iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
 // initialise the tile_style_LUT
-void
-initStyleLut(void)
+void initStyleLut(void)
 {
   styleLut[TS_NONE] = {TS_NONE, ""};
   styleLut[TS_BUTTON] = {TS_BUTTON, "button"};
