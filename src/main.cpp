@@ -1395,12 +1395,13 @@ void jsonBackgroundColorConfig(JsonVariant json)
   g = (uint8_t)json["g"].as<int>();
   b = (uint8_t)json["b"].as<int>();
 
-  // update all screens
   setBackgroundColor(r, g, b);
+
+  // set all screens to the new background color
   classScreen *sPtr = screenVault.getStart();
   do
   {
-    if (sPtr) sPtr->updateBgColor();
+    if (sPtr) sPtr->setBgColor(0, 0, 0);
   } while ((sPtr = screenVault.getNext(sPtr->screenIdx)));
 }
 
@@ -1679,6 +1680,8 @@ void jsonShowMessage(JsonVariant json)
 
 void jsonScreenCommand(JsonVariant json)
 {
+  uint8_t r, g, b;
+
   int screenIdx = json["screen"].as<int>();
   if ((screenIdx < SCREEN_START) || (screenIdx > SCREEN_END))
   {
@@ -1693,6 +1696,15 @@ void jsonScreenCommand(JsonVariant json)
     wt32.print(F("[tp32] screen not found: "));
     wt32.println(screenIdx);
     return;
+  }
+
+  if (json.containsKey("backgroundColorRgb"))
+  {
+    r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
+    g = (uint8_t)json["backgroundColorRgb"]["g"].as<int>();
+    b = (uint8_t)json["backgroundColorRgb"]["b"].as<int>();
+
+    screen->setBgColor(r, g, b);
   }
 
   if (json.containsKey("footer"))
