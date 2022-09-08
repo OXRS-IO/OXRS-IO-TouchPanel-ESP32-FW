@@ -1465,7 +1465,7 @@ void jsonConfig(JsonVariant json)
   }
 }
 
-void screenConfigSchema(JsonVariant json)
+void jsonConfigSchema(JsonVariant json)
 {
   // screens
   JsonObject screens = json.createNestedObject("screens");
@@ -1544,10 +1544,10 @@ void screenConfigSchema(JsonVariant json)
   tilesRequired.add("style");
 
   // background color
-  JsonObject screenConfigSchema = json.createNestedObject("backgroundColorRgb");
-  screenConfigSchema["title"] = "Background Color";
-  screenConfigSchema["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
-  createRgbProperties(screenConfigSchema);
+  JsonObject backgroundColorRgb = json.createNestedObject("backgroundColorRgb");
+  backgroundColorRgb["title"] = "Background Color";
+  backgroundColorRgb["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
+  createRgbProperties(backgroundColorRgb);
 
   // icon 'ON' color
   JsonObject iconOnColorRgb = json.createNestedObject("iconOnColorRgb");
@@ -1578,7 +1578,7 @@ void setConfigSchema()
   StaticJsonDocument<4096> json;
   JsonVariant config = json.as<JsonVariant>();
 
-  screenConfigSchema(config);
+  jsonConfigSchema(config);
 
   // Pass our config schema down to the WT32 library
   wt32.setConfigSchema(config);
