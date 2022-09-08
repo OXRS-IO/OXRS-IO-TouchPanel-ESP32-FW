@@ -42,6 +42,7 @@
 #include <classIconList.h>
 #include <classColorPicker.h>
 #include <classThermostat.h>
+#include <classMessageFeed.h>
 #include <base64.hpp>
 #include <TFT_eSPI.h>
 #include <lvgl.h>
@@ -176,8 +177,11 @@ classKeyPad keyPad = classKeyPad();
 classColorPicker colorPicker = classColorPicker();
 lv_obj_t *_canvasCw = NULL;
 
-// cset point overlay
+// thermostat overlay
 classThermostat thermostat = classThermostat();
+
+// message feed overlay
+classMessageFeed messageFeed = classMessageFeed();
 
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
 
@@ -283,6 +287,7 @@ initStyleLut(void)
   styleLut[TS_REMOTE] = {TS_REMOTE, "remote"};
   styleLut[TS_THERMOSTAT] = {TS_THERMOSTAT, "thermostat"};
   styleLut[TS_LINK] = {TS_LINK, "link"};
+  styleLut[TS_FEED] = {TS_FEED, "feed"};
 }
 
 // converts a style string to its enum
@@ -1042,6 +1047,11 @@ static void tileEventHandler(lv_event_t * e)
         thermostat = classThermostat(tPtr, thermostatEventHandler);
         break;
 
+      case TS_FEED:
+        // button is style FEED -> show feed in pop-up
+        messageFeed.show();
+        break;
+
       default:
         // no special action -> publish click event
         publishTileEvent(tPtr, "single");
@@ -1276,6 +1286,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
   // set action indicator if required (depends on tile style)
   switch (style)
   {
+    case TS_FEED:
     case TS_LINK: ref.setActionIndicator(WP_SYMBOL_CHEV_RIGHT); break;
     case TS_DROPDOWN: ref.setActionIndicator(WP_SYMBOL_CHEV_DOWN); break;
     case TS_COLOR_PICKER_CCT:
@@ -2005,6 +2016,20 @@ void jsonAddIcon(JsonVariant json)
   setConfigSchema();
 }
 
+// handle messageFeed comand
+void jsonMessageFeed(JsonVariant json)
+{
+
+  if (json.containsKey("addPost"))
+  {
+    messageFeed.addPost(json["addPost"]["id"], json["addPost"]["head"], json["addPost"]["body"]);
+  }
+  if (json.containsKey("removePost"))
+  {
+    messageFeed.removePost(json["removePost"]["id"]);
+  }
+}
+
 void jsonCommand(JsonVariant json)
 {
   if (json.containsKey("backlight"))
@@ -2046,6 +2071,11 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("addIcon"))
   {
     jsonAddIcon(json["addIcon"]);
+  }
+
+  if (json.containsKey("messageFeed"))
+  {
+    jsonMessageFeed(json["messageFeed"]);
   }
 }
 

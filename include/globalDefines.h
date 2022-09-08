@@ -23,6 +23,7 @@ enum tileType_t
   TS_REMOTE,
   TS_THERMOSTAT,
   TS_LINK,
+  TS_FEED,
   TS_STYLE_COUNT // must be the last element
 };
 
