@@ -23,8 +23,8 @@ classScreen::classScreen(int number, int style)
   screen = lv_obj_create(NULL);
   lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
 
-  // set background color to default
-  setBgColor(0, 0, 0);
+  _screenBgColor = colorBg;
+  lv_obj_set_style_bg_color(screen, _screenBgColor, LV_PART_MAIN);
 
   if (style == 1)
   {
