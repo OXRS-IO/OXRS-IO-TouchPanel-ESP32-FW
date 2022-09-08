@@ -1376,7 +1376,7 @@ void getApiSnapshot(Request &req, Response &res)
  * Config Handler
  */
 
-void jsonColorIconOnConfig(JsonVariant json)
+void jsonIconOnColorConfig(JsonVariant json)
 {
   uint8_t r, g, b;
 
@@ -1387,7 +1387,7 @@ void jsonColorIconOnConfig(JsonVariant json)
   setIconOnColor(r, g, b);
 }
 
-void jsonColorBackgroundConfig(JsonVariant json)
+void jsonBackgroundColorConfig(JsonVariant json)
 {
   uint8_t r, g, b;
 
@@ -1426,14 +1426,14 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
 
 void jsonConfig(JsonVariant json)
 {
-  if (json.containsKey("colorIconOn"))
+  if (json.containsKey("iconOnColorRgb"))
   {
-    jsonColorIconOnConfig(json["colorIconOn"]);
+    jsonIconOnColorConfig(json["iconOnColorRgb"]);
   }
 
-  if (json.containsKey("colorBackground"))
+  if (json.containsKey("backgroundColorRgb"))
   {
-    jsonColorBackgroundConfig(json["colorBackground"]);
+    jsonBackgroundColorConfig(json["backgroundColorRgb"]);
   }
 
   if (json.containsKey("noActivitySecondsToHome"))
