@@ -1546,16 +1546,16 @@ void screenConfigSchema(JsonVariant json)
   tilesRequired.add("style");
 
   // background color
-  JsonObject colorBackground = json.createNestedObject("colorBackground");
-  colorBackground["title"] = "Background Color";
-  colorBackground["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
-  createRgbProperties(colorBackground);
+  JsonObject screenConfigSchema = json.createNestedObject("backgroundColorRgb");
+  screenConfigSchema["title"] = "Background Color";
+  screenConfigSchema["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
+  createRgbProperties(screenConfigSchema);
 
   // icon 'ON' color
-  JsonObject colorIconOn = json.createNestedObject("colorIconOn");
-  colorIconOn["title"] = "Icon Color";
-  colorIconOn["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
-  createRgbProperties(colorIconOn);
+  JsonObject iconOnColorRgb = json.createNestedObject("iconOnColorRgb");
+  iconOnColorRgb["title"] = "Icon Color";
+  iconOnColorRgb["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
+  createRgbProperties(iconOnColorRgb);
 
   // noActivity timeout
   JsonObject noActivitySecondsToHome = json.createNestedObject("noActivitySecondsToHome");
