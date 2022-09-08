@@ -291,24 +291,27 @@ void classTile::setTileDisabled(bool disable)
 {
   if (disable)
   {
-    int row = (tileId.idx.tile - 1) / 2;
-    int col = (tileId.idx.tile - 1) % 2;
+    if (!_tileFg)
+    {
+      int row = (tileId.idx.tile - 1) / 2;
+      int col = (tileId.idx.tile - 1) % 2;
 
-    _tileFg = lv_obj_create(_btn);
-    lv_obj_remove_style_all(_tileFg);
-    lv_obj_set_size(_tileFg, lv_obj_get_width(_btn), lv_obj_get_height(_btn));
-    lv_obj_set_style_radius(_tileFg, 5, LV_PART_MAIN);
-    lv_obj_set_grid_cell(_tileFg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
-    lv_obj_set_style_bg_color(_tileFg, lv_color_hex(0x606060), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(_tileFg, 160, LV_PART_MAIN);
-    lv_obj_move_foreground(_tileFg);
+      _tileFg = lv_obj_create(_btn);
+      lv_obj_remove_style_all(_tileFg);
+      lv_obj_set_size(_tileFg, lv_obj_get_width(_btn), lv_obj_get_height(_btn));
+      lv_obj_set_style_radius(_tileFg, 5, LV_PART_MAIN);
+      lv_obj_set_grid_cell(_tileFg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+      lv_obj_set_style_bg_color(_tileFg, lv_color_hex(0x606060), LV_PART_MAIN);
+      lv_obj_set_style_bg_opa(_tileFg, 160, LV_PART_MAIN);
+      lv_obj_move_foreground(_tileFg);
+    }
   } 
   else
   {
     if (_tileFg)
     {
-    lv_obj_del(_tileFg);
-    _tileFg = NULL;
+      lv_obj_del(_tileFg);
+      _tileFg = NULL;
     }
   }
 }
