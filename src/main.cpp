@@ -262,8 +262,7 @@ void initIconVault(void)
   iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
 // initialise the tile_style_LUT
-void
-initStyleLut(void)
+void initStyleLut(void)
 {
   styleLut[TS_NONE] = {TS_NONE, ""};
   styleLut[TS_BUTTON] = {TS_BUTTON, "button"};
@@ -1376,7 +1375,7 @@ void getApiSnapshot(Request &req, Response &res)
  * Config Handler
  */
 
-void jsonColorIconOnConfig(JsonVariant json)
+void jsonIconOnColorConfig(JsonVariant json)
 {
   uint8_t r, g, b;
 
@@ -1387,7 +1386,7 @@ void jsonColorIconOnConfig(JsonVariant json)
   setIconOnColor(r, g, b);
 }
 
-void jsonColorBackgroundConfig(JsonVariant json)
+void jsonBackgroundColorConfig(JsonVariant json)
 {
   uint8_t r, g, b;
 
@@ -1426,14 +1425,14 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
 
 void jsonConfig(JsonVariant json)
 {
-  if (json.containsKey("colorIconOn"))
+  if (json.containsKey("iconOnColorRgb"))
   {
-    jsonColorIconOnConfig(json["colorIconOn"]);
+    jsonIconOnColorConfig(json["iconOnColorRgb"]);
   }
 
-  if (json.containsKey("colorBackground"))
+  if (json.containsKey("backgroundColorRgb"))
   {
-    jsonColorBackgroundConfig(json["colorBackground"]);
+    jsonBackgroundColorConfig(json["backgroundColorRgb"]);
   }
 
   if (json.containsKey("noActivitySecondsToHome"))
@@ -1466,7 +1465,7 @@ void jsonConfig(JsonVariant json)
   }
 }
 
-void screenConfigSchema(JsonVariant json)
+void jsonConfigSchema(JsonVariant json)
 {
   // screens
   JsonObject screens = json.createNestedObject("screens");
@@ -1545,16 +1544,16 @@ void screenConfigSchema(JsonVariant json)
   tilesRequired.add("style");
 
   // background color
-  JsonObject colorBackground = json.createNestedObject("colorBackground");
-  colorBackground["title"] = "Background Color";
-  colorBackground["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
-  createRgbProperties(colorBackground);
+  JsonObject backgroundColorRgb = json.createNestedObject("backgroundColorRgb");
+  backgroundColorRgb["title"] = "Background Color";
+  backgroundColorRgb["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
+  createRgbProperties(backgroundColorRgb);
 
   // icon 'ON' color
-  JsonObject colorIconOn = json.createNestedObject("colorIconOn");
-  colorIconOn["title"] = "Icon Color";
-  colorIconOn["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
-  createRgbProperties(colorIconOn);
+  JsonObject iconOnColorRgb = json.createNestedObject("iconOnColorRgb");
+  iconOnColorRgb["title"] = "Icon Color";
+  iconOnColorRgb["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
+  createRgbProperties(iconOnColorRgb);
 
   // noActivity timeout
   JsonObject noActivitySecondsToHome = json.createNestedObject("noActivitySecondsToHome");
@@ -1579,7 +1578,7 @@ void setConfigSchema()
   StaticJsonDocument<4096> json;
   JsonVariant config = json.as<JsonVariant>();
 
-  screenConfigSchema(config);
+  jsonConfigSchema(config);
 
   // Pass our config schema down to the WT32 library
   wt32.setConfigSchema(config);
@@ -1757,7 +1756,7 @@ void jsonTileCommand(JsonVariant json)
     // throw error
     else
     {
-      wt32.print(F("[tp32]] invalid state: "));
+      wt32.print(F("[tp32] invalid state: "));
       wt32.println(state);
     }
   }
@@ -1894,9 +1893,48 @@ void jsonTileCommand(JsonVariant json)
       }
       else
       {
-        wt32.print(F("[tp32]] invalid mode: "));
+        wt32.print(F("[tp32] invalid mode: "));
         wt32.println(mode);
       }
+    }
+  }
+
+  if (json.containsKey("keyPad"))
+  {
+    // exit early if no active keypad
+    if (!keyPad.isActive())
+      return;
+
+    // exit early if not addressed to the active keypad
+    if (keyPad.getTile()->tileId.id != tile->tileId.id)
+      return;
+
+    JsonVariant jsonKeyPad = json["keyPad"];
+
+    const char * state = jsonKeyPad["state"];
+
+    // close keypad and exit early
+    if (strcmp(state, "close") == 0)
+    {
+      keyPad.close();
+    }
+    else
+    {
+      const void * icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
+      const char * text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
+
+      uint8_t r, g, b;
+
+      if (jsonKeyPad.containsKey("iconColorRgb"))
+      {
+        r = (uint8_t)jsonKeyPad["iconColorRgb"]["r"].as<int>();
+        g = (uint8_t)jsonKeyPad["iconColorRgb"]["g"].as<int>();
+        b = (uint8_t)jsonKeyPad["iconColorRgb"]["b"].as<int>();
+      }
+      
+      lv_color_t color = lv_color_make(r, g, b);
+
+      keyPad.setState(state, icon, color, text);
     }
   }
 
@@ -1931,47 +1969,6 @@ void jsonTileCommand(JsonVariant json)
     {
       tile->setThermostatUnits(jsonThermostat["units"]);
     }
-  }
-}
-
-void jsonKeyPadCommand(JsonVariant json)
-{
-  // early exit if no valid keypad exist
-  if (!keyPad.isActive())
-    return;
-
-  const char * state = json["state"];
-  const char * text = json.containsKey("text") ? json["text"] : json["state"];
-
-  uint8_t r, g, b;
-
-  if (json.containsKey("colorRgb"))
-  {
-    r = (uint8_t)json["colorRgb"]["r"].as<int>();
-    g = (uint8_t)json["colorRgb"]["g"].as<int>();
-    b = (uint8_t)json["colorRgb"]["b"].as<int>();
-  }
-  
-  lv_color_t color = lv_color_make(r, g, b);
-
-  if (strcmp(state, "locked") == 0)
-  {
-    if ((r + g + b) == 0) color = colorOn;
-    keyPad.setLocked(color, text);
-  }
-  else if (strcmp(state, "unlocked") == 0)
-  {
-    if ((r + g + b) == 0) color = lv_color_hex(0xffffff);
-    keyPad.setUnlocked(color, text);
-  }
-  else if (strcmp(state, "failed") == 0)
-  {
-    if ((r + g + b) == 0) color = lv_color_hex(0xff0000);
-    keyPad.setFailed(color, text);
-  }
-  else if (strcmp(state, "close") == 0)
-  {
-    keyPad.close();
   }
 }
 
@@ -2036,11 +2033,6 @@ void jsonCommand(JsonVariant json)
     {
       jsonTileCommand(tile);
     }
-  }
-
-  if (json.containsKey("keyPad"))
-  {
-    jsonKeyPadCommand(json["keyPad"]);
   }
 
   if (json.containsKey("addIcon"))
