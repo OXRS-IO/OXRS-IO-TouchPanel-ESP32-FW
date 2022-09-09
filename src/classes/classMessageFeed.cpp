@@ -4,12 +4,9 @@
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 
-
-void classMessageFeed::show(void) 
+classMessageFeed::classMessageFeed(classTile *tile) : classPopUpContainer(1)
 {
-  // base class constructor, part to be called to get clean container
-  _startUp();
-
+  _callingTile = tile;
   lv_obj_del(_panel);
 
   lv_obj_t *_flexGrid = lv_obj_create(_ovlPanel);
@@ -21,9 +18,9 @@ void classMessageFeed::show(void)
   lv_obj_set_style_pad_row(_flexGrid, 10, 0);
   lv_obj_add_flag(_flexGrid, LV_OBJ_FLAG_SCROLLABLE);
 
-  _feedIterator = _feed.begin();
+  std::list<post>::iterator _feedIterator = _callingTile->getFeedIterator();
 
-  for (int i = _feed.size(); i > 0; i--)
+  for (int i = _callingTile->getFeedSize(); i > 0; i--)
   {
     lv_obj_t *_postContainer = lv_obj_create(_flexGrid);
     lv_obj_remove_style_all(_postContainer);
@@ -72,23 +69,3 @@ void classMessageFeed::show(void)
   }
 }
 
-// add post to feed (max feed entries = 5)
-void classMessageFeed::addPost(int id, const char *head, const char *body)
-{
-  if (head || body)
-  {
-    if (_feed.size() >= 5)
-      _feed.pop_back();
-    _feed.emplace_front(post(id, head ? (string)head : "", body ? (string)body : ""));
-  }
-}
-
-// remove post(s) from feed
-void classMessageFeed::removePost(int id)
-{
-  if (id == 0)
-    _feed.clear();
-  else
-    _feed.remove_if([&](post const &p)
-                    { return p.id == id; });
-}

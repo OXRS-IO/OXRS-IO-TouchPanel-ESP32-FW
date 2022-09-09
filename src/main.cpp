@@ -595,6 +595,7 @@ void checkNoActivity(void)
       if (colorPicker.isActive()) colorPicker.close();
       if (thermostat.isActive()) thermostat.close();
       if (remoteControl.isActive()) remoteControl.close();
+      if (messageFeed.isActive()) messageFeed.close();
      // return to HomeScreen if keyPad is NOT active
       if (!keyPad.isActive())
       {
@@ -1049,7 +1050,7 @@ static void tileEventHandler(lv_event_t * e)
 
       case TS_FEED:
         // button is style FEED -> show feed in pop-up
-        messageFeed.show();
+        messageFeed = classMessageFeed(tPtr);
         break;
 
       default:
@@ -1943,6 +1944,20 @@ void jsonTileCommand(JsonVariant json)
       tile->setThermostatUnits(jsonThermostat["units"]);
     }
   }
+
+  if (json.containsKey("messageFeed"))
+  {
+    JsonVariant jsonMessageFeed = json["messageFeed"];
+
+    if (jsonMessageFeed.containsKey("addPost"))
+    {
+      tile->addPost(jsonMessageFeed["addPost"]["id"], jsonMessageFeed["addPost"]["head"], jsonMessageFeed["addPost"]["body"]);
+    }
+    if (jsonMessageFeed.containsKey("removePost"))
+    {
+      tile->removePost(jsonMessageFeed["removePost"]["id"]);
+    }
+  }
 }
 
 void jsonKeyPadCommand(JsonVariant json)
@@ -2016,20 +2031,6 @@ void jsonAddIcon(JsonVariant json)
   setConfigSchema();
 }
 
-// handle messageFeed comand
-void jsonMessageFeed(JsonVariant json)
-{
-
-  if (json.containsKey("addPost"))
-  {
-    messageFeed.addPost(json["addPost"]["id"], json["addPost"]["head"], json["addPost"]["body"]);
-  }
-  if (json.containsKey("removePost"))
-  {
-    messageFeed.removePost(json["removePost"]["id"]);
-  }
-}
-
 void jsonCommand(JsonVariant json)
 {
   if (json.containsKey("backlight"))
@@ -2071,11 +2072,6 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("addIcon"))
   {
     jsonAddIcon(json["addIcon"]);
-  }
-
-  if (json.containsKey("messageFeed"))
-  {
-    jsonMessageFeed(json["messageFeed"]);
   }
 }
 

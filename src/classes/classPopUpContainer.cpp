@@ -60,4 +60,5 @@ bool classPopUpContainer::isActive(void)
 void classPopUpContainer::close(void)
 {
   lv_obj_del_delayed(_ovlPanel, 50);
+  _ovlPanel = NULL;
 }
