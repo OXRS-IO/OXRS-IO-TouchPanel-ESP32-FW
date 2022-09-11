@@ -86,6 +86,7 @@ extern "C" const lv_img_dsc_t ios_ceiling_fan_60;
 extern "C" const lv_img_dsc_t ios_left_30;
 extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_slider_60;
+extern "C" const lv_img_dsc_t ios_feed_60;
 
 // pseudo icons
 uint8_t nullImg[] = {0, 0, 0};
@@ -125,6 +126,7 @@ const void *imgCeilingFan = &ios_ceiling_fan_60;
 const void *imgLeft = &ios_left_30;
 const void *imgRight = &ios_right_30;
 const void *imgSlider = &ios_slider_60;
+const void *imgFeed = &ios_feed_60;
 const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 
 int _actBackLight;
@@ -263,6 +265,7 @@ void initIconVault(void)
   iconVault.add({string("_pause"), imgPause});
   iconVault.add({string("_thermometer"), imgThermo});
   iconVault.add({string("_slider"), imgSlider});
+  iconVault.add({string("_feed"), imgFeed});
   iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
 // initialise the tile_style_LUT
