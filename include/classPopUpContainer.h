@@ -13,6 +13,7 @@ protected:
   lv_obj_t *_btnExit = NULL;
 
   static void _exitButtonEventHandler(lv_event_t *e);
+  void _startUp(void);
 
 public:
   classPopUpContainer(void){};

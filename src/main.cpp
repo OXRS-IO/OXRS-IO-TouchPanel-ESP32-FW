@@ -42,6 +42,7 @@
 #include <classIconList.h>
 #include <classColorPicker.h>
 #include <classThermostat.h>
+#include <classMessageFeed.h>
 #include <base64.hpp>
 #include <TFT_eSPI.h>
 #include <lvgl.h>
@@ -85,6 +86,7 @@ extern "C" const lv_img_dsc_t ios_ceiling_fan_60;
 extern "C" const lv_img_dsc_t ios_left_30;
 extern "C" const lv_img_dsc_t ios_right_30;
 extern "C" const lv_img_dsc_t ios_slider_60;
+extern "C" const lv_img_dsc_t ios_feed_60;
 
 // pseudo icons
 uint8_t nullImg[] = {0, 0, 0};
@@ -124,6 +126,7 @@ const void *imgCeilingFan = &ios_ceiling_fan_60;
 const void *imgLeft = &ios_left_30;
 const void *imgRight = &ios_right_30;
 const void *imgSlider = &ios_slider_60;
+const void *imgFeed = &ios_feed_60;
 const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 
 int _actBackLight;
@@ -176,8 +179,11 @@ classKeyPad keyPad = classKeyPad();
 classColorPicker colorPicker = classColorPicker();
 lv_obj_t *_canvasCw = NULL;
 
-// cset point overlay
+// thermostat overlay
 classThermostat thermostat = classThermostat();
+
+// message feed overlay
+classMessageFeed messageFeed = classMessageFeed();
 
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
 
@@ -259,6 +265,7 @@ void initIconVault(void)
   iconVault.add({string("_pause"), imgPause});
   iconVault.add({string("_thermometer"), imgThermo});
   iconVault.add({string("_slider"), imgSlider});
+  iconVault.add({string("_feed"), imgFeed});
   iconVault.add({string("_thermostat"), imgPseudoThermostat});
 }
 // initialise the tile_style_LUT
@@ -282,6 +289,7 @@ void initStyleLut(void)
   styleLut[TS_REMOTE] = {TS_REMOTE, "remote"};
   styleLut[TS_THERMOSTAT] = {TS_THERMOSTAT, "thermostat"};
   styleLut[TS_LINK] = {TS_LINK, "link"};
+  styleLut[TS_FEED] = {TS_FEED, "feed"};
 }
 
 // converts a style string to its enum
@@ -589,6 +597,7 @@ void checkNoActivity(void)
       if (colorPicker.isActive()) colorPicker.close();
       if (thermostat.isActive()) thermostat.close();
       if (remoteControl.isActive()) remoteControl.close();
+      if (messageFeed.isActive()) messageFeed.close();
      // return to HomeScreen if keyPad is NOT active
       if (!keyPad.isActive())
       {
@@ -1041,6 +1050,11 @@ static void tileEventHandler(lv_event_t * e)
         thermostat = classThermostat(tPtr, thermostatEventHandler);
         break;
 
+      case TS_FEED:
+        // button is style FEED -> show feed in pop-up
+        messageFeed = classMessageFeed(tPtr);
+        break;
+
       default:
         // no special action -> publish click event
         publishTileEvent(tPtr, "single");
@@ -1275,6 +1289,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
   // set action indicator if required (depends on tile style)
   switch (style)
   {
+    case TS_FEED:
     case TS_LINK: ref.setActionIndicator(WP_SYMBOL_CHEV_RIGHT); break;
     case TS_DROPDOWN: ref.setActionIndicator(WP_SYMBOL_CHEV_DOWN); break;
     case TS_COLOR_PICKER_CCT:
@@ -1968,6 +1983,20 @@ void jsonTileCommand(JsonVariant json)
     if (jsonThermostat.containsKey("units"))
     {
       tile->setThermostatUnits(jsonThermostat["units"]);
+    }
+  }
+
+  if (json.containsKey("messageFeed"))
+  {
+    JsonVariant jsonMessageFeed = json["messageFeed"];
+
+    if (jsonMessageFeed.containsKey("addPost"))
+    {
+      tile->addPost(jsonMessageFeed["addPost"]["id"], jsonMessageFeed["addPost"]["head"], jsonMessageFeed["addPost"]["body"]);
+    }
+    if (jsonMessageFeed.containsKey("removePost"))
+    {
+      tile->removePost(jsonMessageFeed["removePost"]["id"]);
     }
   }
 }

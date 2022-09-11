@@ -4,9 +4,8 @@
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 
-
 // build the panels with all widgets
-classPopUpContainer::classPopUpContainer(int start)
+void classPopUpContainer::_startUp(void)
 {
   // full screen overlay / opaqe
   _ovlPanel = lv_obj_create(lv_scr_act());
@@ -26,7 +25,7 @@ classPopUpContainer::classPopUpContainer(int start)
   lv_obj_clear_flag(_panel, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(_panel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_panel, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
- 
+
   // back button (closes pop up)
   _btnExit = lv_btn_create(_ovlPanel);
   lv_obj_set_size(_btnExit, 153, 40);
@@ -38,7 +37,12 @@ classPopUpContainer::classPopUpContainer(int start)
   lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
   lv_obj_add_event_cb(_btnExit, _exitButtonEventHandler, LV_EVENT_CLICKED, this);
+}
 
+// build the panels with all widgets (constructor)
+classPopUpContainer::classPopUpContainer(int start)
+{
+  _startUp();
 }
 
 void classPopUpContainer::_exitButtonEventHandler(lv_event_t *e)
@@ -56,4 +60,5 @@ bool classPopUpContainer::isActive(void)
 void classPopUpContainer::close(void)
 {
   lv_obj_del_delayed(_ovlPanel, 50);
+  _ovlPanel = NULL;
 }

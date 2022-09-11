@@ -1,8 +1,25 @@
 ﻿#pragma once
+#include <list>
 #include <lvgl.h>
 #include <globalDefines.h>
 
 #define ARC_STEP 5
+
+// object to handle feed posts
+class post
+{
+public:
+  string head = "";
+  string body = "";
+  int id = 0;
+
+  post(int _id, string h, string b)
+  {
+    id = _id;
+    head = h;
+    body = b;
+  };
+};
 
 class classTile
 {
@@ -54,6 +71,9 @@ protected:
   int _thermostatCurrent = 0;
   string _units = "";
   lv_color_t _tileBgColor = {0, 0, 0};
+
+  std::list<post> _feed;
+  std::list<post>::iterator _feedIterator;
 
   void _button(lv_obj_t *parent, const void *img);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
@@ -142,4 +162,9 @@ public :
   void setThermostatUnits(const char *units);
   const char *getThermostatUnits(void);
   void updateThermostatDisplay(void);
+
+  void addPost(int id, const char *head, const char *body);
+  void removePost(int id);
+  std::list<post>::iterator getFeedIterator(void);
+  int getFeedSize(void);
 };

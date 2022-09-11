@@ -948,3 +948,35 @@ void classTile::updateThermostatDisplay(void)
     lv_label_set_text(_labelArcSubValue, buffer);
   }
 }
+
+// add post to feed (max feed entries = 5)
+void classTile::addPost(int id, const char *head, const char *body)
+{
+  if (head || body)
+  {
+    if (_feed.size() >= 5)
+      _feed.pop_back();
+    _feed.emplace_front(post(id, head ? (string)head : "", body ? (string)body : ""));
+  }
+}
+
+// remove post(s) from feed
+void classTile::removePost(int id)
+{
+  if (id == 0)
+    _feed.clear();
+  else
+    _feed.remove_if([&](post const &p)
+                    { return p.id == id; });
+}
+
+std::list<post>::iterator classTile::getFeedIterator(void)
+{
+  _feedIterator = _feed.begin();
+  return _feedIterator;
+}
+
+int classTile::getFeedSize(void)
+{
+  return _feed.size();
+}
