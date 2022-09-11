@@ -1,10 +1,8 @@
 ﻿#include <classScreen.h>
-#include <classTile.h>
 #include <globalDefines.h>
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
-// extern classScreen *screenDsc[9];
 
 // grid definitions
 // sub screens 3 x 2 + home button
@@ -23,6 +21,7 @@ classScreen::classScreen(int number, int style)
   screen = lv_obj_create(NULL);
   lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(screen, colorBg, LV_PART_MAIN);
+  lv_obj_clear_flag(screen, TP_COLOR_BG_OVERWRITE);
 
   if (style == 1)
   {
@@ -153,9 +152,32 @@ void classScreen::setFooter(const char *left, const char *center, const char *ri
   }
 }
 
+void classScreen::setBgColor(int r, int g, int b)
+{
+  if ((r + g + b) == 0)
+  {
+    // if all zero reset to default background
+    lv_obj_clear_flag(screen, TP_COLOR_BG_OVERWRITE);
+    _screenBgColor = colorBg;
+  }
+  else
+  {
+    lv_obj_add_flag(screen, TP_COLOR_BG_OVERWRITE);
+    _screenBgColor = lv_color_make(r, g, b);
+  }
+  updateBgColor();
+}
+
 void classScreen::updateBgColor(void)
 {
-  lv_obj_set_style_bg_color(screen, colorBg, LV_PART_MAIN);
+  if (!lv_obj_has_flag(screen, TP_COLOR_BG_OVERWRITE))
+    _screenBgColor = colorBg;
+  lv_obj_set_style_bg_color(screen, _screenBgColor, LV_PART_MAIN);
+}
+
+lv_color_t classScreen::getBgColor(void)
+{
+  return _screenBgColor;
 }
 
 void classScreen::createHomeButton(lv_event_cb_t callBack, const void *img)

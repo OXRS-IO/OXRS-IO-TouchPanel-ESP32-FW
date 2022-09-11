@@ -6,6 +6,7 @@ using std::list;
 
 // THE list that holds all tiles
 std::list<classTile> _listTiles;
+std::list<classTile>::iterator _itNext;
 
 classTile &classTileList::add(void)
 {
@@ -47,4 +48,23 @@ void classTileList::remove(int screenIdx, int tileIdx)
 int classTileList::getSize(void)
 {
   return _listTiles.size();
+}
+
+// return size from list
+void classTileList::setIteratorStart(void)
+{
+  _itNext = _listTiles.begin();
+}
+
+// return size from list
+classTile *classTileList::getNextTile(void)
+{
+  if (_itNext == _listTiles.end())
+  {
+    return NULL;
+  }
+  else
+  {
+    return _itNext++.operator->();
+  }
 }
