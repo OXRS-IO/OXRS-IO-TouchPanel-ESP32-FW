@@ -1,13 +1,14 @@
 ﻿#pragma once
 #include <lvgl.h>
 #include <globalDefines.h>
+#include <classScreen.h>
 
 #define ARC_STEP 5
 
 class classTile
 {
 protected:
-  lv_obj_t *_parent = NULL;
+  lv_obj_t *_parentContainer = NULL;
   lv_obj_t *_tileBg = NULL;
   lv_obj_t *_tileFg = NULL;
   lv_obj_t *_btn = NULL;
@@ -28,8 +29,7 @@ protected:
   lv_obj_t *_labelArcValue = NULL;
   lv_obj_t *_labelArcSubValue = NULL;
 
-  int _screenIdx = 0;
-  int _tileIdx = 0;
+  classScreen *_parentScreen = NULL;
   int _style = 0;
   string _styleStr;
   int _linkedScreen = 0;
@@ -68,30 +68,27 @@ public :
   lv_obj_t *btn = NULL;
 
   classTile(void){};
-  classTile(lv_obj_t *parent, const void *img);
-  classTile(lv_obj_t *parent, const void *img, const char *labelText);
   ~classTile();
 
-  void begin(lv_obj_t *parent, const void *img, const char *labelText);
-  void registerTile(int screenIdx, int tileIdx, int style, const char* styleStr);
-  void setLabel(const char *labelText);
+  void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, const void *img, const char *labelText, int style, const char* styleStr);
   void setSubLabel(const char *subLabelText);
   void setState(bool state);
-  lv_color_t getColor();
   void setColor(lv_color_t color);
   void setColor(int r, int g, int b);
+  lv_color_t getColor();
   void setBgColor(int r, int g, int b);
+  void updateBgColor(void);
   void setIcon(const void *imgIcon);
   void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
   void setBgImage(lv_img_dsc_t *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
-  void setLink(int linkedScreen);
   void setIconForStateOn(const void* imgStateOn);
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
   void setActionIndicator(const char* symbol);
   void setTileDisabled(bool disable);
 
+  void setLink(int linkedScreen);
   int getLink(void);
   tileId_t getId(void);
   int getScreenIdx(void);

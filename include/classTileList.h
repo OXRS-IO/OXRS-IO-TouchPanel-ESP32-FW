@@ -11,6 +11,8 @@ public:
   classTile &add(void);
   classTile *get(int screenIdx, int tileIdx);
   void remove(int screenIdx, int tileIdx);
+  void setIteratorStart(void);
+  classTile *getNextTile(void);
  
   int getSize(void);
 };

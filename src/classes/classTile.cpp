@@ -2,17 +2,16 @@
 #include <globalDefines.h>
 
 extern lv_color_t colorOn;
-extern lv_color_t colorBg;
 extern "C" const lv_font_t number_OR_50;
 extern "C" const lv_font_t wp_symbol_font_15;
 
 // create the tile
 void classTile::_button(lv_obj_t *parent, const void *img)
 {
-  _parent = parent;
-  _tileBgColor = colorBg;
+  _parentContainer = parent;
+  _tileBgColor = _parentScreen->getBgColor();
   // create a background layer to opional configle tile backgroung
-  _tileBg = lv_obj_create(_parent);
+  _tileBg = lv_obj_create(_parentContainer);
   lv_obj_remove_style_all(_tileBg);
   lv_obj_set_style_radius(_tileBg, 5, LV_PART_MAIN);
   lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
@@ -76,6 +75,7 @@ void classTile::_button(lv_obj_t *parent, const void *img)
       lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_CLICKABLE);
     }
   }
+  
   lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, img, NULL, NULL);
   lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
@@ -243,17 +243,6 @@ if (_arcTarget)
   hide ? lv_obj_add_flag(_arcTarget, LV_OBJ_FLAG_HIDDEN) : lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_HIDDEN);
 }
 
-classTile::classTile(lv_obj_t *parent, const void *img)
-{
-  _button(parent, img);
-}
-
-classTile::classTile(lv_obj_t *parent, const void *img, const char *labelText)
-{
-  _button(parent, img);
-  lv_label_set_text(_label, labelText);
-}
-
 classTile::~classTile()
 {
   if (_btn)
@@ -264,21 +253,16 @@ classTile::~classTile()
 }
 
 // initialise existing object
-void classTile::begin(lv_obj_t *parent, const void *img, const char *labelText)
+void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, const void *img, const char *labelText, int style, const char *styleStr)
 {
-  _button(parent, img);
-  lv_label_set_text(_label, labelText);
-}
-
-// supply bookkeeping information and align tile in grid
-void classTile::registerTile(int screenIdx, int tileIdx, int style, const char* styleStr)
-{
-  _screenIdx = screenIdx;
-  _tileIdx = tileIdx;
-  tileId.idx.screen = screenIdx;
+  _parentScreen = parentScreen;
+  tileId.idx.screen = _parentScreen->getScreenNumber();
   tileId.idx.tile = tileIdx;
   _style = style;
   _styleStr = styleStr;
+
+  _button(parent, img);
+  lv_label_set_text(_label, labelText);
 
   // position tile in grid after tile and screen are known
   int row = (tileIdx - 1) / 2;
@@ -314,11 +298,6 @@ void classTile::setTileDisabled(bool disable)
       _tileFg = NULL;
     }
   }
-}
-
-void classTile::setLabel(const char *labelText)
-{
-  lv_label_set_text(_label, labelText);
 }
 
 void classTile::setSubLabel(const char *subLabelText)
@@ -401,15 +380,29 @@ void classTile::setBgColor(int r, int g, int b)
   if ((r + g + b) == 0)
   {
     // if all zero reset to default background
-    lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
-    _tileBgColor = colorBg;
+    lv_obj_clear_flag(_tileBg, TP_COLOR_BG_OVERWRITE);
+    _tileBgColor = _parentScreen->getBgColor();
   }
   else
   {
-    lv_obj_set_style_bg_color(_tileBg, lv_color_make(r, g, b), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(_tileBg, 255, LV_PART_MAIN);
+    lv_obj_add_flag(_tileBg, TP_COLOR_BG_OVERWRITE);
     _tileBgColor = lv_color_make(r, g, b);
+  }
+  updateBgColor();
+}
+
+void classTile::updateBgColor(void)
+{
+  if (lv_obj_has_flag(_tileBg, TP_COLOR_BG_OVERWRITE))
+  {
+    lv_obj_set_style_bg_color(_tileBg, _tileBgColor, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(_tileBg, 255, LV_PART_MAIN);
+  }
+  else
+  {
+    _tileBgColor = _parentScreen->getBgColor();
+    lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
   }
   if (_arcTarget)
     lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -492,12 +485,12 @@ tileId_t classTile::getId(void)
 
 int classTile::getScreenIdx(void)
 {
-  return _screenIdx;
+  return tileId.idx.screen;
 }
 
 int classTile::getTileIdx(void)
 {
-  return _tileIdx;
+  return tileId.idx.tile;
 }
 
 int classTile::getStyle(void)
@@ -638,8 +631,8 @@ void classTile::setTopDownMode(bool enable)
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
 {
   // set button and label size from grid
-  int width = (*lv_obj_get_style_grid_column_dsc_array(_parent, 0) - 10) / 2 + 1;
-  int height = (*lv_obj_get_style_grid_row_dsc_array(_parent, 0) - 10) / 2 + 1;
+  int width = (*lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) - 10) / 2 + 1;
+  int height = (*lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) - 10) / 2 + 1;
 
   // up / down  buttons
   _btnUp = lv_btn_create(_btn);

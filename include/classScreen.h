@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <lvgl.h>
 
+#define TP_COLOR_BG_OVERWRITE LV_OBJ_FLAG_USER_1
+
 class classScreen
 {
 private:
@@ -16,6 +18,7 @@ private:
   lv_obj_t *_labelCenter = NULL;
   lv_obj_t *_labelRight = NULL;
 
+  lv_color_t _screenBgColor = {0, 0, 0};
   bool _hidden = false;
 
 public:
@@ -35,6 +38,8 @@ public:
   
   void setFooter(const char *left, const char *center, const char *right);
 
+  void setBgColor(int r, int g, int b);
+  lv_color_t getBgColor(void);
   void updateBgColor(void);
   void createHomeButton(lv_event_cb_t callBack, const void *img);
   void createSettingsButton(lv_event_cb_t callBack, const void *img);

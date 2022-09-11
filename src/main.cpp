@@ -1202,8 +1202,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
 
   // create new Tile
   classTile &ref = tileVault.add();
-  ref.begin(screenVault.get(screenIdx)->container, img, label);
-  ref.registerTile(screenIdx, tileIdx, style, styleStr);
+  ref.begin(screenVault.get(screenIdx)->container, screenVault.get(screenIdx), tileIdx, img, label, style, styleStr);
 
   // handle tiles depending on style capabilities
   if ((style == TS_LINK) && linkedScreen)
@@ -1375,6 +1374,15 @@ void getApiSnapshot(Request &req, Response &res)
  * Config Handler
  */
 
+void updateTilesBgColor(void)
+{
+  tileVault.setIteratorStart();
+  while (classTile *tile = tileVault.getNextTile())
+  {
+    tile->updateBgColor();
+  }
+}
+
 void jsonIconOnColorConfig(JsonVariant json)
 {
   uint8_t r, g, b;
@@ -1401,6 +1409,8 @@ void jsonBackgroundColorConfig(JsonVariant json)
   {
     if (sPtr) sPtr->updateBgColor();
   } while ((sPtr = screenVault.getNext(sPtr->screenIdx)));
+  // update all tiles
+  updateTilesBgColor();
 }
 
 void jsonTilesConfig(int screenIdx, JsonVariant json)
@@ -1692,6 +1702,17 @@ void jsonScreenCommand(JsonVariant json)
     wt32.print(F("[tp32] screen not found: "));
     wt32.println(screenIdx);
     return;
+  }
+
+  if (json.containsKey("backgroundColorRgb"))
+  {
+    uint8_t r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
+    uint8_t g = (uint8_t)json["backgroundColorRgb"]["g"].as<int>();
+    uint8_t b = (uint8_t)json["backgroundColorRgb"]["b"].as<int>();
+
+    screen->setBgColor(r, g, b);
+    // announce tiles about BG change
+    updateTilesBgColor();
   }
 
   if (json.containsKey("footer"))
