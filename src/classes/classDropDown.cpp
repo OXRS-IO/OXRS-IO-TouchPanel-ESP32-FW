@@ -43,6 +43,7 @@ classDropDown::classDropDown(classTile *tile, lv_event_cb_t dropDownEventHandler
     int index = _callingTile->getDropDownIndex();
     if (index > 0) index--;
     lv_dropdown_set_selected(_dropDown, index);
+    lv_dropdown_open(_dropDown);
   }
   // add event handler
   lv_obj_add_event_cb(_dropDown, dropDownEventHandler, LV_EVENT_ALL, _callingTile);

@@ -1016,7 +1016,6 @@ static void tileEventHandler(lv_event_t * e)
       case TS_DROPDOWN:
         // button is style DROPDOWN -> show drop down overlay
         dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
-        dropDownOverlay.open();
         break;
 
       case TS_REMOTE:
@@ -2211,11 +2210,12 @@ void setup()
   setBackgroundColor(0, 0, 0);
 
   // show splash screen
-  _setBackLightLED(20);
+ // _setBackLightLED(20);
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
   lv_img_set_src(img1, imgOxrsSplash);
   lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
   lv_timer_handler();
+  lv_img_cache_invalidate_src(NULL);
   _actBackLight = 50;
   _setBackLightLED(_actBackLight);
   _retainedBackLight = _actBackLight;
