@@ -285,7 +285,6 @@ void initStyleLut(void)
   styleLut[TS_COLOR_PICKER_CCT] = {TS_COLOR_PICKER_CCT, "colorPickerCct"};
   styleLut[TS_DROPDOWN] = {TS_DROPDOWN, "dropDown"};
   styleLut[TS_KEYPAD] = {TS_KEYPAD, "keyPad"};
-  styleLut[TS_KEYPAD_BLOCKING] = {TS_KEYPAD_BLOCKING, "keyPadBlocking"};
   styleLut[TS_REMOTE] = {TS_REMOTE, "remote"};
   styleLut[TS_THERMOSTAT] = {TS_THERMOSTAT, "thermostat"};
   styleLut[TS_LINK] = {TS_LINK, "link"};
@@ -380,13 +379,26 @@ void publishDropDownEvent(classTile *tPtr, int listIndex)
 void publishKeyPadEvent(classTile *tPtr, const char *key)
 {
   StaticJsonDocument<128> json;
-  json["screen"] = tPtr->getScreenIdx();
-  json["tile"] = tPtr->getTileIdx();
-  json["style"] = tPtr->getStyleStr();
-  json["type"] = "button";
-  json["event"] = "key";
-  json["state"] = (tPtr->getState() == true) ? "on" : "off";
-  json["keyCode"] = key;
+  //keypad has parent tile
+  if (tPtr)
+  {
+    json["screen"] = tPtr->getScreenIdx();
+    json["tile"] = tPtr->getTileIdx();
+    json["style"] = tPtr->getStyleStr();
+    json["type"] = "button";
+    json["event"] = "key";
+    json["state"] = (tPtr->getState() == true) ? "on" : "off";
+    json["keyCode"] = key;
+  }
+  // keypad called by direct command
+  else
+  {
+    json["style"] = styleEnum2Str(TS_KEYPAD);
+    json["type"] = "button";
+    json["event"] = "key";
+    json["state"] = "on";
+    json["keyCode"] = key;
+  }
 
   wt32.publishStatus(json.as<JsonVariant>());
 }
@@ -828,8 +840,6 @@ static void keyPadEventHandler(lv_event_t * e)
     }
     else if (strcmp(txt, LV_SYMBOL_NEW_LINE) == 0)
     {
-      if ((strlen(keyPad.getKey()) == 0) && !(tPtr->getStyle() == TS_KEYPAD_BLOCKING))
-        keyPad.close();
       if (strlen(keyPad.getKey()) > 0)
         publishKeyPadEvent(tPtr, keyPad.getKey());
     }
@@ -1024,7 +1034,6 @@ static void tileEventHandler(lv_event_t * e)
         break;
 
       case TS_KEYPAD:
-      case TS_KEYPAD_BLOCKING:
         // button is style keypad
         keyPad = classKeyPad(tPtr, keyPadEventHandler);
         break;
@@ -1294,7 +1303,6 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     case TS_COLOR_PICKER_RGB:
     case TS_COLOR_PICKER_RGB_CCT:
     case TS_KEYPAD:
-    case TS_KEYPAD_BLOCKING:
     case TS_REMOTE:
     case TS_THERMOSTAT: ref.setActionIndicator(WP_SYMBOL_DOTS); break;
   }
@@ -1657,6 +1665,35 @@ void jsonArrayToString(JsonArray array, string *longString)
   longString->pop_back();
 }
 
+void handleKeyPadCommand(JsonVariant jsonKeyPad)
+{
+  const char *state = jsonKeyPad["state"];
+
+  // close keypad and exit early
+  if (strcmp(state, "close") == 0)
+  {
+    keyPad.close();
+  }
+  else
+  {
+    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
+    const char *text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
+
+    uint8_t r, g, b;
+
+    if (jsonKeyPad.containsKey("iconColorRgb"))
+    {
+      r = (uint8_t)jsonKeyPad["iconColorRgb"]["r"].as<int>();
+      g = (uint8_t)jsonKeyPad["iconColorRgb"]["g"].as<int>();
+      b = (uint8_t)jsonKeyPad["iconColorRgb"]["b"].as<int>();
+    }
+
+    lv_color_t color = lv_color_make(r, g, b);
+
+    keyPad.setState(state, icon, color, text);
+  }
+}
+
 void jsonSetBackLightCommand(JsonVariant json)
 {
   int blValue = -1;
@@ -1945,32 +1982,7 @@ void jsonTileCommand(JsonVariant json)
       return;
 
     JsonVariant jsonKeyPad = json["keyPad"];
-
-    const char * state = jsonKeyPad["state"];
-
-    // close keypad and exit early
-    if (strcmp(state, "close") == 0)
-    {
-      keyPad.close();
-    }
-    else
-    {
-      const void * icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
-      const char * text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
-
-      uint8_t r, g, b;
-
-      if (jsonKeyPad.containsKey("iconColorRgb"))
-      {
-        r = (uint8_t)jsonKeyPad["iconColorRgb"]["r"].as<int>();
-        g = (uint8_t)jsonKeyPad["iconColorRgb"]["g"].as<int>();
-        b = (uint8_t)jsonKeyPad["iconColorRgb"]["b"].as<int>();
-      }
-      
-      lv_color_t color = lv_color_make(r, g, b);
-
-      keyPad.setState(state, icon, color, text);
-    }
+    handleKeyPadCommand(jsonKeyPad);
   }
 
   if (json.containsKey("thermostat"))
@@ -2051,6 +2063,25 @@ void jsonAddIcon(JsonVariant json)
   setConfigSchema();
 }
 
+void jsonCommandKeyPad(JsonVariant json)
+{
+  // make pop-up active if not exists
+  if (!keyPad.isActive())
+  {
+    keyPad = classKeyPad(NULL, keyPadEventHandler);
+  }
+
+  // exit early if active keypad is not loaded via direct cmnd
+  if (keyPad.getTile() != NULL)
+    return;
+
+  // label supplied by direct cmnd/
+  if (json.containsKey("label"))
+    keyPad.setLabel(json["label"]);
+
+  handleKeyPadCommand(json);
+}
+
 void jsonCommand(JsonVariant json)
 {
   if (json.containsKey("backlight"))
@@ -2087,6 +2118,12 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("addIcon"))
   {
     jsonAddIcon(json["addIcon"]);
+  }
+
+  if (json.containsKey("keyPad"))
+  {
+    JsonVariant jsonKeyPad = json["keyPad"];
+    jsonCommandKeyPad(jsonKeyPad);
   }
 }
 

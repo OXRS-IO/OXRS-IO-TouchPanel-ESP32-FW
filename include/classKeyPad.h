@@ -16,7 +16,8 @@ private:
 public:
   classKeyPad(void){};
   classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler);
-
+  void setLabel(const char *labelText);
+  
   void addChar(char value);
   void delChar(void);
 
