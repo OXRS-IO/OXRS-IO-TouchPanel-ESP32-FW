@@ -19,12 +19,20 @@ enum tileType_t
   TS_COLOR_PICKER_CCT,
   TS_DROPDOWN,
   TS_KEYPAD,
-  TS_KEYPAD_BLOCKING,
   TS_REMOTE,
   TS_THERMOSTAT,
   TS_LINK,
   TS_FEED,
   TS_STYLE_COUNT // must be the last element
+};
+
+// keyPad types depending how called
+enum keyPadType_t
+{
+  KP_NONE,
+  KP_TILE,
+  KP_DEVICE,
+  KP_LOCKED
 };
 
 // entry for the tile_type_LUT

@@ -54,21 +54,38 @@ void classKeyPad::_createKeyPad(void)
   _label = lv_label_create(_panel);
   lv_obj_set_size(_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_align(_label, LV_ALIGN_TOP_MID, 0, 57);
+  lv_label_set_text(_label, "");
   lv_obj_set_style_text_color(_label, lv_color_hex(0x000000), LV_STATE_CHECKED);
-  lv_label_set_text(_label, _callingTile->getLabel());
-
-  setState(_callingTile->getState() ? "locked" : "unlocked", NULL, _callingTile->getColor(), "enter code");
+  if(_callingTile)
+  {
+    lv_label_set_text(_label, _callingTile->getLabel());
+    setState(_callingTile->getState() ? "locked" : "unlocked", NULL, _callingTile->getColor(), "enter code");
+  }
 }
 
-classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler) : classPopUpContainer(1)
+classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler, keyPadType_t kpType) : classPopUpContainer(1)
 {
-  _callingTile = tile;  
-  _callingTile->getImages(_imgUnLocked, _imgLocked);
+  if (tile)
+  {
+    _callingTile = tile;  
+    _callingTile->getImages(_imgUnLocked, _imgLocked);
+  }
   _createKeyPad();
-
-  if (_callingTile->getStyle() == TS_KEYPAD_BLOCKING)
+  _kpType = kpType;
+  // hide exit button if called by direct command (no parent tile)
+  if (!_callingTile)
     lv_obj_add_flag(_btnExit, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_event_cb(_btnm1, keyPadEventHandler, LV_EVENT_SHORT_CLICKED, _callingTile);
+}
+
+void classKeyPad::setLabel(const char *labelText)
+{
+  lv_label_set_text(_label, labelText);
+}
+
+keyPadType_t classKeyPad::getKeyPadType(void)
+{
+  return _kpType;
 }
 
 void classKeyPad::addChar(char value)
