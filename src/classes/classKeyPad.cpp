@@ -63,7 +63,7 @@ void classKeyPad::_createKeyPad(void)
   }
 }
 
-classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler) : classPopUpContainer(1)
+classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler, keyPadType_t kpType) : classPopUpContainer(1)
 {
   if (tile)
   {
@@ -71,6 +71,7 @@ classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler) : cl
     _callingTile->getImages(_imgUnLocked, _imgLocked);
   }
   _createKeyPad();
+  _kpType = kpType;
   // hide exit button if called by direct command (no parent tile)
   if (!_callingTile)
     lv_obj_add_flag(_btnExit, LV_OBJ_FLAG_HIDDEN);
@@ -80,6 +81,11 @@ classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler) : cl
 void classKeyPad::setLabel(const char *labelText)
 {
   lv_label_set_text(_label, labelText);
+}
+
+keyPadType_t classKeyPad::getKeyPadType(void)
+{
+  return _kpType;
 }
 
 void classKeyPad::addChar(char value)

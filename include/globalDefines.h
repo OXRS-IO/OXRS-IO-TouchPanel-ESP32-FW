@@ -26,6 +26,15 @@ enum tileType_t
   TS_STYLE_COUNT // must be the last element
 };
 
+// keyPad types depending how called
+enum keyPadType_t
+{
+  KP_NONE,
+  KP_TILE,
+  KP_DEVICE,
+  KP_LOCKED
+};
+
 // entry for the tile_type_LUT
 typedef struct
 {

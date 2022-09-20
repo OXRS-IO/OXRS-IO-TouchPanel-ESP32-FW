@@ -135,6 +135,8 @@ int _retainedBackLight;
 connectionState_t _connectionState  = CONNECTED_NONE;
 uint32_t _noActivityTimeOutToHome   = 0L;
 uint32_t _noActivityTimeOutToSleep  = 0L;
+uint32_t _noActivityTimeOutToLock = 0L;
+uint32_t _noActivityTimeOutToLockTriggered = UINT32_MAX;
 
 #define DEFAULT_COLOR_ICON_ON_R     91
 #define DEFAULT_COLOR_ICON_ON_G     190
@@ -144,7 +146,7 @@ uint32_t _noActivityTimeOutToSleep  = 0L;
 #define DEFAULT_COLOR_BACKGROUND_G  0
 #define DEFAULT_COLOR_BACKGROUND_B  0
 
-lv_color_t colorOn;
+    lv_color_t colorOn;
 lv_color_t colorBg;
 
 /*--------------------------- Global Objects -----------------------------*/
@@ -375,7 +377,8 @@ void publishDropDownEvent(classTile *tPtr, int listIndex)
 }
 
 // publish key pad change Event
-// {"screen":1, "tile":1, "style":"light", "type":"button", "event":"key", "state":"off", "keycode":"1234" }
+// {"screen":1, "tile":1, "style":"keyPad", "type":"button", "event":"key", "state":"off", "keycode":"1234" }
+// {"style":"keyPad", "type":"button", "event":"key", "state":"off", "keycode":"1234" }
 void publishKeyPadEvent(classTile *tPtr, const char *key)
 {
   StaticJsonDocument<128> json;
@@ -399,6 +402,17 @@ void publishKeyPadEvent(classTile *tPtr, const char *key)
     json["state"] = "on";
     json["keyCode"] = key;
   }
+
+  wt32.publishStatus(json.as<JsonVariant>());
+}
+
+// publish panel lock state change Event
+// {"style":"keyPad" , "state":"locked" | "unlocked"}
+void publishLockStateEvent(const char *state)
+{
+  StaticJsonDocument<128> json;
+  json["style"] = "keyPad";
+  json["state"] = state;
 
   wt32.publishStatus(json.as<JsonVariant>());
 }
@@ -594,42 +608,6 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data)
   wt32.print(F(","));
   wt32.println(data->point.y);
 #endif
-}
-
-// check for timeout inactivity timeout
-void checkNoActivity(void)
-{
-  // observer disabled
-  if (_noActivityTimeOutToHome != 0)
-  {
-    if (lv_disp_get_inactive_time(NULL) > _noActivityTimeOutToHome)
-    {
-      // check and close pop-ups first
-      if (dropDownOverlay.isActive()) dropDownOverlay.close();
-      if (colorPicker.isActive()) colorPicker.close();
-      if (thermostat.isActive()) thermostat.close();
-      if (remoteControl.isActive()) remoteControl.close();
-      if (messageFeed.isActive()) messageFeed.close();
-     // return to HomeScreen if keyPad is NOT active
-      if (!keyPad.isActive())
-      {
-        if (lv_scr_act() != screenVault.get(SCREEN_HOME)->screen) screenVault.show(SCREEN_HOME);
-      }
-    }
-  }
-  if (_noActivityTimeOutToSleep != 0)
-  {
-    // is in sleep allready ?
-    if (_actBackLight > 0)
-    {
-      // time elapsed, jump to HomeScreen
-      if (lv_disp_get_inactive_time(NULL) > _noActivityTimeOutToSleep)
-      {
-        _retainedBackLight = _actBackLight;
-        _setBackLight(0);
-      }
-    }
-  }
 }
 
 /*
@@ -1035,7 +1013,7 @@ static void tileEventHandler(lv_event_t * e)
 
       case TS_KEYPAD:
         // button is style keypad
-        keyPad = classKeyPad(tPtr, keyPadEventHandler);
+        keyPad = classKeyPad(tPtr, keyPadEventHandler, KP_TILE);
         break;
 
       case TS_COLOR_PICKER_RGB_CCT:
@@ -1477,6 +1455,11 @@ void jsonConfig(JsonVariant json)
     _noActivityTimeOutToSleep = json["noActivitySecondsToSleep"].as<int>() * 1000;
   }
 
+  if (json.containsKey("noActivitySecondsToLock"))
+  {
+    _noActivityTimeOutToLock = json["noActivitySecondsToLock"].as<int>() * 1000;
+  }
+
   if (json.containsKey("screens"))
   {
     for (JsonVariant screenJson : json["screens"].as<JsonArray>())
@@ -1602,6 +1585,14 @@ void jsonConfigSchema(JsonVariant json)
   noActivitySecondsToSleep["type"] = "integer";
   noActivitySecondsToSleep["minimum"] = 0;
   noActivitySecondsToSleep["maximum"] = 3600;
+
+  // noActivity timeout
+  JsonObject noActivitySecondsToLock = json.createNestedObject("noActivitySecondsToLock");
+  noActivitySecondsToLock["title"] = "Lock Panel Timeout (seconds)";
+  noActivitySecondsToLock["description"] = "Lock Panel after a period of in-activity (defaults to 0 which disables the timeout). Must be a number between 0 and 3600 (i.e. 1 hour).";
+  noActivitySecondsToLock["type"] = "integer";
+  noActivitySecondsToLock["minimum"] = 0;
+  noActivitySecondsToLock["maximum"] = 3600;
 }
 
 void setConfigSchema()
@@ -1673,6 +1664,8 @@ void handleKeyPadCommand(JsonVariant jsonKeyPad)
   if (strcmp(state, "close") == 0)
   {
     keyPad.close();
+    if (keyPad.getKeyPadType() == KP_LOCKED)
+      publishLockStateEvent("unlocked");
   }
   else
   {
@@ -2068,7 +2061,7 @@ void jsonCommandKeyPad(JsonVariant json)
   // make pop-up active if not exists
   if (!keyPad.isActive())
   {
-    keyPad = classKeyPad(NULL, keyPadEventHandler);
+    keyPad = classKeyPad(NULL, keyPadEventHandler, KP_DEVICE);
   }
 
   // exit early if active keypad is not loaded via direct cmnd
@@ -2175,6 +2168,66 @@ void ui_init(void)
   ref.createHomeButton(footerButtonEventHandler, imgHome);
   ref.adScreenEventHandler(screenEventHandler);
   ref.setLabel("Settings");
+}
+
+// check for timeout inactivity timeouts
+void checkNoActivity(void)
+{
+  // observer disabled
+  if (_noActivityTimeOutToHome != 0)
+  {
+    if (lv_disp_get_inactive_time(NULL) > _noActivityTimeOutToHome)
+    {
+      // check and close pop-ups first
+      if (dropDownOverlay.isActive()) dropDownOverlay.close();
+      if (colorPicker.isActive())     colorPicker.close();
+      if (thermostat.isActive())      thermostat.close();
+      if (remoteControl.isActive())   remoteControl.close();
+      if (messageFeed.isActive())     messageFeed.close();
+      // return to HomeScreen if keyPad is NOT active
+      if (!keyPad.isActive())
+      {
+        if (lv_scr_act() != screenVault.get(SCREEN_HOME)->screen)
+          screenVault.show(SCREEN_HOME);
+      }
+    }
+  }
+  if (_noActivityTimeOutToSleep != 0)
+  {
+    // is in sleep allready ?
+    if (_actBackLight > 0)
+    {
+      // time elapsed, jump to HomeScreen
+      if (lv_disp_get_inactive_time(NULL) > _noActivityTimeOutToSleep)
+      {
+        _retainedBackLight = _actBackLight;
+        _setBackLight(0);
+      }
+    }
+  }
+
+  if (_noActivityTimeOutToLock != 0)
+  {
+    uint32_t inactive;
+    // is locked allready ?
+    if (!keyPad.isActive())
+    {
+      // check if still within the same timeout
+      if ((inactive = lv_disp_get_inactive_time(NULL)) < _noActivityTimeOutToLockTriggered)
+      {
+        _noActivityTimeOutToLockTriggered = UINT32_MAX;
+        // time elapsed after new input occured
+        if (inactive > _noActivityTimeOutToLock)
+        {
+          _noActivityTimeOutToLockTriggered = inactive;
+          keyPad = classKeyPad(NULL, keyPadEventHandler, KP_LOCKED);
+          keyPad.setState("locked", iconVault.getIcon("_locked"), lv_color_make(255, 0, 0), "enter code");
+          keyPad.setLabel("Panel locked after in-activity");
+          publishLockStateEvent("locked");
+        }
+      }
+    }
+  }
 }
 
 /**
