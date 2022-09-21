@@ -1748,6 +1748,24 @@ void jsonScreenCommand(JsonVariant json)
     return;
   }
 
+ if (json.containsKey("action"))
+  {
+    if (strcmp(json["action"], "remove") == 0)
+    {
+      for (int tileIdx = TILE_START; tileIdx <= TILE_END; tileIdx++)
+      {
+        tileVault.remove(screenIdx, tileIdx);
+      }
+      screenVault.remove(screenIdx);
+      if (screenIdx == SCREEN_HOME)
+        createScreen(SCREEN_HOME);
+
+      screenVault.show(SCREEN_HOME);
+      // early exit after screen removed
+      return;
+    }
+  }
+ 
   if (json.containsKey("backgroundColorRgb"))
   {
     uint8_t r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
@@ -1793,6 +1811,25 @@ void jsonTileCommand(JsonVariant json)
     wt32.print(F("/"));
     wt32.println(tileIdx);
     return;
+  }
+
+  if (json.containsKey("action"))
+  {
+    JsonVariant jsonAction = json["action"];
+    if (strcmp(jsonAction, "remove") == 0)
+    {
+      tileVault.remove(screenIdx, tileIdx);
+      // early exit after tile removed
+      return;
+    }
+    if (strcmp(jsonAction, "enable") == 0)
+    {
+      tile->setTileDisabled(false);
+    }
+    if (strcmp(jsonAction, "disable") == 0)
+    {
+      tile->setTileDisabled(true);
+    }
   }
 
   if (json.containsKey("state"))
@@ -1868,11 +1905,6 @@ void jsonTileCommand(JsonVariant json)
   if (json.containsKey("text"))
   {
     tile->setIconText(json["text"]);
-  }
-
-  if (json.containsKey("disable"))
-  {
-    tile->setTileDisabled(json["disable"]);
   }
 
   if (json.containsKey("backgroundImage"))
