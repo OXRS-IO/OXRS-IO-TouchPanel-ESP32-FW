@@ -345,21 +345,9 @@ lv_color_t classTile::getColor()
 
 void classTile::setColor(lv_color_t color)
 {
-  if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
-  {
-    _reColorAll(color, LV_STATE_CHECKED);
-  }
-  else
-  {
-    _reColorAll(color, LV_IMGBTN_STATE_RELEASED);
-  }
-}
-
-void classTile::setColor(int r, int g, int b)
-{
-  if ((r + g + b) == 0)
-  {
     // if all zero reset to default color
+  if (color.full == 0)
+  {
     if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
     {
       _reColorAll(colorOn, LV_STATE_CHECKED);
@@ -371,13 +359,20 @@ void classTile::setColor(int r, int g, int b)
   }
   else
   {
-    setColor(lv_color_make(r, g, b));
+    if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
+    {
+      _reColorAll(color, LV_STATE_CHECKED);
+    }
+    else
+    {
+      _reColorAll(color, LV_IMGBTN_STATE_RELEASED);
+    }
   }
 }
 
-void classTile::setBgColor(int r, int g, int b)
+void classTile::setBgColor(lv_color_t color)
 {
-  if ((r + g + b) == 0)
+  if (color.full == 0)
   {
     // if all zero reset to default background
     lv_obj_clear_flag(_tileBg, TP_COLOR_BG_OVERWRITE);
@@ -386,7 +381,7 @@ void classTile::setBgColor(int r, int g, int b)
   else
   {
     lv_obj_add_flag(_tileBg, TP_COLOR_BG_OVERWRITE);
-    _tileBgColor = lv_color_make(r, g, b);
+    _tileBgColor = color;
   }
   updateBgColor();
 }

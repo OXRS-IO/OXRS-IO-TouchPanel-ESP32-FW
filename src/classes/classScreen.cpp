@@ -152,9 +152,9 @@ void classScreen::setFooter(const char *left, const char *center, const char *ri
   }
 }
 
-void classScreen::setBgColor(int r, int g, int b)
+void classScreen::setBgColor(lv_color_t color)
 {
-  if ((r + g + b) == 0)
+  if (color.full == 0)
   {
     // if all zero reset to default background
     lv_obj_clear_flag(screen, TP_COLOR_BG_OVERWRITE);
@@ -163,7 +163,7 @@ void classScreen::setBgColor(int r, int g, int b)
   else
   {
     lv_obj_add_flag(screen, TP_COLOR_BG_OVERWRITE);
-    _screenBgColor = lv_color_make(r, g, b);
+    _screenBgColor = color;
   }
   updateBgColor();
 }
