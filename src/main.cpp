@@ -1184,7 +1184,7 @@ void createRgbProperties(JsonVariant json)
 }
 
 // Create any tile on any screen
-void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelStart, int levelStop)
+void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelStart, int levelStop, lv_color_t colorBg)
 {
   const void *img = NULL;
   int style;
@@ -1294,6 +1294,9 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     case TS_REMOTE:
     case TS_THERMOSTAT: ref.setActionIndicator(WP_SYMBOL_DOTS); break;
   }
+
+  // set tile bg color
+  ref.setBgColor(colorBg);
 }
 
 // Snapshot API
@@ -1428,7 +1431,7 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
     return;
   }
 
-  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelStart"], json["levelStop"]);
+  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelStart"], json["levelStop"], jsonRgbToColor(json["backgroundColorRgb"]));
 }
 
 void jsonConfig(JsonVariant json)
@@ -1469,6 +1472,10 @@ void jsonConfig(JsonVariant json)
       screen->setLabel(screenJson["label"]);
       if (screenIdx != SCREEN_START)
         screen->setHidden(screenJson["hidden"].as<bool>());
+      if (screenJson.containsKey("backgroundColorRgb"))
+      {
+        screen->setBgColor(jsonRgbToColor(screenJson["backgroundColorRgb"]));
+      }
 
       for (JsonVariant tileJson : screenJson["tiles"].as<JsonArray>())
       {
@@ -1500,6 +1507,11 @@ void jsonConfigSchema(JsonVariant json)
   JsonObject screenLabel = screensProperties.createNestedObject("label");
   screenLabel["title"] = "Label";
   screenLabel["type"] = "string";
+
+  JsonObject screenBackgroundColorRgb = screensProperties.createNestedObject("backgroundColorRgb");
+  screenBackgroundColorRgb["title"] = "Screen Background Color";
+  screenBackgroundColorRgb["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
+  createRgbProperties(screenBackgroundColorRgb);
 
   JsonObject screenHidden = screensProperties.createNestedObject("hidden");
   screenHidden["title"] = "Hidden";
@@ -1551,6 +1563,11 @@ void jsonConfigSchema(JsonVariant json)
   JsonObject levelStop = tilesProperties.createNestedObject("levelStop");
   levelStop["title"] = "Level Stop";
   levelStop["type"] = "integer";
+
+  JsonObject tileBackgroundColorRgb = tilesProperties.createNestedObject("backgroundColorRgb");
+  tileBackgroundColorRgb["title"] = "Tile Background Color";
+  tileBackgroundColorRgb["description"] = "RGB color of tile background (defaults to black - R0, G0, B0).";
+  createRgbProperties(tileBackgroundColorRgb);
 
   JsonArray tilesRequired = tilesItems.createNestedArray("required");
   tilesRequired.add("tile");
@@ -2086,6 +2103,11 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("backlight"))
   {
     jsonSetBackLightCommand(json["backlight"]);
+  }
+
+  if (json.containsKey("backgroundColorRgb"))
+  {
+    jsonBackgroundColorConfig(json["backgroundColorRgb"]);
   }
 
   if (json.containsKey("message"))
