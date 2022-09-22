@@ -94,9 +94,8 @@ public :
   void setSubLabel(const char *subLabelText);
   void setState(bool state);
   void setColor(lv_color_t color);
-  void setColor(int r, int g, int b);
   lv_color_t getColor();
-  void setBgColor(int r, int g, int b);
+  void setBgColor(lv_color_t color);
   void updateBgColor(void);
   void setIcon(const void *imgIcon);
   void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);

@@ -614,10 +614,20 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data)
   * ui helper functions
   */
 
-void setIconOnColor(int r, int g, int b)
+// make lv_color_t from jsonRgb{r:, g;, b:}
+lv_color_t jsonRgbToColor(JsonVariant jsonRgb)
+{
+  uint8_t r = (uint8_t)jsonRgb["r"].as<int>();
+  uint8_t g = (uint8_t)jsonRgb["g"].as<int>();
+  uint8_t b = (uint8_t)jsonRgb["b"].as<int>();
+
+  return lv_color_make(r, g, b);
+}
+
+void setIconOnColor(lv_color_t color)
 {
   // all zero is defined as unset, so set default
-  if ((r + g + b) == 0)
+  if (color.full == 0)
   {
     colorOn = lv_color_make(
       DEFAULT_COLOR_ICON_ON_R, 
@@ -626,14 +636,14 @@ void setIconOnColor(int r, int g, int b)
   }
   else
   {
-    colorOn = lv_color_make(r, g, b);
+    colorOn = color;
   }
 }
 
-void setBackgroundColor(int r, int g, int b)
+void setBackgroundColor(lv_color_t color)
 {
   // all zero is defined as unset, so set default
-  if ((r + g + b) == 0)
+  if (color.full == 0)
   {
     colorBg = lv_color_make(
       DEFAULT_COLOR_BACKGROUND_R,
@@ -642,7 +652,7 @@ void setBackgroundColor(int r, int g, int b)
   }
   else
   {
-    colorBg = lv_color_make(r, g, b);
+    colorBg = color;
   }
 }
 
@@ -1385,25 +1395,13 @@ void updateTilesBgColor(void)
 
 void jsonIconOnColorConfig(JsonVariant json)
 {
-  uint8_t r, g, b;
-
-  r = (uint8_t)json["r"].as<int>();
-  g = (uint8_t)json["g"].as<int>();
-  b = (uint8_t)json["b"].as<int>();
-
-  setIconOnColor(r, g, b);
+  setIconOnColor(jsonRgbToColor(json));
 }
 
 void jsonBackgroundColorConfig(JsonVariant json)
 {
-  uint8_t r, g, b;
-
-  r = (uint8_t)json["r"].as<int>();
-  g = (uint8_t)json["g"].as<int>();
-  b = (uint8_t)json["b"].as<int>();
-
   // update all screens
-  setBackgroundColor(r, g, b);
+  setBackgroundColor(jsonRgbToColor(json));
   classScreen *sPtr = screenVault.getStart();
   do
   {
@@ -1671,17 +1669,7 @@ void handleKeyPadCommand(JsonVariant jsonKeyPad)
   {
     const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
     const char *text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
-
-    uint8_t r, g, b;
-
-    if (jsonKeyPad.containsKey("iconColorRgb"))
-    {
-      r = (uint8_t)jsonKeyPad["iconColorRgb"]["r"].as<int>();
-      g = (uint8_t)jsonKeyPad["iconColorRgb"]["g"].as<int>();
-      b = (uint8_t)jsonKeyPad["iconColorRgb"]["b"].as<int>();
-    }
-
-    lv_color_t color = lv_color_make(r, g, b);
+    lv_color_t color = jsonRgbToColor(jsonKeyPad["iconColorRgb"]);
 
     keyPad.setState(state, icon, color, text);
   }
@@ -1768,11 +1756,7 @@ void jsonScreenCommand(JsonVariant json)
  
   if (json.containsKey("backgroundColorRgb"))
   {
-    uint8_t r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
-    uint8_t g = (uint8_t)json["backgroundColorRgb"]["g"].as<int>();
-    uint8_t b = (uint8_t)json["backgroundColorRgb"]["b"].as<int>();
-
-    screen->setBgColor(r, g, b);
+    screen->setBgColor(jsonRgbToColor(json["backgroundColorRgb"]));
     // announce tiles about BG change
     updateTilesBgColor();
   }
@@ -1785,8 +1769,6 @@ void jsonScreenCommand(JsonVariant json)
 
 void jsonTileCommand(JsonVariant json)
 {
-  uint8_t r, g, b;
-
   int screenIdx = json["screen"].as<int>();
   if ((screenIdx < SCREEN_START) || (screenIdx > SCREEN_END))
   {
@@ -1875,20 +1857,12 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("iconColorRgb"))
   {
-    r = (uint8_t)json["iconColorRgb"]["r"].as<int>();
-    g = (uint8_t)json["iconColorRgb"]["g"].as<int>();
-    b = (uint8_t)json["iconColorRgb"]["b"].as<int>();
-
-    tile->setColor(r, g, b);
+    tile->setColor(jsonRgbToColor(json["iconColorRgb"]));
   }
 
   if (json.containsKey("backgroundColorRgb"))
   {
-    r = (uint8_t)json["backgroundColorRgb"]["r"].as<int>();
-    g = (uint8_t)json["backgroundColorRgb"]["g"].as<int>();
-    b = (uint8_t)json["backgroundColorRgb"]["b"].as<int>();
-
-    tile->setBgColor(r, g, b);
+    tile->setBgColor(jsonRgbToColor(json["backgroundColorRgb"]));
   }
 
   if (json.containsKey("icon"))
@@ -1960,9 +1934,9 @@ void jsonTileCommand(JsonVariant json)
 
     if (jsonColorPicker.containsKey("colorRgb"))
     {
-      r = (uint8_t)jsonColorPicker["colorRgb"]["r"].as<int>();
-      g = (uint8_t)jsonColorPicker["colorRgb"]["g"].as<int>();
-      b = (uint8_t)jsonColorPicker["colorRgb"]["b"].as<int>();
+      uint8_t r = (uint8_t)jsonColorPicker["colorRgb"]["r"].as<int>();
+      uint8_t g = (uint8_t)jsonColorPicker["colorRgb"]["g"].as<int>();
+      uint8_t b = (uint8_t)jsonColorPicker["colorRgb"]["b"].as<int>();
 
       tile->setColorPickerRGB(r, g, b);
     }
@@ -2328,8 +2302,8 @@ void setup()
   indev_drv.scroll_limit = 3;
 
   // set colors to default, may be updated later from config handler
-  setIconOnColor(0, 0, 0);
-  setBackgroundColor(0, 0, 0);
+  setIconOnColor(lv_color_make(0, 0, 0));
+  setBackgroundColor(lv_color_make(0, 0, 0));
 
   // show splash screen
  // _setBackLightLED(20);

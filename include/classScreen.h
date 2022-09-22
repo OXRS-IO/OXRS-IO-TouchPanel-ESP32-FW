@@ -38,7 +38,7 @@ public:
   
   void setFooter(const char *left, const char *center, const char *right);
 
-  void setBgColor(int r, int g, int b);
+  void setBgColor(lv_color_t color);
   lv_color_t getBgColor(void);
   void updateBgColor(void);
   void createHomeButton(lv_event_cb_t callBack, const void *img);
