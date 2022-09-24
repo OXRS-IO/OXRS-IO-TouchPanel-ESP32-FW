@@ -38,16 +38,16 @@ void classIconList::remove(string iconStr)
 // set iterator to 1st element to prepare for getNext()
 void classIconList::setIteratorStart(void)
 {
-  _iterator = begin(_listIcons);
+  _itNext = _listIcons.begin();
 }
 
 // get next iconStr
-string classIconList::getNextStr(void)
+string classIconList::getNextIconStr(void)
 {
-  if (_iterator == end(_listIcons))
+  if (_itNext == _listIcons.end())
     return "";
   else
-    return _iterator++->iconStr;
+    return _itNext++->iconStr;
 }
 
 // sort list by iconStr

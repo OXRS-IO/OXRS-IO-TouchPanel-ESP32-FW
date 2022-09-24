@@ -1,12 +1,6 @@
 #include <classTileList.h>
-#include <list>
-#include <algorithm>
 
 using std::list;
-
-// THE list that holds all tiles
-std::list<classTile> _listTiles;
-std::list<classTile>::iterator _itNext;
 
 classTile &classTileList::add(void)
 {
@@ -50,13 +44,13 @@ int classTileList::getSize(void)
   return _listTiles.size();
 }
 
-// return size from list
+// set the iterator to start
 void classTileList::setIteratorStart(void)
 {
   _itNext = _listTiles.begin();
 }
 
-// return size from list
+// return iterator and advance iterator to next
 classTile *classTileList::getNextTile(void)
 {
   if (_itNext == _listTiles.end())
