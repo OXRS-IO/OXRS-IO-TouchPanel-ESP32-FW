@@ -1,4 +1,5 @@
 ﻿#include "classScreenList.h"
+#include <stdio.h>
 
 using std::list;
 
@@ -6,14 +7,15 @@ using std::list;
 std::list<classScreen> _listScreens;
 
 // helper for find unhidden screens
-bool _isNotHidden(classScreen screen)
+bool _isNotHidden(classScreen &screen)
 {
   return !screen.isHidden();
 }
 
 classScreen &classScreenList::add(int screenIdx, int style)
 {
-  _listScreens.emplace_back(classScreen(screenIdx, style));
+  _listScreens.emplace_back(classScreen());
+  _listScreens.back().begin(screenIdx, style);
   return _listScreens.back();
 }
 

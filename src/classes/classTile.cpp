@@ -245,10 +245,10 @@ if (_arcTarget)
 
 classTile::~classTile()
 {
-  if (_btn)
+  if ( _tileBg)
   {
     _freeImageHeap();
-    lv_obj_del(_btn);
+    lv_obj_del(_tileBg);
   }
 }
 

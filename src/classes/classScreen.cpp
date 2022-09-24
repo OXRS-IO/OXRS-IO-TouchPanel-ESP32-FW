@@ -14,7 +14,7 @@ extern lv_color_t colorBg;
 static lv_coord_t colDsc_2X3[] = {COL_SIZE_2X3, COL_SIZE_2X3, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t rowDsc_2X3[] = {ROW_SIZE_2X3, ROW_SIZE_2X3, ROW_SIZE_2X3, LV_GRID_TEMPLATE_LAST};
 
-classScreen::classScreen(int number, int style)
+void classScreen::begin(int number, int style)
 {
   screenIdx = number;
 
@@ -76,6 +76,14 @@ classScreen::classScreen(int number, int style)
   lv_label_set_text(_labelRight, "");
   lv_label_set_recolor(_labelRight, true);
   lv_obj_add_flag(_labelRight, LV_OBJ_FLAG_HIDDEN);
+}
+
+classScreen::~classScreen()
+{
+  if (screen)
+  {
+    lv_obj_del(screen);
+  }
 }
 
 int classScreen::getScreenNumber(void)
