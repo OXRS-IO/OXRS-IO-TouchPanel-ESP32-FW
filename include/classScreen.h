@@ -28,8 +28,9 @@ public:
   lv_obj_t *container = NULL;
 
   classScreen(void){};
-  classScreen(int screenIdx, int style);
-  
+  ~classScreen();
+  void begin(int screenIdx, int style);
+
   void setHidden(bool hidden);
   bool isHidden();
   
@@ -41,12 +42,12 @@ public:
   void setBgColor(lv_color_t color);
   lv_color_t getBgColor(void);
   void updateBgColor(void);
+
   void createHomeButton(lv_event_cb_t callBack, const void *img);
   void createSettingsButton(lv_event_cb_t callBack, const void *img);
   void showConnectionStatus(bool connected);
   
   int getScreenNumber(void);
  
-  void adWipeEventHandler(lv_event_cb_t callBack);
   void adScreenEventHandler(lv_event_cb_t callBack);
 };
