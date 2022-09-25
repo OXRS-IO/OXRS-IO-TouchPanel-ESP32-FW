@@ -701,12 +701,11 @@ void updateConnectionStatus(void)
   {
     _connectionState = connectionState;
     // update footers in all screens
-    classScreen *sPtr = screenVault.getStart();
-    do
+    screenVault.setIteratorStart();
+    while (classScreen *sPtr = screenVault.getNextScreen())
     {
       sPtr->showConnectionStatus(_connectionState == CONNECTED_MQTT);
-    } while ((sPtr = screenVault.getNext(sPtr->screenIdx)));
-
+    }
     // update info text to reflect actual status
     updateInfoText();
   }
@@ -1142,7 +1141,7 @@ void createIconEnum(JsonObject parent)
 
   string iconStr;
   iconVault.setIteratorStart();
-  while ((iconStr = iconVault.getNextStr()) != "")
+  while ((iconStr = iconVault.getNextIconStr()) != "")
   {
     styleEnum.add(iconStr);
   }
@@ -1405,11 +1404,12 @@ void jsonBackgroundColorConfig(JsonVariant json)
 {
   // update all screens
   setBackgroundColor(jsonRgbToColor(json));
-  classScreen *sPtr = screenVault.getStart();
-  do
+
+  screenVault.setIteratorStart();
+  while (classScreen *sPtr = screenVault.getNextScreen())
   {
-    if (sPtr) sPtr->updateBgColor();
-  } while ((sPtr = screenVault.getNext(sPtr->screenIdx)));
+    sPtr->updateBgColor();
+  }
   // update all tiles
   updateTilesBgColor();
 }

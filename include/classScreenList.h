@@ -6,21 +6,26 @@
 class classScreenList
 {
 private:
+  // THE list that holds all screens
+  std::list<classScreen> _listScreens;
+  // common iterator
   std::list<classScreen>::iterator it;
+  // next iterator
+  std::list<classScreen>::iterator _itNext;
 
 public:
   classScreenList(void){};
   classScreen &add(int screenIdx, int style);
   classScreen *get(int screenIdx);
-  classScreen *getStart(void);
-  classScreen *getNext(int screenIdx);
+
+  void setIteratorStart(void);
+  classScreen *getNextScreen(void);
+
   void remove(int screenIdx);
   bool exist(int screenIdx);
   void sort(void);
   bool show(int screenIdx);
-  void showPrev(lv_obj_t* screenObj);
-  void showNext(lv_obj_t* screenObj);
-  void showByIndex(int index);
   int makeDropDownList(char *list, lv_obj_t *screenObj);
+  void showByIndex(int index);
   int getSize(void);
 };
