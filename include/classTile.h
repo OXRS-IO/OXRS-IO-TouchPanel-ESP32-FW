@@ -76,6 +76,9 @@ protected:
   std::list<post>::iterator _feedIterator;
 
   void _button(lv_obj_t *parent, const void *img);
+  void _createValueLabels(void);
+  void _createLinkedLabel(void);
+  void _createIconText(void);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
   void _setIconTextFromIndex(void);
   void _freeImageHeap();
