@@ -16,19 +16,6 @@
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
-/*--------------------------- Defines -----------------------------------*/
-// LCD backlight control
-// TFT_BL GPIO pin defined in user_setup.h of tft_eSPI
-// setting PWM properties
-#define BL_PWM_FREQ 5000
-#define BL_PWM_CHANNEL 0
-#define BL_PWM_RESOLUTION 8
-
-// I2C touch controller FT6336U
-#define I2C_SDA 18
-#define I2C_SCL 19
-#define INT_N_PIN 39
-
 /*--------------------------- Libraries ----------------------------------*/
 #include <globalDefines.h>
 #include <classTile.h>
@@ -44,9 +31,12 @@
 #include <classThermostat.h>
 #include <classMessageFeed.h>
 #include <base64.hpp>
-#include <TFT_eSPI.h>
+#if defined (WT32_SC01)
+  #include "panels/cfgWT32-SC01.hpp"
+#elif defined (WT32_SC01_PLUS)
+  #include "panels/cfgWT32-SC01-plus.hpp"
+#endif
 #include <lvgl.h>
-#include <classFT6336U.h>
 
 #include <OXRS_WT32.h> // WT32 support
 
@@ -135,7 +125,7 @@ int _retainedBackLight;
 connectionState_t _connectionState  = CONNECTED_NONE;
 uint32_t _noActivityTimeOutToHome   = 0L;
 uint32_t _noActivityTimeOutToSleep  = 0L;
-uint32_t _noActivityTimeOutToLock = 0L;
+uint32_t _noActivityTimeOutToLock   = 0L;
 uint32_t _noActivityTimeOutToLockTriggered = UINT32_MAX;
 
 #define DEFAULT_COLOR_ICON_ON_R     91
@@ -192,6 +182,9 @@ classThermostat thermostat = classThermostat();
 // message feed overlay
 classMessageFeed messageFeed = classMessageFeed();
 
+ // declare display variable
+static LGFX tft;
+
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
 #define DRAW_BUF_ROWS 10
 // Change to your screen resolution
@@ -201,11 +194,6 @@ static const uint16_t screenHeight = SCREEN_HEIGHT;
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[screenWidth * DRAW_BUF_ROWS];
 lv_indev_t *myInputDevice;
-
-// TFT instance
-TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight);
-// touch controller instance
-classFT6336U ft6336u = classFT6336U(I2C_SDA, I2C_SCL, INT_N_PIN);
 
 #if LV_USE_LOG != 0
 // Serial debugging if enabled
@@ -551,7 +539,7 @@ void _setBackLightLED(int val)
   if (val > 100)   val = 100;
   if (val < 0)     val = 0;
 
-  ledcWrite(BL_PWM_CHANNEL, 255 * val / 100);
+  tft.setBrightness(255 * val / 100);
   _actBackLight = val;
 }
 
@@ -572,23 +560,25 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
   if (snapShotActive)
   // upload pixel data for snap shot in RGB565 format
   {
-    int byteCount = (snapShotArea.x2 - snapShotArea.x1 + 1) * 2; 
+    int rowByteCount = (snapShotArea.x2 - snapShotArea.x1 + 1) * sizeof(color_p->full); 
     for (int row = area->y1; row <= area->y2; row++, color_p += SCREEN_WIDTH)
     {
       if ((row >= snapShotArea.y1) && (row <= snapShotArea.y2))
       {
-        snapShotResponse->write((uint8_t *)(color_p + snapShotArea.x1), byteCount);
+        snapShotResponse->write((uint8_t *)(color_p + snapShotArea.x1), rowByteCount);
       }
     }
   }
   else
   // update screen
   {
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
+    int w = (area->x2 - area->x1 + 1);
+    int h = (area->y2 - area->y1 + 1);
 
+    tft.startWrite(); 
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors((uint16_t *)&color_p->full, w * h, true);
+    tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
+    tft.endWrite();
   }
 
   lv_disp_flush_ready(disp);
@@ -600,28 +590,30 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
 */
 void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data)
 {
-  typePoint ts;
-  bool touched = ft6336u.readTouchPoint(&ts);
+  uint16_t touchX, touchY;
 
-  // no touch detected
+  bool touched = tft.getTouch(&touchX, &touchY);
+
   if (!touched)
   {
     data->state = LV_INDEV_STATE_REL;
     return;
   }
+
   // touch detected while backlight = 0
   if (_actBackLight == 0)
   {
     _setBackLight(_retainedBackLight);
     delay(200);
     // mimic keypress in top/left corner (no sensitive area)
-    ts.x = 0;
-    ts.y = 0;
+    touchX = 0;
+    touchY = 0;
   }
+
   // get coordinates and write into point structure
-  data->point.x = ts.x;
-  data->point.y = ts.y;
   data->state = LV_INDEV_STATE_PR;
+  data->point.x = touchX;
+  data->point.y = touchY;
 
 #if defined(DEBUG_TOUCH)
   wt32.print(F("[tp32] touch data (x,y): "));
@@ -2286,10 +2278,10 @@ void setup()
   initStyleLut();
   initIconVault();
 
-  // set up for backlight dimming (PWM)
-  ledcSetup(BL_PWM_CHANNEL, BL_PWM_FREQ, BL_PWM_RESOLUTION);
-  ledcAttachPin(TFT_BL, BL_PWM_CHANNEL);
-  ledcWrite(BL_PWM_CHANNEL, 0);
+  // start tft library
+  tft.init();
+  tft.setBrightness(0);
+  tft.fillScreen(TFT_BLACK);
 
   // start lvgl
   lv_init();
@@ -2303,15 +2295,6 @@ void setup()
 #if LV_USE_LOG != 0
   lv_log_register_print_cb(my_print); // register print function for debugging
 #endif
-
-  // start tft library
-  tft.begin();
-  tft.setRotation(0);
-  tft.fillScreen(TFT_BLACK);
-
-  // touch pad
-  ft6336u.begin();
-  pinMode(39, INPUT);
 
   // initialise draw buffer
   lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * DRAW_BUF_ROWS);
@@ -2342,11 +2325,11 @@ void setup()
   setBackgroundColor(lv_color_make(0, 0, 0));
 
   // show splash screen
-  // _setBackLightLED(20);
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
   lv_img_set_src(img1, imgOxrsSplash);
   lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
-  lv_timer_handler();
+  lv_obj_invalidate(lv_scr_act());
+  lv_refr_now(NULL);
   lv_img_cache_invalidate_src(NULL);
   _actBackLight = 50;
   _setBackLightLED(_actBackLight);
