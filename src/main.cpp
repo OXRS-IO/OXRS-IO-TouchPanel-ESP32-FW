@@ -16,19 +16,6 @@
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
-/*--------------------------- Defines -----------------------------------*/
-// LCD backlight control
-// TFT_BL GPIO pin defined in user_setup.h of tft_eSPI
-// setting PWM properties
-#define BL_PWM_FREQ 5000
-#define BL_PWM_CHANNEL 0
-#define BL_PWM_RESOLUTION 8
-
-// I2C touch controller FT6336U
-#define I2C_SDA 18
-#define I2C_SCL 19
-#define INT_N_PIN 39
-
 /*--------------------------- Libraries ----------------------------------*/
 #include <globalDefines.h>
 #include <classTile.h>
@@ -44,9 +31,12 @@
 #include <classThermostat.h>
 #include <classMessageFeed.h>
 #include <base64.hpp>
-#include <TFT_eSPI.h>
+#if defined (WT32_SC01)
+  #include "panels/cfgWT32-SC01.hpp"
+#elif defined (WT32_SC01_PLUS)
+  #include "panels/cfgWT32-SC01-plus.hpp"
+#endif
 #include <lvgl.h>
-#include <classFT6336U.h>
 
 #include <OXRS_WT32.h> // WT32 support
 
@@ -135,7 +125,7 @@ int _retainedBackLight;
 connectionState_t _connectionState  = CONNECTED_NONE;
 uint32_t _noActivityTimeOutToHome   = 0L;
 uint32_t _noActivityTimeOutToSleep  = 0L;
-uint32_t _noActivityTimeOutToLock = 0L;
+uint32_t _noActivityTimeOutToLock   = 0L;
 uint32_t _noActivityTimeOutToLockTriggered = UINT32_MAX;
 
 #define DEFAULT_COLOR_ICON_ON_R     91
@@ -146,10 +136,15 @@ uint32_t _noActivityTimeOutToLockTriggered = UINT32_MAX;
 #define DEFAULT_COLOR_BACKGROUND_G  0
 #define DEFAULT_COLOR_BACKGROUND_B  0
 
-    lv_color_t colorOn;
+lv_color_t colorOn;
 lv_color_t colorBg;
 
 /*--------------------------- Global Objects -----------------------------*/
+// used for small footprint snapshot
+bool      snapShotActive = false;
+lv_area_t snapShotArea;
+Response  *snapShotResponse = NULL;
+
 // WT32 handler
 OXRS_WT32 wt32;
 
@@ -187,20 +182,18 @@ classThermostat thermostat = classThermostat();
 // message feed overlay
 classMessageFeed messageFeed = classMessageFeed();
 
-/*--------------------------- screen / lvgl relevant  -----------------------------*/
+ // declare display variable
+static LGFX tft;
 
+/*--------------------------- screen / lvgl relevant  -----------------------------*/
+#define DRAW_BUF_ROWS 10
 // Change to your screen resolution
 static const uint16_t screenWidth = SCREEN_WIDTH;
 static const uint16_t screenHeight = SCREEN_HEIGHT;
 
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[screenWidth * 10];
+static lv_color_t buf[screenWidth * DRAW_BUF_ROWS];
 lv_indev_t *myInputDevice;
-
-// TFT instance
-TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight);
-// touch controller instance
-classFT6336U ft6336u = classFT6336U(I2C_SDA, I2C_SCL, INT_N_PIN);
 
 #if LV_USE_LOG != 0
 // Serial debugging if enabled
@@ -546,7 +539,7 @@ void _setBackLightLED(int val)
   if (val > 100)   val = 100;
   if (val < 0)     val = 0;
 
-  ledcWrite(BL_PWM_CHANNEL, 255 * val / 100);
+  tft.setBrightness(255 * val / 100);
   _actBackLight = val;
 }
 
@@ -564,11 +557,29 @@ void _setBackLight(int val)
 */
 void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *color_p)
 {
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
+  if (snapShotActive)
+  // upload pixel data for snap shot in RGB565 format
+  {
+    int rowByteCount = (snapShotArea.x2 - snapShotArea.x1 + 1) * sizeof(color_p->full); 
+    for (int row = area->y1; row <= area->y2; row++, color_p += SCREEN_WIDTH)
+    {
+      if ((row >= snapShotArea.y1) && (row <= snapShotArea.y2))
+      {
+        snapShotResponse->write((uint8_t *)(color_p + snapShotArea.x1), rowByteCount);
+      }
+    }
+  }
+  else
+  // update screen
+  {
+    int w = (area->x2 - area->x1 + 1);
+    int h = (area->y2 - area->y1 + 1);
 
-  tft.setAddrWindow(area->x1, area->y1, w, h);
-  tft.pushColors((uint16_t *)&color_p->full, w * h, true);
+    tft.startWrite(); 
+    tft.setAddrWindow(area->x1, area->y1, w, h);
+    tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
+    tft.endWrite();
+  }
 
   lv_disp_flush_ready(disp);
 }
@@ -579,28 +590,30 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
 */
 void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data)
 {
-  typePoint ts;
-  bool touched = ft6336u.readTouchPoint(&ts);
+  uint16_t touchX, touchY;
 
-  // no touch detected
+  bool touched = tft.getTouch(&touchX, &touchY);
+
   if (!touched)
   {
     data->state = LV_INDEV_STATE_REL;
     return;
   }
+
   // touch detected while backlight = 0
   if (_actBackLight == 0)
   {
     _setBackLight(_retainedBackLight);
     delay(200);
     // mimic keypress in top/left corner (no sensitive area)
-    ts.x = 0;
-    ts.y = 0;
+    touchX = 0;
+    touchY = 0;
   }
+
   // get coordinates and write into point structure
-  data->point.x = ts.x;
-  data->point.y = ts.y;
   data->state = LV_INDEV_STATE_PR;
+  data->point.x = touchX;
+  data->point.y = touchY;
 
 #if defined(DEBUG_TOUCH)
   wt32.print(F("[tp32] touch data (x,y): "));
@@ -1306,26 +1319,12 @@ void getApiSnapshot(Request &req, Response &res)
   req.query("tile", requestedTile, sizeof(requestedTile));
   int tileIdx = atoi(requestedTile);
 
-  // take a snapshot
-  lv_img_dsc_t *snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
-  uint8_t *bufferPtr = (uint8_t *)snapshot->data;
-  size_t bufferSize = WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3;
-
-  // convert to RGB888
-  lv_color_t color;
-  for (int i = 0; i < bufferSize; i += 3)
-  {
-    color.full = bufferPtr[i] + bufferPtr[i + 1] * 0x100;
-    bufferPtr[i] = (color.ch.blue * 255) / 31;
-    bufferPtr[i + 1] = (color.ch.green * 255) / 63;
-    bufferPtr[i + 2] = (color.ch.red * 255) / 31;
-  }
-
-  // build header for .bmp file (full screen)
+  // build header for .bmp file (full screen), pixel data format = RGB565
+  const uint32_t bytePerPixel = 2;
   struct bmpHeader_t
   {
     uint8_t magic[2] = {'B', 'M'};
-    uint32_t bfSize = (uint32_t)(WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3);
+    uint32_t bfSize = (uint32_t)(WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT) * bytePerPixel;
     uint32_t bfReserved = 0;
     uint32_t bfOffBits = sizeof(bmpHeader_t);
 
@@ -1333,15 +1332,15 @@ void getApiSnapshot(Request &req, Response &res)
     int32_t biWidth = WT32_SCREEN_WIDTH;
     int32_t biHeight = -WT32_SCREEN_HEIGHT;
     uint16_t biPlanes = 1;
-    uint16_t biBitCount = 24;
-    uint32_t biCompression = 0;
+    uint16_t biBitCount = 16;
+    uint32_t biCompression = 3;
     uint32_t biSizeImage = bfSize;
     int32_t biXPelsPerMeter = 2836;
     int32_t biYPelsPerMeter = 2836;
     uint32_t biClrUsed = 0;
     uint32_t biClrImportant = 0;
 
-    uint32_t bdMask[3] = {0x0, 0x0, 0x0};
+    uint32_t bdMask[4] = {0x0000F800, 0x000007E0, 0x0000001F, 0x00000000};
   } __attribute__((packed)) bmpHeader;
 
   // preset for full screen
@@ -1359,7 +1358,7 @@ void getApiSnapshot(Request &req, Response &res)
     int rowColStarts[6][2] = {{5, 7},  {5, 165},  {154, 7},  {154, 165},  {303, 7},  {303, 165}};
     rowStart = rowColStarts[tileIdx][0];
     colStart = rowColStarts[tileIdx][1];
-    uint32_t size = rows * cols * 3;
+    uint32_t size = rows * cols * bytePerPixel;
 
     // update header with recent values for tile only mode
     bmpHeader.bfSize = size;
@@ -1368,18 +1367,25 @@ void getApiSnapshot(Request &req, Response &res)
     bmpHeader.biHeight = -rows;
   }
 
-  // return the snapshot image to the caller
+  // return the snapshot image to the caller (start with the header)
   res.set("Content-Type", "image/bmp");
   res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
 
-  // send bmp data row by row to limit buffer size
-  for (bufferPtr += (rowStart * WT32_SCREEN_WIDTH * 3 + colStart * 3); rows > 0; bufferPtr += (WT32_SCREEN_WIDTH * 3), rows--)
-  {
-    res.write(bufferPtr, cols * 3);
-  }
+  // set variables for my_disp_flush snapShotMode to return the image content
+  snapShotArea.x1 = colStart;
+  snapShotArea.y1 = rowStart;
+  snapShotArea.x2 = colStart + cols -1;
+  snapShotArea.y2 = rowStart + rows -1;
+  snapShotResponse = &res;
 
-  // free used memory
-  lv_snapshot_free(snapshot);
+  // invalidate whole screen
+  lv_obj_invalidate(lv_scr_act());
+  // enable snapshot mode in my_disp_flush
+  snapShotActive = true;
+  // refresh screen now -> pixel data will be captured by my_disp_flush() and uploaded via getApiSnapshot's->Response (&res)
+  lv_refr_now(NULL);
+  // arrive here after screen data were uploaded by my_disp_flush() and return to normal mode
+  snapShotActive = false;
 }
 
 /**
@@ -2272,10 +2278,10 @@ void setup()
   initStyleLut();
   initIconVault();
 
-  // set up for backlight dimming (PWM)
-  ledcSetup(BL_PWM_CHANNEL, BL_PWM_FREQ, BL_PWM_RESOLUTION);
-  ledcAttachPin(TFT_BL, BL_PWM_CHANNEL);
-  ledcWrite(BL_PWM_CHANNEL, 0);
+  // start tft library
+  tft.init();
+  tft.setBrightness(0);
+  tft.fillScreen(TFT_BLACK);
 
   // start lvgl
   lv_init();
@@ -2290,17 +2296,8 @@ void setup()
   lv_log_register_print_cb(my_print); // register print function for debugging
 #endif
 
-  // start tft library
-  tft.begin();
-  tft.setRotation(0);
-  tft.fillScreen(TFT_BLACK);
-
-  // touch pad
-  ft6336u.begin();
-  pinMode(39, INPUT);
-
   // initialise draw buffer
-  lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
+  lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * DRAW_BUF_ROWS);
   // initialise the display
   static lv_disp_drv_t disp_drv;
   lv_disp_drv_init(&disp_drv);
@@ -2328,11 +2325,11 @@ void setup()
   setBackgroundColor(lv_color_make(0, 0, 0));
 
   // show splash screen
- // _setBackLightLED(20);
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
   lv_img_set_src(img1, imgOxrsSplash);
   lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
-  lv_timer_handler();
+  lv_obj_invalidate(lv_scr_act());
+  lv_refr_now(NULL);
   lv_img_cache_invalidate_src(NULL);
   _actBackLight = 50;
   _setBackLightLED(_actBackLight);
@@ -2377,6 +2374,6 @@ void loop()
   // let the GUI do its work
   lv_timer_handler();
 
-  // TODO: is this needed?
+  // recommended by LVGL, needed for background processes to do their work
   delay(3);
 }
