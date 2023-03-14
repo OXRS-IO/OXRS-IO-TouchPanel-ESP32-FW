@@ -1350,14 +1350,17 @@ void getApiSnapshot(Request &req, Response &res)
   int cols = WT32_SCREEN_WIDTH;
 
   // handle one tile only request
-  if ((tileIdx >= 1) && (tileIdx <= 6))
+  if ((tileIdx >= TILE_START) && (tileIdx <= TILE_END))
   {
-    rows = 139;
-    cols = 148;
-    tileIdx--;
-    int rowColStarts[6][2] = {{5, 7},  {5, 165},  {154, 7},  {154, 165},  {303, 7},  {303, 165}};
-    rowStart = rowColStarts[tileIdx][0];
-    colStart = rowColStarts[tileIdx][1];
+    int tileRow = (tileIdx - 1) / SCREEN_COLS;
+    int tileCol = (tileIdx - 1) % SCREEN_COLS;
+    int tileRows = (SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / SCREEN_ROWS;
+    int tileCols = SCREEN_WIDTH / SCREEN_COLS;
+    rows = tileRows - (TILE_PADDING * 2);
+    cols = tileCols - (TILE_PADDING * 2);
+
+    rowStart = tileRow * tileRows + TILE_PADDING;
+    colStart = tileCol * tileCols + TILE_PADDING;
     uint32_t size = rows * cols * bytePerPixel;
 
     // update header with recent values for tile only mode

@@ -1,9 +1,10 @@
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
+#include <globalDefines.h>
 
 // Portrait
-#define TFT_WIDTH   320
-#define TFT_HEIGHT  480
+#define TFT_WIDTH   SCREEN_WIDTH
+#define TFT_HEIGHT  SCREEN_HEIGHT
 
 #define TFT_DC    0
 #define TFT_RST   4

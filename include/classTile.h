@@ -76,6 +76,8 @@ protected:
   std::list<post>::iterator _feedIterator;
 
   void _button(lv_obj_t *parent, const void *img);
+  int _tileWidth(void);
+  int _tileHeight(void);
   void _createValueLabels(void);
   void _createLinkedLabel(void);
   void _createIconText(void);

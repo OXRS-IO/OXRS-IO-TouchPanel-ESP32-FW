@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <lvgl.h>
+#include <globalDefines.h>
 
 #define TP_COLOR_BG_OVERWRITE LV_OBJ_FLAG_USER_1
 
@@ -20,6 +21,8 @@ private:
 
   lv_color_t _screenBgColor = {0, 0, 0};
   bool _hidden = false;
+
+  void _makeScreenLayout(void);
 
 public:
   int screenIdx;
