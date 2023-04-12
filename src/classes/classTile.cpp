@@ -110,10 +110,13 @@ void classTile::_button(lv_obj_t *parent, const void *img)
 
   // Sub Label (placeholder)
   _subLabel = lv_label_create(_btn);
-  lv_obj_set_size(_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_size(_subLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_label_set_text(_subLabel, "");
   lv_obj_align(_subLabel, LV_ALIGN_BOTTOM_LEFT, 8, -5);
-  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x808080), 0);
+  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
+  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_DEFAULT);
+  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_CHECKED);
 
   // set tile bg, button and label size from grid
   int width = *lv_obj_get_style_grid_column_dsc_array(parent, 0) - 10;
@@ -351,6 +354,7 @@ void classTile::setState(bool state)
   _state = state;
   state == false ? lv_obj_clear_state(_btn, LV_STATE_CHECKED) : lv_obj_add_state(_btn, LV_STATE_CHECKED);
   state == false ? lv_obj_clear_state(_fullBar, LV_STATE_CHECKED) : lv_obj_add_state(_fullBar, LV_STATE_CHECKED);
+  state == false ? lv_obj_clear_state(_subLabel, LV_STATE_CHECKED) : lv_obj_add_state(_subLabel, LV_STATE_CHECKED);
   if (_txtIconText)
     state == false ? lv_obj_clear_state(_txtIconText, LV_STATE_CHECKED) : lv_obj_add_state(_txtIconText, LV_STATE_CHECKED);
   if (_valueLabel)
