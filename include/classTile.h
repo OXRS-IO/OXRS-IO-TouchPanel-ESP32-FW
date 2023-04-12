@@ -28,6 +28,7 @@ protected:
   lv_obj_t *_parentContainer = NULL;
   lv_obj_t *_tileBg = NULL;
   lv_obj_t *_tileFg = NULL;
+  lv_obj_t *_fullBar = NULL;
   lv_obj_t *_btn = NULL;
   lv_obj_t *_label = NULL;
   lv_obj_t *_subLabel = NULL;
@@ -37,8 +38,6 @@ protected:
   lv_obj_t *_subValueLabel = NULL;
   lv_obj_t *_btnUp = NULL;
   lv_obj_t *_btnDown = NULL;
-  lv_obj_t *_ovlPanel = NULL;
-  lv_obj_t *_bar = NULL;
   lv_obj_t *_txtIconText = NULL;
   lv_obj_t *_imgBg = NULL;
   lv_obj_t *_roller = NULL;
@@ -56,6 +55,7 @@ protected:
   int _levelLargeStep = 5;
   int _level = 0;
   bool _topDownMode = false;
+  int _tileHeight = 0;
   const void *_img = NULL;
   const void *_imgOn = NULL;
   const void *_imgConfig = NULL;
@@ -129,7 +129,6 @@ public :
   int getLevelStop(void);
   int getLevelLargeStep(void);
   void setTopDownMode(bool enable);
-  void showOvlBar(int level);
   void addUpDownControl(lv_event_cb_t upDownEventHandler, const void* imgUpperButton, const void* imgLowerButton);
  
   void setDropDownList(string list);
