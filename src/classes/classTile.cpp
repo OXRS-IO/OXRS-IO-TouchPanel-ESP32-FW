@@ -10,15 +10,26 @@ void classTile::_button(lv_obj_t *parent, const void *img)
 {
   _parentContainer = parent;
   _tileBgColor = _parentScreen->getBgColor();
-  // create a background layer to opional configle tile backgroung
+
+  // create a background layer to optional configure tile background
   _tileBg = lv_obj_create(_parentContainer);
   lv_obj_remove_style_all(_tileBg);
   lv_obj_set_style_radius(_tileBg, 5, LV_PART_MAIN);
   lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
+  lv_obj_set_style_clip_corner(_tileBg, true, LV_PART_MAIN );
+
+  // create layer for full tile level bar
+  _fullBar = lv_obj_create(_tileBg);
+  lv_obj_remove_style_all(_fullBar);
+  lv_obj_set_style_bg_color(_fullBar, lv_color_hex(0xffffff), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(_fullBar, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_fullBar, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
 
   // create the image button as root parent for all content
   _btn = lv_imgbtn_create(_tileBg);
+
   // placeholder for full image
   _imgBg = lv_img_create(_btn);
 
@@ -99,16 +110,20 @@ void classTile::_button(lv_obj_t *parent, const void *img)
 
   // Sub Label (placeholder)
   _subLabel = lv_label_create(_btn);
-  lv_obj_set_size(_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_size(_subLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_label_set_text(_subLabel, "");
   lv_obj_align(_subLabel, LV_ALIGN_BOTTOM_LEFT, 8, -5);
-  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x808080), 0);
+  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
+  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_DEFAULT);
+  lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_CHECKED);
 
   // set tile bg, button and label size from grid
   int width = _tileWidth();
   int height = _tileHeight();
 
   lv_obj_set_size(_tileBg, width, height);
+  lv_obj_set_size(_fullBar, width, 0);
   lv_obj_set_size(_btn, width, height);
 
   lv_obj_set_size(_label, width - 10, LV_SIZE_CONTENT);
@@ -222,6 +237,10 @@ void classTile::_reColorAll(lv_color_t color, lv_style_selector_t selector)
     lv_obj_set_style_text_color(_labelArcValue, color, selector);
     lv_obj_set_style_bg_color(_arcTarget, color, LV_PART_KNOB | selector);
   }
+  if (_btnUp)
+    lv_obj_set_style_bg_img_recolor(_btnUp, color, selector);
+  if (_btnDown)
+    lv_obj_set_style_bg_img_recolor(_btnDown, color, selector);
 }
 
 // hide/unhide icon if to be replaced by text or number
@@ -347,6 +366,8 @@ void classTile::setState(bool state)
 
   _state = state;
   state == false ? lv_obj_clear_state(_btn, LV_STATE_CHECKED) : lv_obj_add_state(_btn, LV_STATE_CHECKED);
+  state == false ? lv_obj_clear_state(_fullBar, LV_STATE_CHECKED) : lv_obj_add_state(_fullBar, LV_STATE_CHECKED);
+  state == false ? lv_obj_clear_state(_subLabel, LV_STATE_CHECKED) : lv_obj_add_state(_subLabel, LV_STATE_CHECKED);
   if (_txtIconText)
     state == false ? lv_obj_clear_state(_txtIconText, LV_STATE_CHECKED) : lv_obj_add_state(_txtIconText, LV_STATE_CHECKED);
   if (_valueLabel)
@@ -636,11 +657,12 @@ void classTile::setLevelStartStop(int start, int stop)
 
 void classTile::setLevel(int level, bool force)
 {
-  // early exit if bar visualisation is activ and not forced
-  if (lv_obj_is_valid(_ovlPanel) && !force)
-    return;
-
   _level = level;
+  if (_level > _levelStop) _level = _levelStop;
+  if (_level < _levelStart) _level = _levelStart;
+
+  _topDownMode == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_set_height(_fullBar, _tileHeight * _level / (_levelStop - _levelStart));
 }
 
 int classTile::getLevel(void)
@@ -666,6 +688,9 @@ int classTile::getLevelLargeStep(void)
 void classTile::setTopDownMode(bool enable)
 {
   _topDownMode = enable;
+
+  // we show the full tile level bar, tile BG depends on level if state = on
+  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_50, LV_STATE_CHECKED);
 }
 
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
@@ -682,7 +707,9 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   lv_obj_set_style_bg_color(_btnUp, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnUp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnUp, 0, LV_PART_MAIN | LV_STATE_CHECKED);
-  lv_obj_set_style_bg_img_recolor(_btnUp, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor(_btnUp, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_img_recolor(_btnUp, colorOn, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor_opa(_btnUp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor_opa(_btnUp, 255, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_img_recolor_opa(_btnUp, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
@@ -693,7 +720,9 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   lv_obj_set_style_bg_color(_btnDown, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnDown, 0, LV_PART_MAIN | LV_STATE_CHECKED);
-  lv_obj_set_style_bg_img_recolor(_btnDown, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor(_btnDown, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_img_recolor(_btnDown, colorOn, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor_opa(_btnDown, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor_opa(_btnDown, 255, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_img_recolor_opa(_btnDown, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
@@ -708,79 +737,6 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
 
   // reduced width for main label
   lv_obj_set_size(_label, 80, LV_SIZE_CONTENT);
-}
-
-void classTile::showOvlBar(int level)
-{
-  if (lv_obj_is_valid(_ovlPanel))
-  {
-    lv_obj_del(_ovlPanel);
-  }
-
-  _ovlPanel = lv_obj_create(_btn);
-  lv_obj_clear_flag(_ovlPanel, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_border_width(_ovlPanel, 0, LV_PART_MAIN);
-  lv_obj_set_size(_ovlPanel, 60, 70);
-  lv_obj_align(_ovlPanel, LV_ALIGN_TOP_LEFT, 2, 2);
-  lv_obj_set_style_bg_color(_ovlPanel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_ovlPanel, 255, LV_PART_MAIN | LV_STATE_CHECKED);
-
-  _bar = lv_bar_create(_ovlPanel);
-  if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
-    lv_obj_add_state(_bar, LV_STATE_CHECKED);
-  lv_bar_set_range(_bar, _levelStart, _levelStop);
-  lv_obj_set_size(_bar, 10, 60);
-  lv_obj_align(_bar, LV_ALIGN_CENTER, 10, 0);
-
-  lv_obj_set_style_radius(_bar, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_radius(_bar, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-
-  // _barLabel
-  lv_obj_t *_barLabel = lv_label_create(_ovlPanel);
-  lv_obj_set_size(_barLabel, 40, LV_SIZE_CONTENT);
-  lv_obj_align(_barLabel, LV_ALIGN_TOP_MID, -20, 0);
-  lv_obj_set_style_text_align(_barLabel, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_style_text_color(_barLabel, lv_color_hex(0x000000), 0);
-  lv_label_set_text_fmt(_barLabel, "%d", level);
-
-  // set mode to bottom-up(default)  or top-down
-  if (!_topDownMode)
-  {
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 200), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 50), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 150), LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_CHECKED);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 0), LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_CHECKED);
-
-    lv_obj_set_y(_barLabel, 38 - (50 * 0 / 100));
-    lv_bar_set_value(_bar, level, LV_ANIM_OFF);
-  }
-  else
-  {
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 50), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(_tileBgColor, 200), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 0), LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_MAIN | LV_STATE_CHECKED);
-
-    lv_obj_set_style_bg_color(_bar, lv_color_lighten(colorOn, 150), LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(_bar, 255, LV_PART_INDICATOR | LV_STATE_CHECKED);
-
-    lv_obj_set_y(_barLabel, -10);
-    lv_bar_set_value(_bar, _levelStop - level, LV_ANIM_OFF);
-  }
-
-  lv_obj_del_delayed(_ovlPanel, 2000);
 }
 
 // additional methods for drop down (interface)

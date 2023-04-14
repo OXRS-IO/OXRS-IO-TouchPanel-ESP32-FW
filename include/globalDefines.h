@@ -50,6 +50,7 @@ typedef struct
 
 #define WP_OPA_BG_OFF     26
 #define WP_OPA_BG_ON      255
+#define WP_OPA_BG_50      128
 #define WP_OPA_BG_PRESSED 128
 
 // screen layout

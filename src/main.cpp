@@ -788,22 +788,24 @@ static void upDownEventHandler(lv_event_t * e)
   {
     // get tile* of clicked tile from USER_DATA
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
+    // early exit if tile is in off state (level changes in on only)
+    if (!tPtr->getState()) return;
+
     int levelStart = tPtr->getLevelStart();
     int levelStop = tPtr->getLevelStop();
     int levelLargeStep = tPtr->getLevelLargeStep();
     int level = tPtr->getLevel();
-    // short increments 1; long increments 5
+    // short increments 1; long increments from tile
     int increment = (code == LV_EVENT_SHORT_CLICKED) ? 1 : levelLargeStep;
     int direction = lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? 1 : -1;
     increment *= direction;
-    // calc new value and limit to 0...100
+    // calc new value and limit to levelStart ... levelStop
     level += increment;
     if (level > levelStop)
       level = levelStop;
     if (level < levelStart)
       level = levelStart;
     tPtr->setLevel(level, true);
-    tPtr->showOvlBar(level);
     // send event
     publishLevelEvent(tPtr, (direction == 1) ? "up" : "down", level);
   }
@@ -1268,6 +1270,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
   // enable on-tile level control (bottom-up)
   if (style == TS_BUTTON_LEVEL_UP)
   {
+    ref.setTopDownMode(false);
     ref.addUpDownControl(upDownEventHandler, imgUp, imgDown);
   }
 
