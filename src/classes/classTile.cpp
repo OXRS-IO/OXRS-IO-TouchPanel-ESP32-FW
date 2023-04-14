@@ -675,7 +675,7 @@ void classTile::setTopDownMode(bool enable)
   _topDownMode = enable;
 
   // we show the full tile level bar, tile BG depends on level if state = on
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_50, LV_STATE_CHECKED);
 }
 
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
