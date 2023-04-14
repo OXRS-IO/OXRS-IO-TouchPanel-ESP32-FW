@@ -662,7 +662,7 @@ void classTile::setLevel(int level, bool force)
   if (_level < _levelStart) _level = _levelStart;
 
   _topDownMode == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_height(_fullBar, _tileHeight * _level / (_levelStop - _levelStart));
+  lv_obj_set_height(_fullBar, _tileHeight() * (_level - _levelStart) / (_levelStop - _levelStart));
 }
 
 int classTile::getLevel(void)

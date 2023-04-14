@@ -55,7 +55,6 @@ protected:
   int _levelLargeStep = 5;
   int _level = 0;
   bool _topDownMode = false;
-  int _tileHeight = 0;
   const void *_img = NULL;
   const void *_imgOn = NULL;
   const void *_imgConfig = NULL;
