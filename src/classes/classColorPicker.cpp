@@ -131,7 +131,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 
   _btnColor = lv_btn_create(_ovlPanel);
   lv_obj_align(_btnColor, LV_ALIGN_TOP_LEFT, 5, 5);
-  lv_obj_set_size(_btnColor, 153, 40);
+  lv_obj_set_size(_btnColor, SCREEN_WIDTH / 2 - 7, 40);
   lv_obj_set_style_bg_color(_btnColor, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btnColor, lv_color_hex(0xffffff), LV_STATE_CHECKED);
   lv_obj_set_style_bg_opa(_btnColor, WP_OPA_BG_OFF, LV_STATE_DEFAULT);
@@ -144,7 +144,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 
   _btnKelvin = lv_btn_create(_ovlPanel);
   lv_obj_align(_btnKelvin, LV_ALIGN_TOP_RIGHT, -5, 5);
-  lv_obj_set_size(_btnKelvin, 153, 40);
+  lv_obj_set_size(_btnKelvin, SCREEN_WIDTH / 2 - 7, 40);
   lv_obj_set_style_bg_color(_btnKelvin, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btnKelvin, lv_color_hex(0xffffff), LV_STATE_CHECKED);
   lv_obj_set_style_bg_opa(_btnKelvin, WP_OPA_BG_OFF, LV_STATE_DEFAULT);
@@ -277,14 +277,14 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_labelBrightnessColorValue, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessColorValue, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessColorValue, "100 %");
-  lv_obj_align(_labelBrightnessColorValue, LV_ALIGN_TOP_RIGHT, -20, CP_BRIGHTNESS_COLOR_Y - 20);
+  lv_obj_align_to(_labelBrightnessColorValue, _barBrightnessColor, LV_ALIGN_OUT_TOP_RIGHT, 0, - 7);
 
   // label Brightness Color text
   _labelBrightnessColor = lv_label_create(_panelRGB);
   lv_obj_set_size(_labelBrightnessColor, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessColor, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessColor, "Brightness Color");
-  lv_obj_align(_labelBrightnessColor, LV_ALIGN_TOP_LEFT, 20, CP_BRIGHTNESS_COLOR_Y - 20);
+  lv_obj_align_to(_labelBrightnessColor, _barBrightnessColor, LV_ALIGN_OUT_TOP_LEFT, 0, -7);
 
   // _barBrightness white
   _barBrightnessWhite = lv_bar_create(_panelCCT);
@@ -330,14 +330,14 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_labelBrightnessWhiteValue, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessWhiteValue, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessWhiteValue, "100 %");
-  lv_obj_align(_labelBrightnessWhiteValue, LV_ALIGN_TOP_RIGHT, -20, CP_BRIGHTNESS_WHITE_Y-20);  
+  lv_obj_align_to(_labelBrightnessWhiteValue, _barBrightnessWhite, LV_ALIGN_OUT_TOP_RIGHT, 0, -7);
 
   // label Brightness white text
   _labelBrightnessWhite = lv_label_create(_panelCCT);
   lv_obj_set_size(_labelBrightnessWhite, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelBrightnessWhite, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelBrightnessWhite, "Brightness White");
-  lv_obj_align(_labelBrightnessWhite, LV_ALIGN_TOP_LEFT, 20, CP_BRIGHTNESS_WHITE_Y-20);
+  lv_obj_align_to(_labelBrightnessWhite, _barBrightnessWhite, LV_ALIGN_OUT_TOP_LEFT, 0, -7);
 
   // panel for kelvin slider components
   _panelKelvin = lv_obj_create(_panelCCT);
@@ -405,14 +405,14 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_labelKelvinValue, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelKelvinValue, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelKelvinValue, "4000 K");
-  lv_obj_align(_labelKelvinValue, LV_ALIGN_TOP_RIGHT, -20, CP_KELVIN_Y-20);
+  lv_obj_align_to(_labelKelvinValue, _panelKelvin, LV_ALIGN_OUT_TOP_RIGHT, 0, -7);
 
   // label kelvin text
   _labelKelvin = lv_label_create(_panelCCT);
   lv_obj_set_size(_labelKelvin, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_color(_labelKelvin, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_label_set_text(_labelKelvin, "Color Temperature");
-  lv_obj_align(_labelKelvin, LV_ALIGN_TOP_LEFT, 20, CP_KELVIN_Y-20);
+  lv_obj_align_to(_labelKelvin, _panelKelvin, LV_ALIGN_OUT_TOP_LEFT, 0, -7);
 }
 
 classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode) : classPopUpContainer(1)

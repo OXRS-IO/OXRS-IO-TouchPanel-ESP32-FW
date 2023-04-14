@@ -9,7 +9,7 @@
   Bugs/Features:
     See GitHub issues list
 
-  Copyright 2019-2022 SuperHouse Automation Pty Ltd
+  Copyright 2019-2023 SuperHouse Automation Pty Ltd
 */
 
 // Macro for converting env vars to strings
@@ -35,7 +35,10 @@
   #include "panels/cfgWT32-SC01.hpp"
 #elif defined (WT32_SC01_PLUS)
   #include "panels/cfgWT32-SC01-plus.hpp"
+#elif defined(WT32S3_86V)
+  #include "panels/cfgWT32S3-86V.hpp"
 #endif
+
 #include <lvgl.h>
 
 #include <OXRS_WT32.h> // WT32 support
@@ -560,6 +563,16 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
   if (snapShotActive)
   // upload pixel data for snap shot in RGB565 format
   {
+  #if LV_COLOR_16_SWAP == 1
+    // swap back bytes for bmp image
+    int w = (area->x2 - area->x1 + 1);
+    int h = (area->y2 - area->y1 + 1);
+    lv_color_t *pixel = color_p;
+    for (int i = 0; i < (w * h); i++, pixel++)
+    {
+      pixel->full = (pixel->full << 8 | pixel->full >> 8);
+    }
+  #endif
     int rowByteCount = (snapShotArea.x2 - snapShotArea.x1 + 1) * sizeof(color_p->full); 
     for (int row = area->y1; row <= area->y2; row++, color_p += SCREEN_WIDTH)
     {
@@ -570,17 +583,29 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
     }
   }
   else
-  // update screen
   {
-    int w = (area->x2 - area->x1 + 1);
-    int h = (area->y2 - area->y1 + 1);
+  // update screen
+    #if defined(WT32S3_86V)
+    {
+    tft.pushImageDMA( area->x1
+                    , area->y1
+                    , area->x2 - area->x1 + 1
+                    , area->y2 - area->y1 + 1
+                    , ( lgfx::swap565_t* )&color_p->full );
+    }
 
-    tft.startWrite(); 
-    tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
-    tft.endWrite();
+    #else
+    {
+      int w = (area->x2 - area->x1 + 1);
+      int h = (area->y2 - area->y1 + 1);
+
+      tft.startWrite();
+      tft.setAddrWindow(area->x1, area->y1, w, h);
+      tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
+      tft.endWrite();
+    }
+    #endif
   }
-
   lv_disp_flush_ready(disp);
 }
 
@@ -1324,13 +1349,13 @@ void getApiSnapshot(Request &req, Response &res)
   struct bmpHeader_t
   {
     uint8_t magic[2] = {'B', 'M'};
-    uint32_t bfSize = (uint32_t)(WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT) * bytePerPixel;
+    uint32_t bfSize = (uint32_t)(SCREEN_WIDTH * SCREEN_HEIGHT) * bytePerPixel;
     uint32_t bfReserved = 0;
     uint32_t bfOffBits = sizeof(bmpHeader_t);
 
     uint32_t biSize = 40;
-    int32_t biWidth = WT32_SCREEN_WIDTH;
-    int32_t biHeight = -WT32_SCREEN_HEIGHT;
+    int32_t biWidth = SCREEN_WIDTH;
+    int32_t biHeight = -SCREEN_HEIGHT;
     uint16_t biPlanes = 1;
     uint16_t biBitCount = 16;
     uint32_t biCompression = 3;
@@ -1346,8 +1371,8 @@ void getApiSnapshot(Request &req, Response &res)
   // preset for full screen
   int rowStart = 0;
   int colStart = 0;
-  int rows = WT32_SCREEN_HEIGHT;
-  int cols = WT32_SCREEN_WIDTH;
+  int rows = SCREEN_HEIGHT;
+  int cols = SCREEN_WIDTH;
 
   // handle one tile only request
   if ((tileIdx >= TILE_START) && (tileIdx <= TILE_END))
@@ -2274,7 +2299,7 @@ void setup()
 {
   // start serial and let settle
   Serial.begin(SERIAL_BAUD_RATE);
-  delay(2000);
+  delay(100);
   Serial.println(F("[tp32] starting up..."));
 
   // initialise the Tile_Style_LUT and Img_LUT for later use
@@ -2329,6 +2354,7 @@ void setup()
 
   // show splash screen
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
+  lv_obj_set_style_bg_color(lv_scr_act(), lv_color_make(22, 22, 48), LV_PART_MAIN);
   lv_img_set_src(img1, imgOxrsSplash);
   lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
   lv_obj_invalidate(lv_scr_act());
