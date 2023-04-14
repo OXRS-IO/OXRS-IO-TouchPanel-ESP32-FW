@@ -228,6 +228,10 @@ void classTile::_reColorAll(lv_color_t color, lv_style_selector_t selector)
     lv_obj_set_style_text_color(_labelArcValue, color, selector);
     lv_obj_set_style_bg_color(_arcTarget, color, LV_PART_KNOB | selector);
   }
+  if (_btnUp)
+    lv_obj_set_style_bg_img_recolor(_btnUp, color, selector);
+  if (_btnDown)
+    lv_obj_set_style_bg_img_recolor(_btnDown, color, selector);
 }
 
 // hide/unhide icon if to be replaced by text or number
@@ -645,9 +649,11 @@ void classTile::setLevelStartStop(int start, int stop)
 void classTile::setLevel(int level, bool force)
 {
   _level = level;
+  if (_level > _levelStop) _level = _levelStop;
+  if (_level < _levelStart) _level = _levelStart;
 
   _topDownMode == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_height(_fullBar, _tileHeight * _level / 100);
+  lv_obj_set_height(_fullBar, _tileHeight * _level / (_levelStop - _levelStart));
 }
 
 int classTile::getLevel(void)
@@ -692,7 +698,9 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   lv_obj_set_style_bg_color(_btnUp, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnUp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnUp, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor(_btnUp, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor(_btnUp, colorOn, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor_opa(_btnUp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor_opa(_btnUp, 255, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_img_recolor_opa(_btnUp, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
@@ -703,7 +711,9 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   lv_obj_set_style_bg_color(_btnDown, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnDown, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor(_btnDown, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor(_btnDown, colorOn, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_img_recolor_opa(_btnDown, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_img_recolor_opa(_btnDown, 255, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_img_recolor_opa(_btnDown, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
