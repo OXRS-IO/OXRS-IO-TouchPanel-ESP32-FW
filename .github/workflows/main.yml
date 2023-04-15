@@ -36,7 +36,7 @@ jobs:
         pip install --upgrade platformio
     
     - name: Build release binary
-      run: pio run -e wt32-eth -e wt32-wifi -e wt32-plus-wifi
+      run: pio run -e wt32-eth -e wt32-wifi -e wt32-plus-wifi -e wt32-86v-wifi
 
     - name: Create release
       uses: ncipollo/release-action@v1
