@@ -119,9 +119,8 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_CHECKED);
 
   // set tile bg, button and label size from grid
-  int width = *lv_obj_get_style_grid_column_dsc_array(parent, 0) - 10;
-  int height = *lv_obj_get_style_grid_row_dsc_array(parent, 0) - 10;
-  _tileHeight = height;
+  int width = _tileWidth();
+  int height = _tileHeight();
 
   lv_obj_set_size(_tileBg, width, height);
   lv_obj_set_size(_fullBar, width, 0);
@@ -131,6 +130,18 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_obj_set_size(_subLabel, width - 10, LV_SIZE_CONTENT);
 
   btn = _btn;
+}
+
+// tile width from grid
+int classTile::_tileWidth()
+{
+  return *lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) - (TILE_PADDING * 2);
+}
+
+// tile width from grid
+int classTile::_tileHeight()
+{
+  return *lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) - (TILE_PADDING * 2);
 }
 
 void classTile::_createValueLabels()
@@ -190,9 +201,7 @@ void classTile::_createIconText()
   lv_obj_set_style_text_color(_txtIconText, colorReleased, LV_IMGBTN_STATE_RELEASED);
 
   // set size from grid
-  int width = *lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) - 10;
-  int height = *lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) - 10;
-  lv_obj_set_size(_txtIconText, width - 20, height - 4);
+  lv_obj_set_size(_txtIconText, _tileWidth() - 20, _tileHeight() - 4);
 }
 
   void classTile::_setIconTextFromIndex()
@@ -310,8 +319,8 @@ void classTile::begin(lv_obj_t * parent, classScreen * parentScreen, int tileIdx
   lv_label_set_text(_label, labelText);
 
   // position tile in grid after tile and screen are known
-  int row = (tileIdx - 1) / 2;
-  int col = (tileIdx - 1) % 2;
+  int col = (tileIdx - 1) % SCREEN_COLS;
+  int row = (tileIdx - 1) / SCREEN_COLS;
   lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
 }
 
@@ -653,7 +662,7 @@ void classTile::setLevel(int level, bool force)
   if (_level < _levelStart) _level = _levelStart;
 
   _topDownMode == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_height(_fullBar, _tileHeight * _level / (_levelStop - _levelStart));
+  lv_obj_set_height(_fullBar, _tileHeight() * (_level - _levelStart) / (_levelStop - _levelStart));
 }
 
 int classTile::getLevel(void)
@@ -687,8 +696,8 @@ void classTile::setTopDownMode(bool enable)
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
 {
   // set button and label size from grid
-  int width = (*lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) - 10) / 2 + 1;
-  int height = (*lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) - 10) / 2 + 1;
+  int width = _tileWidth() / 2 + 1;
+  int height = _tileHeight() / 2 + 1;
 
   // up / down  buttons
   _btnUp = lv_btn_create(_btn);

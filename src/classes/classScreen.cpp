@@ -1,18 +1,29 @@
 ﻿#include <classScreen.h>
-#include <globalDefines.h>
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
 
 // grid definitions
-// sub screens 3 x 2 + home button
-#define FOOTER_HEIGHT 25
-#define COLS_2X3 2
-#define ROWS_2X3 3
-#define COL_SIZE_2X3 (SCREEN_WIDTH / COLS_2X3) - 2
-#define ROW_SIZE_2X3 ((SCREEN_HEIGHT - FOOTER_HEIGHT) / ROWS_2X3) - 2
-static lv_coord_t colDsc_2X3[] = {COL_SIZE_2X3, COL_SIZE_2X3, LV_GRID_TEMPLATE_LAST};
-static lv_coord_t rowDsc_2X3[] = {ROW_SIZE_2X3, ROW_SIZE_2X3, ROW_SIZE_2X3, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t colDsc[SCREEN_COLS + 1];
+static lv_coord_t rowDsc[SCREEN_ROWS + 1];
+
+void classScreen::_makeScreenLayout()
+{
+  int colSize = (SCREEN_WIDTH / SCREEN_COLS);
+  int rowSize = ((SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / SCREEN_ROWS);
+
+  for (int c = 0; c < SCREEN_COLS; c++)
+  {
+    colDsc[c] = colSize;
+  }
+  colDsc[SCREEN_COLS] = LV_GRID_TEMPLATE_LAST;
+
+  for (int r = 0; r < SCREEN_ROWS; r++)
+  {
+    rowDsc[r] = rowSize;
+  }
+  rowDsc[SCREEN_ROWS] = LV_GRID_TEMPLATE_LAST;
+}
 
 void classScreen::begin(int number, int style)
 {
@@ -33,8 +44,10 @@ void classScreen::begin(int number, int style)
     lv_obj_set_align(cont, LV_ALIGN_TOP_MID);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
     lv_obj_set_style_pad_top(cont, 0, 0);
-    lv_obj_set_style_pad_left(cont, 2, 0);
-    lv_obj_set_grid_dsc_array(cont, colDsc_2X3, rowDsc_2X3);
+    lv_obj_set_style_pad_left(cont, 0, 0);
+
+    _makeScreenLayout();
+    lv_obj_set_grid_dsc_array(cont, colDsc, rowDsc);
 
     container = cont;
   }

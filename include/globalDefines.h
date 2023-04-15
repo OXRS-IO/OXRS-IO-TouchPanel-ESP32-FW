@@ -53,16 +53,31 @@ typedef struct
 #define WP_OPA_BG_50      128
 #define WP_OPA_BG_PRESSED 128
 
-#define SCREEN_WIDTH      320
-#define SCREEN_HEIGHT     480
+// screen layout
+#ifndef SCREEN_WIDTH
+  #define SCREEN_WIDTH    320
+#endif
+#ifndef SCREEN_HEIGHT
+  #define SCREEN_HEIGHT   480
+#endif
+#ifndef SCREEN_COLS
+  #define SCREEN_COLS     2
+#endif
+#ifndef SCREEN_ROWS
+  #define SCREEN_ROWS     3
+#endif
+#ifndef SCREEN_FOOTER_HEIGHT
+  #define SCREEN_FOOTER_HEIGHT 33
+#endif
 
 #define SCREEN_START      1
 #define SCREEN_END        32
 #define SCREEN_HOME       SCREEN_START
 #define SCREEN_SETTINGS   (SCREEN_END + 1)
 
+#define TILE_PADDING      5
 #define TILE_START        1
-#define TILE_END          6
+#define TILE_END          (SCREEN_COLS * SCREEN_ROWS)
 
 typedef union
 {

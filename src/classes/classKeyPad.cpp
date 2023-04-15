@@ -17,10 +17,12 @@ static const char *btnm_map[] = {"1", "2", "3", "\n",
 
 void classKeyPad::_createKeyPad(void)
 {
+  int heightOffset = (!_callingTile) ? 45 : 0;
+  lv_obj_set_style_height(_panel, lv_obj_get_style_height(_panel, LV_PART_MAIN) + heightOffset, LV_PART_MAIN);
   _btnm1 = lv_btnmatrix_create(_panel);
   lv_obj_set_style_text_font(_btnm1, &lv_font_montserrat_20, LV_PART_ITEMS);
-  lv_obj_set_style_height(_btnm1, 320, LV_PART_MAIN);
-  lv_obj_set_style_width(_btnm1, 320*3/4, LV_PART_MAIN);
+  lv_obj_set_style_height(_btnm1, 320 + heightOffset, LV_PART_MAIN);
+  lv_obj_set_style_width(_btnm1, (320 + heightOffset) * 3 / 4, LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_btnm1, 0, LV_PART_MAIN);
   lv_obj_set_style_radius(_btnm1, 80, LV_PART_ITEMS);
   lv_obj_set_style_bg_color(_btnm1, lv_color_hex(0xffffff), LV_PART_ITEMS);
@@ -37,6 +39,8 @@ void classKeyPad::_createKeyPad(void)
   pwd_ta = lv_textarea_create(_panel);
   lv_obj_set_style_border_width(pwd_ta, 0, LV_PART_MAIN);
   lv_obj_set_style_bg_opa(pwd_ta, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_left(pwd_ta, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_right(pwd_ta, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_textarea_set_align(pwd_ta, LV_TEXT_ALIGN_CENTER);
   lv_textarea_set_password_mode(pwd_ta, true);
   lv_textarea_set_password_show_time(pwd_ta, PASSWORD_SHOW_TIME);
@@ -119,7 +123,7 @@ void classKeyPad::setState(const char *state, const void *icon, lv_color_t color
     }
   }
 
-  if ((color.ch.red + color.ch.blue + color.ch.green) == 0)
+  if (color.full == 0)
   {
     if (strcmp(state, "locked") == 0)
     {

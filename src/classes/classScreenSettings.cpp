@@ -88,7 +88,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_style_img_recolor(_btnRestart, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btnRestart, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_size(_btnRestart, 150, 50);
-  lv_obj_align(_btnRestart, LV_ALIGN_BOTTOM_RIGHT, -5, -40);
+  lv_obj_align_to(_btnRestart, _panelSlider, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 40);
 
   lv_obj_t *_labelRestart = lv_label_create(_btnRestart);
   lv_obj_set_size(_labelRestart, LV_SIZE_CONTENT, LV_SIZE_CONTENT);

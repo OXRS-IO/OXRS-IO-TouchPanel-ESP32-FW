@@ -6,6 +6,7 @@ config = env.GetProjectConfig()
 
 # get the firmware name from the [firmware] section in platformio.ini
 firmware_name = config.get("firmware", "name")
+firmware_name = firmware_name.replace('\\\"', '')
 
 # get the env name for this build
 env_name = env.subst("$PIOENV")
