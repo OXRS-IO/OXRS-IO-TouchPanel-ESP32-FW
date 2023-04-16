@@ -7,7 +7,7 @@ boot_app_bin = platform.get_package_dir("framework-arduinoespressif32") + '/tool
 env.AddPostAction(
     "$BUILD_DIR/${PROGNAME}.bin", 
     "esptool.py --chip esp32s3 merge_bin -o $BUILD_DIR/${PROGNAME}_FLASHER.bin  " + 
-    " --flash_mode dio --flash_freq 80m --flash_size 16MB " +
+    " --flash_mode dio --flash_freq 80m --flash_size 8MB " +
     " 0x0000 $BUILD_DIR/bootloader.bin " +
     " 0x8000 $BUILD_DIR/partitions.bin " + 
     " 0xe000 " + boot_app_bin + 
