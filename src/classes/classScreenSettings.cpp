@@ -26,7 +26,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_align(_imgLogo, LV_ALIGN_TOP_MID);
 
   _infoTextArea = lv_table_create(_parent);
-  lv_obj_set_size(_infoTextArea, 320, 190);
+  lv_obj_set_size(_infoTextArea, 320, 211);
   lv_obj_align_to(_infoTextArea, _imgLogo, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
   lv_obj_set_style_radius(_infoTextArea, 5, 0);
   lv_obj_set_style_bg_color(_infoTextArea, lv_color_hex(0xffffff), LV_PART_MAIN);
@@ -88,7 +88,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_style_img_recolor(_btnRestart, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btnRestart, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_size(_btnRestart, 150, 50);
-  lv_obj_align_to(_btnRestart, _panelSlider, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 40);
+  lv_obj_align_to(_btnRestart, _panelSlider, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 20);
 
   lv_obj_t *_labelRestart = lv_label_create(_btnRestart);
   lv_obj_set_size(_labelRestart, LV_SIZE_CONTENT, LV_SIZE_CONTENT);

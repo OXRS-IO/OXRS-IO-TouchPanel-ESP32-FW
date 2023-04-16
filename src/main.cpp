@@ -700,7 +700,7 @@ void updateInfoText(void)
   char buffer[40];
 
   lv_obj_t *table = screenSettings.getInfoPanel();
-  lv_table_set_row_cnt(table, 9);
+  lv_table_set_row_cnt(table, 10);
   lv_table_set_col_cnt(table, 2);
 
   lv_table_set_cell_value(table, 0, 0, "Name:");
@@ -710,25 +710,27 @@ void updateInfoText(void)
   lv_table_set_cell_value(table, 2, 1, FW_MAKER);
   lv_table_set_cell_value(table, 3, 0, "Version:");
   lv_table_set_cell_value(table, 3, 1, STRINGIFY(FW_VERSION));
+  lv_table_set_cell_value(table, 4, 0, "H/W:");
+  lv_table_set_cell_value(table, 4, 1, STRINGIFY(FW_HARDWARE));
 
-  lv_table_set_cell_value(table, 5, 0, "MAC:");
+  lv_table_set_cell_value(table, 6, 0, "MAC:");
   wt32.getMACAddressTxt(buffer);
-  lv_table_set_cell_value(table, 5, 1, buffer);
-
-  lv_table_set_cell_value(table, 6, 0, "IP:");
-  wt32.getIPAddressTxt(buffer);
   lv_table_set_cell_value(table, 6, 1, buffer);
 
-  lv_table_set_cell_value(table, 7, 0, "MODE:");
-  #if defined(ETH_MODE)
-    lv_table_set_cell_value(table, 7, 1, "Ethernet");
+  lv_table_set_cell_value(table, 7, 0, "IP:");
+  wt32.getIPAddressTxt(buffer);
+  lv_table_set_cell_value(table, 7, 1, buffer);
+
+  lv_table_set_cell_value(table, 8, 0, "MODE:");
+#if defined(ETH_MODE)
+    lv_table_set_cell_value(table, 8, 1, "Ethernet");
   #else
-    lv_table_set_cell_value(table, 7, 1, "WiFi");
+    lv_table_set_cell_value(table, 8, 1, "WiFi");
   #endif
 
-    lv_table_set_cell_value(table, 8, 0, "MQTT:");
+    lv_table_set_cell_value(table, 9, 0, "MQTT:");
     wt32.getMQTTTopicTxt(buffer);
-    lv_table_set_cell_value(table, 8, 1, buffer);
+    lv_table_set_cell_value(table, 9, 1, buffer);
 }
 
 // check for changes in IP/MQTT connection and update warning sign in footer
