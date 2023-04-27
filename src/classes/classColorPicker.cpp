@@ -15,6 +15,7 @@ hsv_t _colorWheelHSV;
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern const void *imgOnOff;
 
 // convert RGB to HSV with RGB888 and floating point calc
 // h = [0,360], s = [0,1], v = [0,1]
@@ -203,6 +204,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   _imgBtn = lv_img_create(_btn);
   lv_obj_align(_imgBtn, LV_ALIGN_CENTER, 0, 0);
   lv_img_set_zoom(_imgBtn, 140);
+  lv_img_set_src(_imgBtn, imgOnOff);
   lv_obj_set_style_img_recolor(_imgBtn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_img_recolor_opa(_imgBtn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_img_recolor(_imgBtn, colorOn, LV_STATE_CHECKED);
@@ -433,7 +435,6 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
   lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", lv_slider_get_value(_sliderBrightnessWhite));
 
   // update the button
-  _callingTile->getImages(_imgOff, _imgOn);
   setState(_callingTile->getState());
 
   // add event handler
@@ -562,14 +563,12 @@ void classColorPicker::setState(bool state)
   {
     lv_obj_add_state(_btn, LV_STATE_CHECKED);
     lv_obj_add_state(_imgBtn, LV_STATE_CHECKED);
-    lv_img_set_src(_imgBtn, _imgOn);
     lv_obj_set_style_img_recolor(_imgBtn, _callingTile->getColor(), LV_STATE_CHECKED);
   }
   else
   {
     lv_obj_clear_state(_btn, LV_STATE_CHECKED);
     lv_obj_clear_state(_imgBtn, LV_STATE_CHECKED);
-    lv_img_set_src(_imgBtn, _imgOff);
     lv_obj_set_style_img_recolor(_imgBtn, _callingTile->getColor(), LV_STATE_DEFAULT);
   }
 }

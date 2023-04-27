@@ -146,25 +146,22 @@ int classTile::_tileHeight()
 
 void classTile::_createValueLabels()
 {
-  lv_color_t colorChecked = lv_obj_get_style_img_recolor(_btn, LV_STATE_CHECKED);
-  lv_color_t colorReleased = lv_obj_get_style_img_recolor(_btn, LV_IMGBTN_STATE_RELEASED);
-
   // additional Label (placeholder)
   _valueLabel = lv_label_create(_btn);
   lv_obj_set_size(_valueLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_font(_valueLabel, &number_OR_50, 0);
   lv_label_set_text(_valueLabel, "");
   lv_obj_align(_valueLabel, LV_ALIGN_TOP_LEFT, 8, 8);
-  lv_obj_set_style_text_color(_valueLabel, colorChecked, LV_STATE_CHECKED);
-  lv_obj_set_style_text_color(_valueLabel, colorReleased, LV_IMGBTN_STATE_RELEASED);
+  lv_obj_set_style_text_color(_valueLabel, colorOn, LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(_valueLabel, lv_color_hex(0xffffff), LV_IMGBTN_STATE_RELEASED);
 
   // additional Label (unit display)
   _unitLabel = lv_label_create(_btn);
   lv_obj_set_size(_unitLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_font(_unitLabel, &lv_font_montserrat_20, 0);
   lv_label_set_text(_unitLabel, "");
-  lv_obj_set_style_text_color(_unitLabel, colorChecked, LV_STATE_CHECKED);
-  lv_obj_set_style_text_color(_unitLabel, colorReleased, LV_IMGBTN_STATE_RELEASED);
+  lv_obj_set_style_text_color(_unitLabel, colorOn, LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(_unitLabel, lv_color_hex(0xffffff), LV_IMGBTN_STATE_RELEASED);
 
   // additional subLabel to value label
   _subValueLabel = lv_label_create(_btn);
@@ -187,9 +184,6 @@ void classTile::_createLinkedLabel()
 
 void classTile::_createIconText()
 {
-  lv_color_t colorChecked = lv_obj_get_style_img_recolor(_btn, LV_STATE_CHECKED);
-  lv_color_t colorReleased = lv_obj_get_style_img_recolor(_btn, LV_IMGBTN_STATE_RELEASED);
-
   // label for text to replace icon  (hide by default)
   _txtIconText = lv_label_create(_btn);
   lv_obj_align(_txtIconText, LV_ALIGN_TOP_LEFT, 8, 4);
@@ -197,8 +191,8 @@ void classTile::_createIconText()
   lv_label_set_text(_txtIconText, "");
   lv_label_set_recolor(_txtIconText, true);
   lv_obj_add_flag(_txtIconText, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_set_style_text_color(_txtIconText, colorChecked, LV_STATE_CHECKED);
-  lv_obj_set_style_text_color(_txtIconText, colorReleased, LV_IMGBTN_STATE_RELEASED);
+  lv_obj_set_style_text_color(_txtIconText, colorOn, LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(_txtIconText, lv_color_hex(0xffffff), LV_IMGBTN_STATE_RELEASED);
 
   // set size from grid
   lv_obj_set_size(_txtIconText, _tileWidth() - 20, _tileHeight() - 4);
@@ -393,14 +387,7 @@ void classTile::setState(bool state)
 
 lv_color_t classTile::getColor()
 {
-  if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
-  {
-    return lv_obj_get_style_img_recolor(_btn, LV_STATE_CHECKED);
-  }
-  else
-  {
-    return lv_obj_get_style_img_recolor(_btn, LV_IMGBTN_STATE_RELEASED);
-  }
+    return lv_obj_get_style_img_recolor(_btn, LV_PART_MAIN);
 }
 
 void classTile::setColor(lv_color_t color)

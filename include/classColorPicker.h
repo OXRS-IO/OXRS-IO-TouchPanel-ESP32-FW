@@ -36,7 +36,6 @@ private:
   lv_obj_t *_imgBtn = NULL;
 
   void _createColorPicker(lv_img_dsc_t *imgCw);
-  const void *_imgOff, *_imgOn;
 
 public:
   classColorPicker(void) : classPopUpContainer() {};

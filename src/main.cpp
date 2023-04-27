@@ -1870,28 +1870,23 @@ void jsonTileCommand(JsonVariant json)
     }
   }
 
+  int newState = -1;
   if (json.containsKey("state"))
   {
     const char *state = json["state"];
-    int iState = -1;
     // decode state
     if (strcmp(state, "off") == 0)
     {
-      iState = 0;
+      newState = 0;
     }
     else if (strcmp(state, "on") == 0)
     {
-      iState = 1;
+      newState = 1;
     }
     // send if valid
-    if(iState >= 0)
+    if (newState >= 0)
     {
-      tile->setState(iState == 0 ? false : true);
-      // send to colorpicker if active and belongs to tile which the state is sent to
-      if(colorPicker.isActive() && (colorPicker.getTile()->tileId.id == tile->tileId.id))
-      {
-        colorPicker.setState(iState == 0 ? false : true);
-      }
+      tile->setState(newState == 0 ? false : true);
     }
     // throw error
     else
@@ -1899,6 +1894,17 @@ void jsonTileCommand(JsonVariant json)
       wt32.print(F("[tp32] invalid state: "));
       wt32.println(state);
     }
+  }
+
+  if (json.containsKey("iconColorRgb"))
+  {
+    tile->setColor(jsonRgbToColor(json["iconColorRgb"]));
+  }
+  // send state to colorpicker if active and belongs to tile which the state is sent to
+  // must be sent after iconColor is updated
+  if (newState >= 0 && colorPicker.isActive() && (colorPicker.getTile()->tileId.id == tile->tileId.id))
+  {
+    colorPicker.setState(newState == 0 ? false : true);
   }
 
   if (json.containsKey("subLabel"))
@@ -1909,11 +1915,6 @@ void jsonTileCommand(JsonVariant json)
   if (json.containsKey("level"))
   {
     tile->setLevel(json["level"].as<int>(), false);
-  }
-
-  if (json.containsKey("iconColorRgb"))
-  {
-    tile->setColor(jsonRgbToColor(json["iconColorRgb"]));
   }
 
   if (json.containsKey("backgroundColorRgb"))
