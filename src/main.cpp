@@ -709,7 +709,14 @@ void updateInfoText(void)
   lv_table_set_cell_value(table, 2, 0, "Maker:");
   lv_table_set_cell_value(table, 2, 1, FW_MAKER);
   lv_table_set_cell_value(table, 3, 0, "Version:");
-  lv_table_set_cell_value(table, 3, 1, STRINGIFY(FW_VERSION));
+#if defined(FW_VERSION)
+  strcpy(buffer, STRINGIFY(FW_VERSION));
+#else
+  time_t rawtime = BUILD_TIMESTAMP;
+  struct tm ts = *localtime(&rawtime);
+  strftime(buffer, sizeof(buffer), "Build: %Y-%m-%d %H:%M:%S %Z", &ts);
+#endif
+  lv_table_set_cell_value(table, 3, 1, buffer);
   lv_table_set_cell_value(table, 4, 0, "H/W:");
   lv_table_set_cell_value(table, 4, 1, STRINGIFY(FW_HARDWARE));
 
