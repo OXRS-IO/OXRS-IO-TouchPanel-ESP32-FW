@@ -54,7 +54,8 @@ protected:
   int _levelStop = 100;
   int _levelLargeStep = 5;
   int _level = 0;
-  bool _topDownMode = false;
+  int _levelBottom = _levelStart;
+  int _levelTop = _levelStop;
   const void *_img = NULL;
   const void *_imgOn = NULL;
   const void *_imgConfig = NULL;
@@ -123,13 +124,12 @@ public :
   
   void addEventHandler(lv_event_cb_t callBack);
 
-  void setLevelStartStop(int start, int stop);
+  void setLevelBottomTop(int bottom, int top);
   void setLevel(int level, bool force);
   int getLevel(void);
   int getLevelStart(void);
   int getLevelStop(void);
   int getLevelLargeStep(void);
-  void setTopDownMode(bool enable);
   void addUpDownControl(lv_event_cb_t upDownEventHandler, const void* imgUpperButton, const void* imgLowerButton);
  
   void setDropDownList(string list);

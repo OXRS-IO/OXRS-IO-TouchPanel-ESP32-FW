@@ -114,9 +114,9 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   lv_label_set_text(_subLabel, "");
   lv_obj_align(_subLabel, LV_ALIGN_BOTTOM_LEFT, 8, -5);
   lv_obj_set_style_text_color(_subLabel, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
-  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_DEFAULT);
+  lv_obj_set_style_text_opa(_subLabel, WP_OPA_BG_70, LV_STATE_DEFAULT);
   lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
-  lv_obj_set_style_text_opa(_subLabel, 178, LV_STATE_CHECKED);
+  lv_obj_set_style_text_opa(_subLabel, WP_OPA_BG_70, LV_STATE_CHECKED);
 
   // set tile bg, button and label size from grid
   int width = _tileWidth();
@@ -168,7 +168,10 @@ void classTile::_createValueLabels()
   lv_obj_set_size(_subValueLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_text_font(_subValueLabel, &lv_font_montserrat_20, 0);
   lv_label_set_text(_subValueLabel, "");
-  lv_obj_set_style_text_color(_subValueLabel, lv_color_hex(0x808080), LV_STATE_DEFAULT);
+  lv_obj_set_style_text_color(_subValueLabel, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
+  lv_obj_set_style_text_opa(_subValueLabel, WP_OPA_BG_70, LV_STATE_DEFAULT);
+  lv_obj_set_style_text_color(_subValueLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
+  lv_obj_set_style_text_opa(_subValueLabel, WP_OPA_BG_70, LV_STATE_CHECKED);
 }
 
 void classTile::_createLinkedLabel()
@@ -369,6 +372,8 @@ void classTile::setState(bool state)
     state == false ? lv_obj_clear_state(_valueLabel, LV_STATE_CHECKED) : lv_obj_add_state(_valueLabel, LV_STATE_CHECKED);
     state == false ? lv_obj_clear_state(_unitLabel, LV_STATE_CHECKED) : lv_obj_add_state(_unitLabel, LV_STATE_CHECKED);
   }
+  if (_subValueLabel)
+    state == false ? lv_obj_clear_state(_subValueLabel, LV_STATE_CHECKED) : lv_obj_add_state(_subValueLabel, LV_STATE_CHECKED);
   if (_btnUp)
     state == false ? lv_obj_clear_state(_btnUp, LV_STATE_CHECKED) : lv_obj_add_state(_btnUp, LV_STATE_CHECKED);
   if (_btnDown)
@@ -624,11 +629,13 @@ void classTile::addEventHandler(lv_event_cb_t callBack)
 
 // additional methods for on-tile level control
 
-void classTile::setLevelStartStop(int start, int stop)
+void classTile::setLevelBottomTop(int bottom, int top)
 {
-  _levelStart = start;
-  _levelStop = stop;
-  _levelLargeStep = ((stop - start) + 10) / 20;
+  _levelBottom = bottom;
+  _levelTop = top;
+  _levelStart = min(bottom, top);
+  _levelStop = max(bottom, top);
+  _levelLargeStep = ((_levelStop - _levelStart) + 10) / 20;
   if (_levelLargeStep == 0) _levelLargeStep++;
   _level = _levelStart;
 
@@ -648,8 +655,10 @@ void classTile::setLevel(int level, bool force)
   if (_level > _levelStop) _level = _levelStop;
   if (_level < _levelStart) _level = _levelStart;
 
-  _topDownMode == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
+   _levelTop > _levelBottom ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_set_height(_fullBar, _tileHeight() * (_level - _levelStart) / (_levelStop - _levelStart));
+  // level bar display requested
+  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_50, LV_STATE_CHECKED);
 }
 
 int classTile::getLevel(void)
@@ -670,14 +679,6 @@ int classTile::getLevelStop(void)
 int classTile::getLevelLargeStep(void)
 {
   return _levelLargeStep;
-}
-
-void classTile::setTopDownMode(bool enable)
-{
-  _topDownMode = enable;
-
-  // we show the full tile level bar, tile BG depends on level if state = on
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_50, LV_STATE_CHECKED);
 }
 
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
@@ -714,7 +715,7 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
   lv_obj_set_style_bg_img_recolor_opa(_btnDown, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
   // select which button increments (USER_FLAG set = increment)
-  if (!_topDownMode)
+  if (_levelTop > _levelBottom)
     lv_obj_add_flag(_btnUp, LV_OBJ_FLAG_USER_1);
   else
     lv_obj_add_flag(_btnDown, LV_OBJ_FLAG_USER_1);

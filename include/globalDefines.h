@@ -7,8 +7,7 @@ enum tileType_t
 {
   TS_NONE,
   TS_BUTTON,
-  TS_BUTTON_LEVEL_UP,
-  TS_BUTTON_LEVEL_DOWN,
+  TS_BUTTON_UP_DOWN_LEVEL,
   TS_BUTTON_UP_DOWN,
   TS_BUTTON_LEFT_RIGHT,
   TS_BUTTON_PREV_NEXT,
@@ -51,6 +50,7 @@ typedef struct
 #define WP_OPA_BG_OFF     26
 #define WP_OPA_BG_ON      255
 #define WP_OPA_BG_50      128
+#define WP_OPA_BG_70      178
 #define WP_OPA_BG_PRESSED 128
 
 // screen layout

@@ -30,7 +30,7 @@
 #include <classColorPicker.h>
 #include <classThermostat.h>
 #include <classMessageFeed.h>
-#include <base64.hpp>
+#include <arduino_base64.hpp>
 #if defined (WT32_SC01)
   #include "panels/cfgWT32-SC01.hpp"
 #elif defined (WT32_SC01_PLUS)
@@ -241,7 +241,6 @@ void createColorWheel(void)
   }
 }
 
-
 /*-----------------  Icon_Vault and tile_style_LUT handler  -----------------------*/
 // initialise the Icon_Vault
 void initIconVault(void)
@@ -271,8 +270,7 @@ void initStyleLut(void)
 {
   styleLut[TS_NONE] = {TS_NONE, ""};
   styleLut[TS_BUTTON] = {TS_BUTTON, "button"};
-  styleLut[TS_BUTTON_LEVEL_UP] = {TS_BUTTON_LEVEL_UP, "buttonLevelUp"};
-  styleLut[TS_BUTTON_LEVEL_DOWN] = {TS_BUTTON_LEVEL_DOWN, "buttonLevelDown"};
+  styleLut[TS_BUTTON_UP_DOWN_LEVEL] = {TS_BUTTON_UP_DOWN_LEVEL, "buttonUpDownLevel"};
   styleLut[TS_BUTTON_UP_DOWN] = {TS_BUTTON_UP_DOWN, "buttonUpDown"};
   styleLut[TS_BUTTON_LEFT_RIGHT] = {TS_BUTTON_LEFT_RIGHT, "buttonLeftRight"};
   styleLut[TS_BUTTON_PREV_NEXT] = {TS_BUTTON_PREV_NEXT, "buttonPrevNext"};
@@ -1232,7 +1230,7 @@ void createRgbProperties(JsonVariant json)
 }
 
 // Create any tile on any screen
-void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelStart, int levelStop, lv_color_t colorBg)
+void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop, lv_color_t colorBg)
 {
   const void *img = NULL;
   int style;
@@ -1276,40 +1274,34 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     ref.addEventHandler(tileEventHandler);
   }
 
-  // enable on-tile level control (bottom-up)
-  if (style == TS_BUTTON_LEVEL_UP)
+  // set levelrange
   {
-    ref.setTopDownMode(false);
-    ref.addUpDownControl(upDownEventHandler, imgUp, imgDown);
+    if ((levelBottom != 0) || (levelTop != 0))
+    {
+      // levels have to be different
+      if (levelBottom == levelTop)
+      {
+        wt32.println(F("[tp32] levelBottom <> levelTop required."));
+      }
+      else
+      {
+        ref.setLevelBottomTop(levelBottom, levelTop);
+      }
+    }
   }
 
-  // enable on-tile level control (top-down)
-  if (style == TS_BUTTON_LEVEL_DOWN)
+  // enable on-tile level control
+  if (style == TS_BUTTON_UP_DOWN_LEVEL)
   {
-    ref.setTopDownMode(true);
     ref.addUpDownControl(upDownEventHandler, imgUp, imgDown);
-  }
+    // force level bar 
+    ref.setLevel(ref.getLevelStart(), false);
+ }
 
   // enable on-tile selector control (roller)
   if (style == TS_BUTTON_SELECTOR)
   {
     ref.addUpDownControl(selectorEventHandler, imgUp, imgDown);
-  }
-
-  // set levelrange
-  {
-    if ((levelStart != 0) || (levelStop != 0))
-    {
-      // allow increasing only (Stop > Start)
-      if(levelStop < levelStart)
-      {
-        wt32.println(F("[tp32] invalid level range."));
-      }
-      else
-      {
-        ref.setLevelStartStop(levelStart, levelStop);
-      }
-    }
   }
 
   // enable prev/next control (button events only)
@@ -1477,7 +1469,7 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
     return;
   }
 
-  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelStart"], json["levelStop"], jsonRgbToColor(json["backgroundColorRgb"]));
+  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]));
 }
 
 void jsonConfig(JsonVariant json)
@@ -1570,7 +1562,7 @@ void jsonConfigSchema(JsonVariant json)
   // tiles on screen
   JsonObject tiles = screensProperties.createNestedObject("tiles");
   tiles["title"] = "Tiles";
-  tiles["description"] = "Add one or more tiles to your screen. Index must be between 1-6. 'Linked Screen Index' required for 'link' tiles. 'Level Start/Stop' optional for 'buttonLevelXxx' tiles (defaults to 0/100).";
+  tiles["description"] = "Add one or more tiles to your screen. Index must be between 1-6. 'Linked Screen Index' required for 'link' tiles. 'Level Bottom/Top' optional for 'buttonUpDownLevel' tiles (defaults to 0/100).";
   tiles["type"] = "array";
 
   JsonObject tilesItems = tiles.createNestedObject("items");
@@ -1602,13 +1594,13 @@ void jsonConfigSchema(JsonVariant json)
   link["minimum"] = SCREEN_START;
   link["maximum"] = SCREEN_END;
 
-  JsonObject levelStart = tilesProperties.createNestedObject("levelStart");
-  levelStart["title"] = "Level Start";
-  levelStart["type"] = "integer";
+  JsonObject levelBottom = tilesProperties.createNestedObject("levelBottom");
+  levelBottom["title"] = "Level Bottom";
+  levelBottom["type"] = "integer";
 
-  JsonObject levelStop = tilesProperties.createNestedObject("levelStop");
-  levelStop["title"] = "Level Stop";
-  levelStop["type"] = "integer";
+  JsonObject levelTop = tilesProperties.createNestedObject("levelTop");
+  levelTop["title"] = "Level Top";
+  levelTop["type"] = "integer";
 
   JsonObject tileBackgroundColorRgb = tilesProperties.createNestedObject("backgroundColorRgb");
   tileBackgroundColorRgb["title"] = "Tile Background Color";
