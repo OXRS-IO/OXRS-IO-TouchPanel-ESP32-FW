@@ -23,5 +23,6 @@ env.Append(
 )
 
 env.Replace(
-    PROGNAME="%s_%s_v%s" % (firmware_name, env_name, firmware_version)
+    PROGNAME_RAW="%s_%s_v%s" % (firmware_name, env_name, firmware_version),
+    PROGNAME="%s_%s_v%s_OTA" % (firmware_name, env_name, firmware_version)
 )

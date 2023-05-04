@@ -247,7 +247,7 @@ void createColorWheel(void)
 void makeFwVersion(void)
 {
 #if defined(FW_VERSION)
-  strcpy(buffer, STRINGIFY(FW_VERSION));
+  strncpy(fwVersion, STRINGIFY(FW_VERSION), sizeof(fwVersion));
 #else
   time_t rawtime = BUILD_TIMESTAMP;
   struct tm ts = *localtime(&rawtime);
