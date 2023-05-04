@@ -147,6 +147,7 @@ lv_color_t colorBg;
 bool      snapShotActive = false;
 lv_area_t snapShotArea;
 Response  *snapShotResponse = NULL;
+char fwVersion[40] = "<no Version>";
 
 // WT32 handler
 OXRS_WT32 wt32;
@@ -239,6 +240,19 @@ void createColorWheel(void)
       }
     }
   }
+}
+
+/*-----------------  make fw_version from buildflags    --------------*/
+
+void makeFwVersion(void)
+{
+#if defined(FW_VERSION)
+  strcpy(buffer, STRINGIFY(FW_VERSION));
+#else
+  time_t rawtime = BUILD_TIMESTAMP;
+  struct tm ts = *localtime(&rawtime);
+  strftime(fwVersion, sizeof(fwVersion), "Debug: %Y-%m-%d %H:%M:%S %Z", &ts);
+#endif
 }
 
 /*-----------------  Icon_Vault and tile_style_LUT handler  -----------------------*/
@@ -707,14 +721,7 @@ void updateInfoText(void)
   lv_table_set_cell_value(table, 2, 0, "Maker:");
   lv_table_set_cell_value(table, 2, 1, FW_MAKER);
   lv_table_set_cell_value(table, 3, 0, "Version:");
-#if defined(FW_VERSION)
-  strcpy(buffer, STRINGIFY(FW_VERSION));
-#else
-  time_t rawtime = BUILD_TIMESTAMP;
-  struct tm ts = *localtime(&rawtime);
-  strftime(buffer, sizeof(buffer), "Build: %Y-%m-%d %H:%M:%S %Z", &ts);
-#endif
-  lv_table_set_cell_value(table, 3, 1, buffer);
+  lv_table_set_cell_value(table, 3, 1, fwVersion);
   lv_table_set_cell_value(table, 4, 0, "H/W:");
   lv_table_set_cell_value(table, 4, 1, STRINGIFY(FW_HARDWARE));
 
@@ -2376,6 +2383,8 @@ void setup()
   createColorWheel();
 
   // start WT32 hardware
+  makeFwVersion();
+  wt32.setFwVersion(fwVersion);
   wt32.begin(jsonConfig, jsonCommand);
 
   // set up config/command schema (for self-discovery and adoption)
