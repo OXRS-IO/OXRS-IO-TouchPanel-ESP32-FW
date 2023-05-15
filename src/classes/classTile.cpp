@@ -651,6 +651,16 @@ void classTile::setLevelBottomTop(int bottom, int top)
 
 void classTile::setLevel(int level, bool force)
 {
+  // ignore if time elapsed since last force(up/down button) < 2 sec.
+  if (!force)
+  {
+    if (lv_tick_elaps(_lastLevelUpdate) < 2000) return;
+  }
+  else
+  {
+    _lastLevelUpdate = lv_tick_get();
+  }
+
   _level = level;
   if (_level > _levelStop) _level = _levelStop;
   if (_level < _levelStart) _level = _levelStart;

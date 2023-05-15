@@ -248,7 +248,7 @@ void makeFwVersion(void)
 {
 #if defined(FW_VERSION)
   strncpy(fwVersion, STRINGIFY(FW_VERSION), sizeof(fwVersion));
-#else
+#elif defined(BUILD_TIMESTAMP)
   time_t rawtime = BUILD_TIMESTAMP;
   struct tm ts = *localtime(&rawtime);
   strftime(fwVersion, sizeof(fwVersion), "Debug: %Y-%m-%d %H:%M:%S %Z", &ts);

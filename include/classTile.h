@@ -56,6 +56,7 @@ protected:
   int _level = 0;
   int _levelBottom = _levelStart;
   int _levelTop = _levelStop;
+  uint32_t _lastLevelUpdate = 0;
   const void *_img = NULL;
   const void *_imgOn = NULL;
   const void *_imgConfig = NULL;
