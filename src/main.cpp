@@ -1684,9 +1684,9 @@ lv_img_dsc_t *decodeBase64ToImg(const char *imageBase64)
   if (inLen == 0)
     return NULL;
 
-  size_t outLen = BASE64::decodeLength(imageBase64);
+  size_t outLen = base64::decodeLength(imageBase64);
   uint8_t *raw = (uint8_t *)ps_malloc(outLen);
-  BASE64::decode(imageBase64, raw);
+  base64::decode(imageBase64, raw);
 
   // calc width and height from image file (start @ pos [16])
   uint32_t size[2];
