@@ -1,4 +1,4 @@
-# WT32-SC01 Touch Panel firmware for [OXRS](https://oxrs.io)
+# WT32-xxx Touch Panel firmware for [OXRS](https://oxrs.io)
 
 Supported panels:
 - WT32-SC01
