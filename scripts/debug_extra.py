@@ -1,6 +1,6 @@
 Import("env")
 
-# --- Add custom macros for the ALL files which name contains "main.cpp"
+# --- Add custom macros for the ALL files which name contains "*\src\main.cpp"
 # important change https://github.com/godotengine/godot/issues/74725
 # CPPDEFINES nolonger a list, but deque
 def addUnixTimestamp(env, node):
