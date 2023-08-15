@@ -36,7 +36,7 @@ jobs:
         pip install --upgrade platformio
     
     - name: Build release binary
-      run: pio run -e wt32-eth_ESP32 -e wt32-wifi_ESP32 -e wt32-plus-wifi_ESP32-S3 -e wt32-plus-eth_ESP32-S3 -e wt32-86v-wifi_ESP32-S3
+      run: pio run -e wt32-eth_ESP32 -e wt32-wifi_ESP32 -e wt32-plus-wifi_ESP32-S3 -e wt32-plus-eth_ESP32-S3 -e wt32-86v-wifi_ESP32-S3 -e wt32-86s-wifi_ESP32-S3 -e wt32-86s-eth_ESP32-S3
 
     - name: Create release
       uses: ncipollo/release-action@v1
