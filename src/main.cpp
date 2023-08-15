@@ -31,12 +31,15 @@
 #include <classThermostat.h>
 #include <classMessageFeed.h>
 #include <arduino_base64.hpp>
+
 #if defined (WT32_SC01)
   #include "panels/cfgWT32-SC01.hpp"
 #elif defined (WT32_SC01_PLUS)
   #include "panels/cfgWT32-SC01-plus.hpp"
 #elif defined(WT32S3_86V)
   #include "panels/cfgWT32S3-86V.hpp"
+#elif defined(WT32S3_86S)
+  #include "panels/cfgWT32S3-86S.hpp" 
 #endif
 
 #include <lvgl.h>
@@ -597,7 +600,7 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
   else
   {
   // update screen
-    #if defined(WT32S3_86V)
+  #if defined(WT32S3_86V) or defined(WT32S3_86S)
     {
     tft.pushImageDMA( area->x1
                     , area->y1
@@ -2319,6 +2322,18 @@ void setup()
   initIconVault();
 
   // start tft library
+  #if defined(WT32S3_86S)
+  // WT32S3_86S reset sequence workaround
+  // this can be removed after the Lovyan lib has been fixed
+  pinMode(41, OUTPUT);
+  digitalWrite(41, HIGH);
+  delay(100);
+  digitalWrite(41, LOW);
+  delay(50);
+  digitalWrite(41, HIGH);
+  delay(100);
+  #endif
+
   tft.init();
   tft.setBrightness(0);
   tft.fillScreen(TFT_BLACK);
