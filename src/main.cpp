@@ -189,7 +189,10 @@ classThermostat thermostat = classThermostat();
 // message feed overlay
 classMessageFeed messageFeed = classMessageFeed();
 
- // declare display variable
+// message box
+lv_obj_t *messageBox = NULL;
+
+// declare display variable
 static LGFX tft;
 
 /*--------------------------- screen / lvgl relevant  -----------------------------*/
@@ -792,6 +795,7 @@ void messageClosedEventHandler(lv_event_t * e)
   if (code == LV_EVENT_DELETE)
   {
     publishMessageEvent("close", "closed");
+    messageBox = NULL;
   }
 }
 
@@ -1772,14 +1776,26 @@ void jsonSetBackLightCommand(JsonVariant json)
 
 void jsonShowMessage(JsonVariant json)
 {
-  lv_obj_t *mbox1 = lv_msgbox_create(NULL, json["title"], json["text"], NULL, true);
+  // close an existing message box if json is empty
+  if (json.size() == 0)
+  {
+    if (messageBox)
+      lv_msgbox_close(messageBox);
+    return;
+  }
 
-  lv_obj_t *cbtn = lv_msgbox_get_close_btn(mbox1);
+  // close an existing message box before showing the new one
+  if (messageBox)
+    lv_msgbox_close(messageBox);
+
+  messageBox = lv_msgbox_create(NULL, json["title"], json["text"], NULL, true);
+
+  lv_obj_t *cbtn = lv_msgbox_get_close_btn(messageBox);
   lv_obj_set_style_bg_color(cbtn, lv_color_make(128, 30, 0), 0);
   lv_obj_set_style_bg_opa(cbtn, 255, 0);
-  lv_obj_center(mbox1);
+  lv_obj_center(messageBox);
 
-  lv_obj_add_event_cb(mbox1, messageClosedEventHandler, LV_EVENT_ALL, NULL);
+  lv_obj_add_event_cb(messageBox, messageClosedEventHandler, LV_EVENT_ALL, NULL);
   publishMessageEvent("open", "open");
 }
 
