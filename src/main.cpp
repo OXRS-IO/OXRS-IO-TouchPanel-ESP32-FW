@@ -789,13 +789,22 @@ void screenEventHandler(lv_event_t * e)
 }
 
 // message box closed event handler
-void messageClosedEventHandler(lv_event_t * e)
+void messageClosedEventHandler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
   if (code == LV_EVENT_DELETE)
   {
     publishMessageEvent("close", "closed");
     messageBox = NULL;
+  }
+  if (code == LV_EVENT_SHORT_CLICKED)
+  {
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    const char *btnText = lv_msgbox_get_active_btn_text(obj);
+    if (btnText)
+    {
+      publishMessageEvent("button", btnText);
+    }
   }
 }
 
@@ -1788,12 +1797,49 @@ void jsonShowMessage(JsonVariant json)
   if (messageBox)
     lv_msgbox_close(messageBox);
 
-  messageBox = lv_msgbox_create(NULL, json["title"], json["text"], NULL, true);
+  // build button list from json
+  static char btns[5][40];
+  memset(btns, 0, sizeof(btns));
+  static const char *btnMap[6];
+  memset(btnMap, 0, sizeof(btnMap));
+
+  int i = 0;
+  int bRows = 1;
+  while (json["buttons"][i] && i < 5)
+  {
+    strncpy(btns[i], json["buttons"][i].as<const char *>(), 39);
+    btnMap[i] = btns[i];
+    if (btns[i][0] == '\n')
+      bRows++;
+    i++;
+  }
+  if (!btnMap[0])
+    bRows = 0;
+
+  messageBox = lv_msgbox_create(NULL, json["title"], json["text"], btnMap, true);
+
+  // configure message box layout
+  lv_obj_set_size(messageBox, SCREEN_WIDTH - 20, LV_SIZE_CONTENT);
+  lv_obj_center(messageBox);
+  lv_obj_set_style_radius(messageBox, 5, 0);
 
   lv_obj_t *cbtn = lv_msgbox_get_close_btn(messageBox);
   lv_obj_set_style_bg_color(cbtn, lv_color_make(128, 30, 0), 0);
   lv_obj_set_style_bg_opa(cbtn, 255, 0);
-  lv_obj_center(messageBox);
+  lv_obj_set_style_radius(cbtn, 5, 0);
+
+  lv_obj_t *btnmtx = lv_msgbox_get_btns(messageBox);
+  lv_obj_set_size(btnmtx, SCREEN_WIDTH - 30, bRows * 40);
+  lv_obj_set_style_pad_all(btnmtx, 0, LV_PART_MAIN);
+  lv_obj_set_style_radius(btnmtx, 5, LV_PART_ITEMS);
+  lv_obj_set_style_bg_color(btnmtx, lv_color_hex(0x404040), LV_PART_ITEMS);
+  lv_btnmatrix_set_btn_ctrl_all(btnmtx, LV_BTNMATRIX_CTRL_RECOLOR);
+
+  lv_obj_t *labelTitle = lv_msgbox_get_title(messageBox);
+  lv_label_set_recolor(labelTitle, true);
+
+  lv_obj_t *labelText = lv_msgbox_get_text(messageBox);
+  lv_label_set_recolor(labelText, true);
 
   lv_obj_add_event_cb(messageBox, messageClosedEventHandler, LV_EVENT_ALL, NULL);
   publishMessageEvent("open", "open");
