@@ -540,10 +540,10 @@ void publishBacklightEvent(int brightness)
 
 // publish message box closed Event
 // {"screen":0, "type":"message", "event":"open" , "state":"open"}
-void publishMessageEvent(const char *event, const char *state)
+void publishMessageBoxEvent(const char *event, const char *state)
 {
   StaticJsonDocument<128> json;
-  json["type"] = "message";
+  json["type"] = "messageBox";
   json["event"] = event;
   json["state"] = state;
 
@@ -789,12 +789,12 @@ void screenEventHandler(lv_event_t * e)
 }
 
 // message box closed event handler
-void messageClosedEventHandler(lv_event_t *e)
+void messageBoxEventHandler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
   if (code == LV_EVENT_DELETE)
   {
-    publishMessageEvent("close", "closed");
+    publishMessageBoxEvent("acknowledge", "closed");
     messageBox = NULL;
   }
   if (code == LV_EVENT_SHORT_CLICKED)
@@ -803,7 +803,7 @@ void messageClosedEventHandler(lv_event_t *e)
     const char *btnText = lv_msgbox_get_active_btn_text(obj);
     if (btnText)
     {
-      publishMessageEvent("button", btnText);
+      publishMessageBoxEvent("button", btnText);
     }
   }
 }
@@ -1783,19 +1783,27 @@ void jsonSetBackLightCommand(JsonVariant json)
   }
 }
 
-void jsonShowMessage(JsonVariant json)
+void jsonShowMessageBox(JsonVariant json)
 {
-  // close an existing message box if json is empty
+  // close message box if requested (json is empty "{}")
   if (json.size() == 0)
   {
     if (messageBox)
+    {
+      lv_obj_remove_event_cb(messageBox, messageBoxEventHandler);
       lv_msgbox_close(messageBox);
+      publishMessageBoxEvent("revoke", "closed");
+    }
     return;
   }
 
-  // close an existing message box before showing the new one
+  // close an existing message box before opening the new one
   if (messageBox)
+  {
+    lv_obj_remove_event_cb(messageBox, messageBoxEventHandler);
     lv_msgbox_close(messageBox);
+    publishMessageBoxEvent("remove", "closed");
+  }
 
   // build button list from json
   static char btns[5][40];
@@ -1841,8 +1849,9 @@ void jsonShowMessage(JsonVariant json)
   lv_obj_t *labelText = lv_msgbox_get_text(messageBox);
   lv_label_set_recolor(labelText, true);
 
-  lv_obj_add_event_cb(messageBox, messageClosedEventHandler, LV_EVENT_ALL, NULL);
-  publishMessageEvent("open", "open");
+  // show message box
+  lv_obj_add_event_cb(messageBox, messageBoxEventHandler, LV_EVENT_ALL, NULL);
+  publishMessageBoxEvent("open", "open");
 }
 
 void jsonScreenCommand(JsonVariant json)
@@ -2221,9 +2230,9 @@ void jsonCommand(JsonVariant json)
     jsonBackgroundColorConfig(json["backgroundColorRgb"]);
   }
 
-  if (json.containsKey("message"))
+  if (json.containsKey("messageBox"))
   {
-    jsonShowMessage(json["message"]);
+    jsonShowMessageBox(json["messageBox"]);
   }
 
   if (json.containsKey("screen"))
