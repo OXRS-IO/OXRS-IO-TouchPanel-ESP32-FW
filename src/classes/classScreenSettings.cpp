@@ -26,7 +26,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_align(_imgLogo, LV_ALIGN_TOP_MID);
 
   _infoTextArea = lv_table_create(_parent);
-  lv_obj_set_size(_infoTextArea, 320, 211);
+  lv_obj_set_size(_infoTextArea, 320, 21 * 11); 
   lv_obj_align_to(_infoTextArea, _imgLogo, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
   lv_obj_set_style_radius(_infoTextArea, 5, 0);
   lv_obj_set_style_bg_color(_infoTextArea, lv_color_hex(0xffffff), LV_PART_MAIN);

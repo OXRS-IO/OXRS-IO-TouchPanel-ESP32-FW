@@ -718,8 +718,6 @@ void updateInfoText(void)
   char buffer[40];
 
   lv_obj_t *table = screenSettings.getInfoPanel();
-  lv_table_set_row_cnt(table, 10);
-  lv_table_set_col_cnt(table, 2);
 
   lv_table_set_cell_value(table, 0, 0, "Name:");
   lv_table_set_cell_value(table, 0, 1, FW_NAME);
@@ -741,14 +739,24 @@ void updateInfoText(void)
 
   lv_table_set_cell_value(table, 8, 0, "MODE:");
 #if defined(ETH_MODE)
-    lv_table_set_cell_value(table, 8, 1, "Ethernet");
-  #else
-    lv_table_set_cell_value(table, 8, 1, "WiFi");
-  #endif
+  lv_table_set_cell_value(table, 8, 1, "Ethernet");
+#else
+  lv_table_set_cell_value(table, 8, 1, "WiFi");
+#endif
 
-    lv_table_set_cell_value(table, 9, 0, "MQTT:");
-    wt32.getMQTTTopicTxt(buffer);
-    lv_table_set_cell_value(table, 9, 1, buffer);
+  lv_table_set_cell_value(table, 9, 0, "MQTT:");
+  wt32.getMQTTTopicTxt(buffer);
+  lv_table_set_cell_value(table, 9, 1, buffer);
+
+  lv_table_set_cell_value(table, 10, 0, "");
+  lv_table_set_cell_value(table, 10, 1, "");
+  float temperature, humidity;
+  if (wt32.getClimate(&temperature, &humidity))
+  {
+    lv_table_set_cell_value(table,10, 0, "Climate:");
+    sprintf(buffer, "%1.1f °C  /  %1.1f %%RH", temperature, humidity);
+    lv_table_set_cell_value(table, 10, 1, buffer);
+  }
 }
 
 // check for changes in IP/MQTT connection and update warning sign in footer
@@ -2411,7 +2419,7 @@ void setup()
 
   // start lvgl
   lv_init();
-  lv_img_cache_set_size(10);
+  lv_img_cache_set_size(1);
   Serial.print(F("[tp32] lvgl starting v"));
   Serial.print(lv_version_major());
   Serial.print(F("."));
@@ -2471,7 +2479,7 @@ void setup()
   // start WT32 hardware
   makeFwVersion();
   wt32.setFwVersion(fwVersion);
-  wt32.begin(jsonConfig, jsonCommand);
+  wt32.begin(jsonConfig, jsonCommand, updateInfoText);
 
   // set up config/command schema (for self-discovery and adoption)
   setConfigSchema();
