@@ -26,7 +26,7 @@
 #include <classDropDown.h>
 #include <classRemote.h>
 #include <classKeyPad.h>
-#include <classIconList.h>
+#include <classImageList.h>
 #include <classColorPicker.h>
 #include <classThermostat.h>
 #include <classMessageFeed.h>
@@ -159,7 +159,7 @@ OXRS_WT32 wt32;
 styleLutEntry_t styleLut[TS_STYLE_COUNT] = {0};
 
 // iconVault holds all icon image name and reference
-classIconList iconVault = classIconList();
+classImageList iconVault = classImageList();
 
 // screenVault holds all screens
 classScreenList screenVault = classScreenList();
@@ -1211,7 +1211,7 @@ void createIconEnum(JsonObject parent)
 
   string iconStr;
   iconVault.setIteratorStart();
-  while ((iconStr = iconVault.getNextIconStr()) != "")
+  while ((iconStr = iconVault.getNextImageStr()) != "")
   {
     styleEnum.add(iconStr);
   }
@@ -1277,7 +1277,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
 
   // get the icon image
   if (iconStr)
-    img = iconVault.getIcon(string(iconStr));
+    img = iconVault.get(string(iconStr));
 
   // create new Tile
   classTile &ref = tileVault.add();
@@ -1745,7 +1745,7 @@ void handleKeyPadCommand(JsonVariant jsonKeyPad)
   }
   else
   {
-    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
+    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.get(jsonKeyPad["icon"]) : NULL;
     const char *text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
     lv_color_t color = jsonRgbToColor(jsonKeyPad["iconColorRgb"]);
 
@@ -2004,7 +2004,7 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("icon"))
   {
-    tile->setIcon(iconVault.getIcon(json["icon"]));
+    tile->setIcon(iconVault.get(json["icon"]));
   }
 
   if (json.containsKey("number"))
@@ -2179,7 +2179,7 @@ void jsonAddIcon(JsonVariant json)
   if (!json["name"] || !json["imageBase64"]) return;
   
   // check if named icon exist, if yes -> get descriptor
-  lv_img_dsc_t *oldIcon = (lv_img_dsc_t *)iconVault.getIcon(json["name"]);
+  lv_img_dsc_t *oldIcon = (lv_img_dsc_t *)iconVault.get(json["name"]);
 
   // decode new icon
   lv_img_dsc_t *iconPng = decodeBase64ToImg(json["imageBase64"]);
@@ -2369,7 +2369,7 @@ void checkNoActivity(void)
         {
           _noActivityTimeOutToLockTriggered = inactive;
           keyPad = classKeyPad(NULL, keyPadEventHandler, KP_LOCKED);
-          keyPad.setState("locked", iconVault.getIcon("_locked"), lv_color_make(255, 0, 0), "enter code");
+          keyPad.setState("locked", iconVault.get("_locked"), lv_color_make(255, 0, 0), "enter code");
           keyPad.setLabel("Panel locked after in-activity");
           publishLockStateEvent("locked");
         }
