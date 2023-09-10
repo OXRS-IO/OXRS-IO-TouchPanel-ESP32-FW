@@ -2419,7 +2419,12 @@ void setup()
 
   // start lvgl
   lv_init();
-  lv_img_cache_set_size(1);
+  //larger cache for 86x panels to avoid screen update flicker
+#if defined(WT32S3_86V) or defined(WT32S3_86S)
+  lv_img_cache_set_size(30);
+#else
+  lv_img_cache_set_size(10);
+#endif
   Serial.print(F("[tp32] lvgl starting v"));
   Serial.print(lv_version_major());
   Serial.print(F("."));
