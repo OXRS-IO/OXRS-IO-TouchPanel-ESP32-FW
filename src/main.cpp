@@ -859,7 +859,7 @@ static void selectorEventHandler(lv_event_t *e)
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     int index = tPtr->getDropDownIndex();
-    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index++ : index--;
+    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index-- : index++;
     tPtr->showSelector(index);
     publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
   }
