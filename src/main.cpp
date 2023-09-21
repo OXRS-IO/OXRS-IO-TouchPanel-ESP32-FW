@@ -161,6 +161,9 @@ styleLutEntry_t styleLut[TS_STYLE_COUNT] = {0};
 // iconVault holds all icon image name and reference
 classImageList iconVault = classImageList();
 
+// bgImageVault holds all bgimage name and reference
+classImageList imageVault = classImageList();
+
 // screenVault holds all screens
 classScreenList screenVault = classScreenList();
 
@@ -2036,9 +2039,9 @@ void jsonTileCommand(JsonVariant json)
     }
     else
     {
-      if (jsonBgImage.containsKey("imageBase64"))
+      if (jsonBgImage.containsKey("name"))
       {
-        tile->setBgImage(decodeBase64ToImg(jsonBgImage["imageBase64"]));
+        tile->setBgImage(imageVault.get(jsonBgImage["name"]));
       }
       tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
     }
@@ -2177,31 +2180,40 @@ void jsonTileCommand(JsonVariant json)
   }
 }
 
-// add icon from bas64 coded .png image
+// handle image upload via base64 over mqtt 
+void handleImageUpload(JsonVariant json, classImageList *vault)
+{
+  if (!json["name"] || !json["imageBase64"])
+    return;
+
+  // check if named icon exist, if yes -> get descriptor
+  lv_img_dsc_t *oldImage = (lv_img_dsc_t *)vault->get(json["name"]);
+
+  // decode new image
+  lv_img_dsc_t *imagePng = decodeBase64ToImg(json["imageBase64"]);
+
+  // add custom image to Vault (deletes possible existing one)
+  string imageStr = json["name"];
+  vault->add({imageStr, imagePng});
+
+  // free ps_ram heap if named image existed allready
+  if (oldImage)
+  {
+    free((void *)oldImage->data);
+    free(oldImage);
+  }
+}
+
+// add image from base64 coded .png image
+void jsonAddImage(JsonVariant json)
+{
+  handleImageUpload(json, &imageVault);
+}
+
+// add icon from base64 coded .png image
 void jsonAddIcon(JsonVariant json)
 {
-  // decode image into ps_ram
-  // TODO :
-  //    check if ps_alloc successful
-
-  if (!json["name"] || !json["imageBase64"]) return;
-  
-  // check if named icon exist, if yes -> get descriptor
-  lv_img_dsc_t *oldIcon = (lv_img_dsc_t *)iconVault.get(json["name"]);
-
-  // decode new icon
-  lv_img_dsc_t *iconPng = decodeBase64ToImg(json["imageBase64"]);
-
-  // add custom icon to iconVault (deletes possible existing one)
-  string iconStr = json["name"];
-  iconVault.add({iconStr, iconPng});
-
-  // free ps_ram heap if named icon existed allready
-  if (oldIcon)
-  {
-    free((void *)oldIcon->data);
-    free(oldIcon);
-  }
+  handleImageUpload(json, &iconVault);
 
   // update configutation
   setConfigSchema();
@@ -2267,6 +2279,11 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("addIcon"))
   {
     jsonAddIcon(json["addIcon"]);
+  }
+
+  if (json.containsKey("addImage"))
+  {
+    jsonAddImage(json["addImage"]);
   }
 
   if (json.containsKey("keyPad"))

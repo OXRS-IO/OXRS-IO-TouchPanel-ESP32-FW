@@ -105,7 +105,7 @@ public :
   void updateBgColor(void);
   void setIcon(const void *imgIcon);
   void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
-  void setBgImage(lv_img_dsc_t *img);
+  void setBgImage(const void *img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
   void setIconForStateOn(const void* imgStateOn);
   void setIconText(const char *iconText);
