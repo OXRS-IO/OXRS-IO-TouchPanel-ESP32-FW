@@ -1,5 +1,6 @@
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
+#include <driver/i2c.h>
 #include <globalDefines.h>
 
 // Portrait
@@ -23,8 +24,8 @@
 #define TFT_BL    GPIO_NUM_45
 
 #define TOUCH_INT GPIO_NUM_7
-#define TOUCH_SDA GPIO_NUM_6
-#define TOUCH_SCL GPIO_NUM_5
+#define TOUCH_SDA I2C0_SDA  // GPIO_NUM_6
+#define TOUCH_SCL I2C0_SCL  // GPIO_NUM_5
 
 
 // SD CARD - SPI
@@ -119,7 +120,7 @@ public:
       cfg.bus_shared = true;
       cfg.offset_rotation = 0;
 
-      cfg.i2c_port = 1; // I2C_NUM_1;
+      cfg.i2c_port = I2C_NUM_0;
       cfg.i2c_addr = 0x38;
       cfg.pin_sda = TOUCH_SDA;
       cfg.pin_scl = TOUCH_SCL;

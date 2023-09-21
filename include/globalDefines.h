@@ -43,7 +43,7 @@ typedef struct
 
 typedef struct
 {
-  string iconStr;
+  string imageStr;
   const void *img;
 } imgListElement_t;
 

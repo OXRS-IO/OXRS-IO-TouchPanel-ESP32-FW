@@ -71,7 +71,7 @@ public:
       cfg.pin_vsync = GPIO_NUM_41;
       cfg.pin_hsync = GPIO_NUM_42;
       cfg.pin_pclk = GPIO_NUM_39;
-      cfg.freq_write = 15000000;
+      cfg.freq_write = 12000000;
 
       cfg.hsync_polarity = 1;
       cfg.hsync_front_porch = 10;
@@ -98,11 +98,11 @@ public:
       cfg.bus_shared = false;
       cfg.offset_rotation = 0;
 
-      cfg.i2c_port = I2C_NUM_1;
+      cfg.i2c_port = I2C_NUM_0;
 
       cfg.pin_int = GPIO_NUM_NC;
-      cfg.pin_sda = GPIO_NUM_15;
-      cfg.pin_scl = GPIO_NUM_6;
+      cfg.pin_sda = I2C0_SDA;
+      cfg.pin_scl = I2C0_SCL;
       cfg.pin_rst = GPIO_NUM_NC;
 
       cfg.freq = 400000;

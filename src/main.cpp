@@ -26,7 +26,7 @@
 #include <classDropDown.h>
 #include <classRemote.h>
 #include <classKeyPad.h>
-#include <classIconList.h>
+#include <classImageList.h>
 #include <classColorPicker.h>
 #include <classThermostat.h>
 #include <classMessageFeed.h>
@@ -159,7 +159,10 @@ OXRS_WT32 wt32;
 styleLutEntry_t styleLut[TS_STYLE_COUNT] = {0};
 
 // iconVault holds all icon image name and reference
-classIconList iconVault = classIconList();
+classImageList iconVault = classImageList();
+
+// bgImageVault holds all bgimage name and reference
+classImageList imageVault = classImageList();
 
 // screenVault holds all screens
 classScreenList screenVault = classScreenList();
@@ -718,8 +721,6 @@ void updateInfoText(void)
   char buffer[40];
 
   lv_obj_t *table = screenSettings.getInfoPanel();
-  lv_table_set_row_cnt(table, 10);
-  lv_table_set_col_cnt(table, 2);
 
   lv_table_set_cell_value(table, 0, 0, "Name:");
   lv_table_set_cell_value(table, 0, 1, FW_NAME);
@@ -741,14 +742,24 @@ void updateInfoText(void)
 
   lv_table_set_cell_value(table, 8, 0, "MODE:");
 #if defined(ETH_MODE)
-    lv_table_set_cell_value(table, 8, 1, "Ethernet");
-  #else
-    lv_table_set_cell_value(table, 8, 1, "WiFi");
-  #endif
+  lv_table_set_cell_value(table, 8, 1, "Ethernet");
+#else
+  lv_table_set_cell_value(table, 8, 1, "WiFi");
+#endif
 
-    lv_table_set_cell_value(table, 9, 0, "MQTT:");
-    wt32.getMQTTTopicTxt(buffer);
-    lv_table_set_cell_value(table, 9, 1, buffer);
+  lv_table_set_cell_value(table, 9, 0, "MQTT:");
+  wt32.getMQTTTopicTxt(buffer);
+  lv_table_set_cell_value(table, 9, 1, buffer);
+
+  lv_table_set_cell_value(table, 10, 0, "");
+  lv_table_set_cell_value(table, 10, 1, "");
+  float temperature, humidity;
+  if (wt32.getClimate(&temperature, &humidity))
+  {
+    lv_table_set_cell_value(table,10, 0, "Climate:");
+    sprintf(buffer, "%1.1f °C  /  %1.1f %%RH", temperature, humidity);
+    lv_table_set_cell_value(table, 10, 1, buffer);
+  }
 }
 
 // check for changes in IP/MQTT connection and update warning sign in footer
@@ -851,7 +862,7 @@ static void selectorEventHandler(lv_event_t *e)
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     int index = tPtr->getDropDownIndex();
-    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index++ : index--;
+    lv_obj_has_flag(btn, LV_OBJ_FLAG_USER_1) ? index-- : index++;
     tPtr->showSelector(index);
     publishSelectorEvent(tPtr, tPtr->getDropDownIndex());
   }
@@ -1211,7 +1222,7 @@ void createIconEnum(JsonObject parent)
 
   string iconStr;
   iconVault.setIteratorStart();
-  while ((iconStr = iconVault.getNextIconStr()) != "")
+  while ((iconStr = iconVault.getNextImageStr()) != "")
   {
     styleEnum.add(iconStr);
   }
@@ -1277,7 +1288,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
 
   // get the icon image
   if (iconStr)
-    img = iconVault.getIcon(string(iconStr));
+    img = iconVault.get(string(iconStr));
 
   // create new Tile
   classTile &ref = tileVault.add();
@@ -1745,7 +1756,7 @@ void handleKeyPadCommand(JsonVariant jsonKeyPad)
   }
   else
   {
-    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.getIcon(jsonKeyPad["icon"]) : NULL;
+    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.get(jsonKeyPad["icon"]) : NULL;
     const char *text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
     lv_color_t color = jsonRgbToColor(jsonKeyPad["iconColorRgb"]);
 
@@ -2004,7 +2015,7 @@ void jsonTileCommand(JsonVariant json)
 
   if (json.containsKey("icon"))
   {
-    tile->setIcon(iconVault.getIcon(json["icon"]));
+    tile->setIcon(iconVault.get(json["icon"]));
   }
 
   if (json.containsKey("number"))
@@ -2028,9 +2039,9 @@ void jsonTileCommand(JsonVariant json)
     }
     else
     {
-      if (jsonBgImage.containsKey("imageBase64"))
+      if (jsonBgImage.containsKey("name"))
       {
-        tile->setBgImage(decodeBase64ToImg(jsonBgImage["imageBase64"]));
+        tile->setBgImage(imageVault.get(jsonBgImage["name"]));
       }
       tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
     }
@@ -2169,31 +2180,40 @@ void jsonTileCommand(JsonVariant json)
   }
 }
 
-// add icon from bas64 coded .png image
+// handle image upload via base64 over mqtt 
+void handleImageUpload(JsonVariant json, classImageList *vault)
+{
+  if (!json["name"] || !json["imageBase64"])
+    return;
+
+  // check if named icon exist, if yes -> get descriptor
+  lv_img_dsc_t *oldImage = (lv_img_dsc_t *)vault->get(json["name"]);
+
+  // decode new image
+  lv_img_dsc_t *imagePng = decodeBase64ToImg(json["imageBase64"]);
+
+  // add custom image to Vault (deletes possible existing one)
+  string imageStr = json["name"];
+  vault->add({imageStr, imagePng});
+
+  // free ps_ram heap if named image existed allready
+  if (oldImage)
+  {
+    free((void *)oldImage->data);
+    free(oldImage);
+  }
+}
+
+// add image from base64 coded .png image
+void jsonAddImage(JsonVariant json)
+{
+  handleImageUpload(json, &imageVault);
+}
+
+// add icon from base64 coded .png image
 void jsonAddIcon(JsonVariant json)
 {
-  // decode image into ps_ram
-  // TODO :
-  //    check if ps_alloc successful
-
-  if (!json["name"] || !json["imageBase64"]) return;
-  
-  // check if named icon exist, if yes -> get descriptor
-  lv_img_dsc_t *oldIcon = (lv_img_dsc_t *)iconVault.getIcon(json["name"]);
-
-  // decode new icon
-  lv_img_dsc_t *iconPng = decodeBase64ToImg(json["imageBase64"]);
-
-  // add custom icon to iconVault (deletes possible existing one)
-  string iconStr = json["name"];
-  iconVault.add({iconStr, iconPng});
-
-  // free ps_ram heap if named icon existed allready
-  if (oldIcon)
-  {
-    free((void *)oldIcon->data);
-    free(oldIcon);
-  }
+  handleImageUpload(json, &iconVault);
 
   // update configutation
   setConfigSchema();
@@ -2259,6 +2279,11 @@ void jsonCommand(JsonVariant json)
   if (json.containsKey("addIcon"))
   {
     jsonAddIcon(json["addIcon"]);
+  }
+
+  if (json.containsKey("addImage"))
+  {
+    jsonAddImage(json["addImage"]);
   }
 
   if (json.containsKey("keyPad"))
@@ -2369,7 +2394,7 @@ void checkNoActivity(void)
         {
           _noActivityTimeOutToLockTriggered = inactive;
           keyPad = classKeyPad(NULL, keyPadEventHandler, KP_LOCKED);
-          keyPad.setState("locked", iconVault.getIcon("_locked"), lv_color_make(255, 0, 0), "enter code");
+          keyPad.setState("locked", iconVault.get("_locked"), lv_color_make(255, 0, 0), "enter code");
           keyPad.setLabel("Panel locked after in-activity");
           publishLockStateEvent("locked");
         }
@@ -2411,7 +2436,12 @@ void setup()
 
   // start lvgl
   lv_init();
+  //larger cache for 86x panels to avoid screen update flicker
+#if defined(WT32S3_86V) or defined(WT32S3_86S)
+  lv_img_cache_set_size(30);
+#else
   lv_img_cache_set_size(10);
+#endif
   Serial.print(F("[tp32] lvgl starting v"));
   Serial.print(lv_version_major());
   Serial.print(F("."));
@@ -2471,7 +2501,7 @@ void setup()
   // start WT32 hardware
   makeFwVersion();
   wt32.setFwVersion(fwVersion);
-  wt32.begin(jsonConfig, jsonCommand);
+  wt32.begin(jsonConfig, jsonCommand, updateInfoText);
 
   // set up config/command schema (for self-discovery and adoption)
   setConfigSchema();

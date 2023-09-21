@@ -262,21 +262,6 @@ void classTile::_hideIcon(bool hide)
   }
 }
 
-// free ps_ram heap used by old image if exist
-void classTile::_freeImageHeap(void)
-{
-  if (lv_obj_is_valid(_imgBg))
-  {
-    lv_img_dsc_t *oldImg = (lv_img_dsc_t *)lv_img_get_src(_imgBg);
-    if (oldImg)
-    {
-      lv_img_cache_invalidate_src(oldImg);
-      free((void *)oldImg->data);
-      free(oldImg);
-    }
-  }
-}
-
 bool classTile::_isThumbNail(const void *img)
 {
   if (img)
@@ -298,7 +283,6 @@ classTile::~classTile()
 {
   if (_tileBg)
   {
-    _freeImageHeap();
     lv_obj_del(_tileBg);
   }
 }
@@ -472,11 +456,8 @@ void classTile::setNumber(const char *value, const char *units, const char *subV
 }
 
 // update the _imBg object and hide it, will be shown with alignBgImage()
-void classTile::setBgImage(lv_img_dsc_t *img)
+void classTile::setBgImage(const void *img)
 {
-  // free old image if exist
-  _freeImageHeap();
-
   lv_obj_add_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
   lv_img_set_src(_imgBg, img);
 }
