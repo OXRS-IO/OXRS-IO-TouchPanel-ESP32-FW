@@ -335,6 +335,11 @@ void classTile::setTileDisabled(bool disable)
   }
 }
 
+void classTile::setLabel(const char *labelText)
+{
+  lv_label_set_text(_label, labelText);
+}
+
 void classTile::setSubLabel(const char *subLabelText)
 {
   lv_label_set_text(_subLabel, subLabelText);

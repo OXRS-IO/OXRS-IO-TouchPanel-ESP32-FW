@@ -1998,6 +1998,11 @@ void jsonTileCommand(JsonVariant json)
     colorPicker.setState(newState == 0 ? false : true);
   }
 
+  if (json.containsKey("label"))
+  {
+    tile->setLabel(json["label"]);
+  }
+  
   if (json.containsKey("subLabel"))
   {
     tile->setSubLabel(json["subLabel"]);
