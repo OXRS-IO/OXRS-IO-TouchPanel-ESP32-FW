@@ -4,6 +4,8 @@
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 
 extern "C" const lv_font_t pwd_fond_15;
 
@@ -26,7 +28,7 @@ void classKeyPad::_createKeyPad(void)
   lv_obj_set_style_bg_opa(_btnm1, 0, LV_PART_MAIN);
   lv_obj_set_style_radius(_btnm1, 80, LV_PART_ITEMS);
   lv_obj_set_style_bg_color(_btnm1, lv_color_hex(0xffffff), LV_PART_ITEMS);
-  lv_obj_set_style_bg_opa(_btnm1, WP_OPA_BG_OFF, LV_PART_ITEMS);
+  lv_obj_set_style_bg_opa(_btnm1, opaBgOff, LV_PART_ITEMS);
   lv_obj_set_style_border_width(_btnm1, 0, LV_PART_MAIN);
 
   lv_obj_set_style_pad_row(_btnm1, 15, LV_PART_MAIN);

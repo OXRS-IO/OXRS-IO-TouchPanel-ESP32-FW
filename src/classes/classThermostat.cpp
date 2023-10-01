@@ -3,6 +3,8 @@
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 extern "C" const lv_font_t number_OR_50;
 
 // build the panels with all widgets
@@ -32,7 +34,7 @@ void classThermostat::_createThermostat(void)
   lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
   lv_obj_set_style_arc_width(_arcTarget, 5, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-  lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(colorBg, opaBgOff), LV_PART_KNOB | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
   lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
   lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -68,7 +70,7 @@ void classThermostat::_createThermostat(void)
   _btnMode = lv_btn_create(_panel);
   lv_obj_set_size(_btnMode, 150, 40);
   lv_obj_align(_btnMode, LV_ALIGN_BOTTOM_MID, 0, -40);
-  lv_obj_set_style_bg_color(_btnMode, lv_color_lighten(colorBg, WP_OPA_BG_OFF * 2), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(_btnMode, lv_color_lighten(colorBg, opaBgOff * 2), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btnMode, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
   _labelMode = lv_label_create(_btnMode);
   lv_label_set_text(_labelMode, "");
@@ -81,7 +83,7 @@ void classThermostat::_createThermostat(void)
   lv_obj_set_size(_dropDown, 250, LV_SIZE_CONTENT);
   lv_obj_align(_dropDown, LV_ALIGN_BOTTOM_MID, 00, -40);
   lv_obj_set_style_border_width(_dropDown, 0, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(_dropDown, lv_color_lighten(colorBg, WP_OPA_BG_OFF * 2), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(_dropDown, lv_color_lighten(colorBg, opaBgOff * 2), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_dropDown, 255, LV_PART_MAIN);
   lv_dropdown_set_options(_dropDown, "empty");
   lv_obj_set_style_text_align(_dropDown, LV_ALIGN_CENTER, LV_PART_MAIN);
@@ -91,7 +93,7 @@ void classThermostat::_createThermostat(void)
   lv_obj_set_style_border_width(list, 0, LV_PART_MAIN);
   lv_obj_set_style_text_line_space(list, 30, LV_PART_MAIN);
   lv_obj_set_style_text_font(list, &lv_font_montserrat_20, 0);
-  lv_obj_set_style_bg_color(list, lv_color_lighten(colorBg, WP_OPA_BG_OFF * 2), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(list, lv_color_lighten(colorBg, opaBgOff * 2), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(list, 255, LV_PART_MAIN);
   lv_obj_set_style_radius(list, 5, LV_PART_SELECTED);
   lv_obj_set_style_bg_color(list, colorOn, LV_PART_SELECTED | LV_STATE_PRESSED);

@@ -4,6 +4,8 @@
 extern void _setBackLightLED(int val);
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 
 static void _callBackRestart(lv_event_t *e)
 {
@@ -84,7 +86,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   // reset button
   _btnRestart = lv_btn_create(_parent);
 
-  lv_obj_set_style_bg_opa(_btnRestart, WP_OPA_BG_OFF, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+  lv_obj_set_style_bg_opa(_btnRestart, opaBgOff, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor(_btnRestart, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btnRestart, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_size(_btnRestart, 150, 50);

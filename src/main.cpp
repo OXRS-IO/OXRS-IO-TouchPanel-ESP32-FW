@@ -142,8 +142,13 @@ uint32_t _noActivityTimeOutToLockTriggered = UINT32_MAX;
 #define DEFAULT_COLOR_BACKGROUND_G  0
 #define DEFAULT_COLOR_BACKGROUND_B  0
 
+// global variable for configurable system wide colors
 lv_color_t colorOn;
 lv_color_t colorBg;
+
+// global variables for configurable system wide Tile Opacity in on / off state
+int opaBgOn;
+int opaBgOff;
 
 /*--------------------------- Global Objects -----------------------------*/
 // used for small footprint snapshot
@@ -713,6 +718,16 @@ void setBackgroundColor(lv_color_t color)
   {
     colorBg = color;
   }
+}
+
+void setTileBrightnessOn(int brightness)
+{
+  opaBgOn = 255 * brightness / 100;
+}
+
+void setTileBrightnessOff(int brightness)
+{
+  opaBgOff = 255 * brightness / 100;
 }
 
 // update info text panel on screenSettings
@@ -1506,8 +1521,38 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
   createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]));
 }
 
+void jsonTileBrightnessOnConfig(int brightness)
+{
+  if (brightness < TILE_BRIGHTNESS_ON_MIN)
+    brightness = TILE_BRIGHTNESS_ON_MIN;
+  if (brightness > TILE_BRIGHTNESS_ON_MAX)
+    brightness = TILE_BRIGHTNESS_ON_MAX;
+
+  setTileBrightnessOn(brightness);
+}
+
+void jsonTileBrightnessOffConfig(int brightness)
+{
+  if (brightness < TILE_BRIGHTNESS_OFF_MIN)
+    brightness = TILE_BRIGHTNESS_OFF_MIN;
+  if (brightness > TILE_BRIGHTNESS_OFF_MAX)
+    brightness = TILE_BRIGHTNESS_OFF_MAX;
+
+  setTileBrightnessOff(brightness);
+}
+
 void jsonConfig(JsonVariant json)
 {
+  if (json.containsKey("tileBrightnessOn"))
+  {
+    jsonTileBrightnessOnConfig(json["tileBrightnessOn"]);
+  }
+
+  if (json.containsKey("tileBrightnessOff"))
+  {
+    jsonTileBrightnessOffConfig(json["tileBrightnessOff"]);
+  }
+
   if (json.containsKey("iconOnColorRgb"))
   {
     jsonIconOnColorConfig(json["iconOnColorRgb"]);
@@ -1656,6 +1701,22 @@ void jsonConfigSchema(JsonVariant json)
   iconOnColorRgb["title"] = "Icon Color";
   iconOnColorRgb["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
   createRgbProperties(iconOnColorRgb);
+
+  // tile brightness off
+  JsonObject tileBrightnessOff = json.createNestedObject("tileBrightnessOff");
+  tileBrightnessOff["title"] = "Tile Brightness OFF state";
+  tileBrightnessOff["description"] = "Tile brightness when 'off' (defaults to 10). Must be a number between 0 and 25";
+  tileBrightnessOff["type"] = "integer";
+  tileBrightnessOff["minimum"] = TILE_BRIGHTNESS_OFF_MIN;
+  tileBrightnessOff["maximum"] = TILE_BRIGHTNESS_OFF_MAX;
+
+  // tile brightness on
+  JsonObject tileBrightnessOn = json.createNestedObject("tileBrightnessOn");
+  tileBrightnessOn["title"] = "Tile Brightness ON state";
+  tileBrightnessOn["description"] = "Tile brightness when 'on' (defaults to 100). Must be a number between 75 and 100";
+  tileBrightnessOn["type"] = "integer";
+  tileBrightnessOn["minimum"] = TILE_BRIGHTNESS_ON_MIN;
+  tileBrightnessOn["maximum"] = TILE_BRIGHTNESS_ON_MAX;
 
   // noActivity timeout
   JsonObject noActivitySecondsToHome = json.createNestedObject("noActivitySecondsToHome");
@@ -2484,6 +2545,10 @@ void setup()
   // set colors to default, may be updated later from config handler
   setIconOnColor(lv_color_make(0, 0, 0));
   setBackgroundColor(lv_color_make(0, 0, 0));
+  
+  // set tile brightness for on / off to default, may be updated from config handler
+  setTileBrightnessOff(DEFAULT_TILE_BRIGHTNESS_OFF);
+  setTileBrightnessOn(DEFAULT_TILE_BRIGHTNESS_ON);
 
   // show splash screen
   lv_obj_t *img1 = lv_img_create(lv_scr_act());
