@@ -47,11 +47,18 @@ typedef struct
   const void *img;
 } imgListElement_t;
 
-#define WP_OPA_BG_OFF     26
-#define WP_OPA_BG_ON      255
+// definitions in int units
 #define WP_OPA_BG_50      128
 #define WP_OPA_BG_70      178
 #define WP_OPA_BG_PRESSED 128
+
+// definitions in % for API
+#define DEFAULT_TILE_BRIGHTNESS_OFF 10
+#define DEFAULT_TILE_BRIGHTNESS_ON  100
+#define TILE_BRIGHTNESS_OFF_MIN     0
+#define TILE_BRIGHTNESS_OFF_MAX     25
+#define TILE_BRIGHTNESS_ON_MIN      75
+#define TILE_BRIGHTNESS_ON_MAX      100
 
 // screen layout
 #ifndef SCREEN_WIDTH

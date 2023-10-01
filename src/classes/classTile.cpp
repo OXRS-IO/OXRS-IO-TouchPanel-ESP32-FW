@@ -2,6 +2,9 @@
 #include <globalDefines.h>
 
 extern lv_color_t colorOn;
+extern int opaBgOff;
+extern int opaBgOn;
+
 extern "C" const lv_font_t number_OR_50;
 extern "C" const lv_font_t wp_symbol_font_15;
 
@@ -23,7 +26,7 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   _fullBar = lv_obj_create(_tileBg);
   lv_obj_remove_style_all(_fullBar);
   lv_obj_set_style_bg_color(_fullBar, lv_color_hex(0xffffff), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(_fullBar, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_fullBar, 255 - (255 - opaBgOn) * 2, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_opa(_fullBar, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
 
@@ -60,7 +63,7 @@ void classTile::_button(lv_obj_t *parent, const void *img)
       lv_obj_set_style_arc_opa(_arcTarget, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
       lv_obj_set_style_arc_width(_arcTarget, 4, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-      lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+      lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, opaBgOff), LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_bg_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_border_color(_arcTarget, lv_color_hex(0xC8C8C8), LV_PART_KNOB | LV_STATE_DEFAULT);
       lv_obj_set_style_border_opa(_arcTarget, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -88,12 +91,12 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   }
   
   lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, img, NULL, NULL);
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+  lv_obj_set_style_bg_opa(_btn, opaBgOff, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btn, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
 
   lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_ON, LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btn, opaBgOn, LV_STATE_CHECKED);
   lv_obj_set_style_img_recolor(_btn, colorOn, LV_STATE_CHECKED);
   lv_obj_set_style_img_recolor_opa(_btn, 255, LV_STATE_CHECKED);
 
@@ -335,6 +338,11 @@ void classTile::setTileDisabled(bool disable)
   }
 }
 
+void classTile::setLabel(const char *labelText)
+{
+  lv_label_set_text(_label, labelText);
+}
+
 void classTile::setSubLabel(const char *subLabelText)
 {
   lv_label_set_text(_subLabel, subLabelText);
@@ -371,7 +379,7 @@ void classTile::setState(bool state)
   {
     if (lv_imgbtn_get_src_left(_btn, _state ? LV_IMGBTN_STATE_CHECKED_RELEASED : LV_IMGBTN_STATE_RELEASED))
       _hideThumbNail(false);
-}
+  }
 }
 
 lv_color_t classTile::getColor()
@@ -436,7 +444,7 @@ void classTile::updateBgColor(void)
     lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
   }
   if (_arcTarget)
-    lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, WP_OPA_BG_OFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_arcTarget, lv_color_lighten(_tileBgColor, opaBgOff), LV_PART_KNOB | LV_STATE_DEFAULT);
 }
 
 void classTile::setNumber(const char *value, const char *units, const char *subValue, const char *subUnits)

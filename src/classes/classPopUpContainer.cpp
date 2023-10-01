@@ -3,6 +3,8 @@
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 
 // build the panels with all widgets
 void classPopUpContainer::_startUp(void)
@@ -24,14 +26,14 @@ void classPopUpContainer::_startUp(void)
   lv_obj_set_style_radius(_panel, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_clear_flag(_panel, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(_panel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_panel, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_panel, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
 
   // back button (closes pop up)
   _btnExit = lv_btn_create(_ovlPanel);
   lv_obj_set_size(_btnExit, 153, 40);
   lv_obj_align(_btnExit, LV_ALIGN_BOTTOM_LEFT, 5, -5);
   lv_obj_set_style_bg_color(_btnExit, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btnExit, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_btnExit, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_t *label = lv_label_create(_btnExit);
   lv_label_set_text(label, LV_SYMBOL_LEFT);
   lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);

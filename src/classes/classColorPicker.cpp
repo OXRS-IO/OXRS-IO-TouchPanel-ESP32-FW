@@ -15,6 +15,8 @@ hsv_t _colorWheelHSV;
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 extern const void *imgOnOff;
 
 // convert RGB to HSV with RGB888 and floating point calc
@@ -135,8 +137,8 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_btnColor, SCREEN_WIDTH / 2 - 7, 40);
   lv_obj_set_style_bg_color(_btnColor, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btnColor, lv_color_hex(0xffffff), LV_STATE_CHECKED);
-  lv_obj_set_style_bg_opa(_btnColor, WP_OPA_BG_OFF, LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btnColor, WP_OPA_BG_ON, LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btnColor, opaBgOff, LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_btnColor, opaBgOn, LV_STATE_CHECKED);
   lv_obj_t *labelColor = lv_label_create(_btnColor);
   lv_label_set_text(labelColor, "Color");
   lv_obj_set_style_text_color(_btnColor, lv_color_hex(0x000000), LV_STATE_CHECKED);
@@ -148,8 +150,8 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_btnKelvin, SCREEN_WIDTH / 2 - 7, 40);
   lv_obj_set_style_bg_color(_btnKelvin, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btnKelvin, lv_color_hex(0xffffff), LV_STATE_CHECKED);
-  lv_obj_set_style_bg_opa(_btnKelvin, WP_OPA_BG_OFF, LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btnKelvin, WP_OPA_BG_ON, LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btnKelvin, opaBgOff, LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_btnKelvin, opaBgOn, LV_STATE_CHECKED);
   lv_obj_t *labelKelvin = lv_label_create(_btnKelvin);
   lv_label_set_text(labelKelvin, "Temperature");
   lv_obj_set_style_text_color(_btnKelvin, lv_color_hex(0x000000), LV_STATE_CHECKED);
@@ -164,7 +166,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_style_radius(_panelRGB, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_clear_flag(_panelRGB, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(_panelRGB, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_panelRGB, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_panelRGB, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_flag(_panelRGB, LV_OBJ_FLAG_HIDDEN);
 
   // label calling tile aat top
@@ -182,7 +184,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_style_radius(_panelCCT, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_clear_flag(_panelCCT, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(_panelCCT, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_panelCCT, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_panelCCT, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_flag(_panelCCT, LV_OBJ_FLAG_HIDDEN);
 
   // label calling tile aat top
@@ -197,9 +199,9 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_set_size(_btn, 153, 40);
   lv_obj_align(_btn, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
   lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_OFF, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_btn, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_CHECKED);
-  lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_ON, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(_btn, opaBgOn, LV_PART_MAIN | LV_STATE_CHECKED);
 
   _imgBtn = lv_img_create(_btn);
   lv_obj_align(_imgBtn, LV_ALIGN_CENTER, 0, 0);

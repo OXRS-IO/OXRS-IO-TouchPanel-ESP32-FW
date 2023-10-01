@@ -3,6 +3,8 @@
 
 extern lv_color_t colorOn;
 extern lv_color_t colorBg;
+extern int opaBgOff;
+extern int opaBgOn;
 
 void classDropDown::_createDropDown(void)
 {
@@ -23,7 +25,7 @@ void classDropDown::_createDropDown(void)
   lv_obj_set_style_text_line_space(list, 30, LV_PART_MAIN);
   lv_obj_set_style_text_font(list, &lv_font_montserrat_20, 0);
   lv_obj_set_style_bg_color(list, lv_color_hex(0xffffff), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(list, WP_OPA_BG_OFF, LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(list, opaBgOff, LV_PART_MAIN);
   lv_obj_set_style_radius(list, 5, LV_PART_SELECTED);
   lv_obj_set_style_bg_color(list, colorOn, LV_PART_SELECTED | LV_STATE_PRESSED);
   lv_obj_set_style_bg_color(list, colorOn, LV_PART_SELECTED | LV_STATE_CHECKED);

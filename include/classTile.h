@@ -84,7 +84,6 @@ protected:
   void _createIconText(void);
   void _reColorAll(lv_color_t color, lv_style_selector_t selector);
   void _setIconTextFromIndex(void);
-  void _freeImageHeap();
   void _hideIcon(bool hide);
   bool _isThumbNail(const void *img);
   void _hideThumbNail(bool hide);
@@ -97,6 +96,7 @@ public :
   ~classTile();
 
   void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, const void *img, const char *labelText, int style, const char* styleStr);
+  void setLabel(const char *labelText);
   void setSubLabel(const char *subLabelText);
   void setState(bool state);
   void setColor(lv_color_t color);
