@@ -1091,11 +1091,11 @@ static void tileEventHandler(lv_event_t * e)
 {
   static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
+  classTile *tPtr = (classTile *)lv_event_get_user_data(e);
 
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
   {
     // get tile* of clicked tile from USER_DATA
-    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     if (code == LV_EVENT_SHORT_CLICKED)
     {
       // handle the different button styles
@@ -1156,7 +1156,15 @@ static void tileEventHandler(lv_event_t * e)
     {
       // publish long press event
       publishTileEvent(tPtr, "hold");
+      tPtr->inHold(true);
     }
+  }
+
+  if (code == LV_EVENT_RELEASED)
+  {
+    // if in Hold state publish release
+    if (tPtr->inHold(false))
+      publishTileEvent(tPtr, "release");
   }
 }
 

@@ -382,6 +382,15 @@ void classTile::setState(bool state)
   }
 }
 
+// set hold state and return prev state
+bool classTile::inHold(bool hold)
+{
+  bool prevState = _touchHold;
+  _touchHold = hold;
+
+  return (prevState);
+}
+
 lv_color_t classTile::getColor()
 {
     return lv_obj_get_style_img_recolor(_btn, LV_PART_MAIN);

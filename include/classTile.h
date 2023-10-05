@@ -50,6 +50,7 @@ protected:
   string _styleStr;
   int _linkedScreen = 0;
   bool _state = false;
+  bool _touchHold = false;
   int _levelStart = 0;
   int _levelStop = 100;
   int _levelLargeStep = 5;
@@ -122,7 +123,7 @@ public :
   const char* getStyleStr(void);
   bool getState(void);
   char *getLabel(void);
-  
+  bool inHold(bool hold);
   void addEventHandler(lv_event_cb_t callBack);
 
   void setLevelBottomTop(int bottom, int top);
