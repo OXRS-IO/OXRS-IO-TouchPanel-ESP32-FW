@@ -1809,7 +1809,8 @@ void jsonArrayToString(JsonArray array, string *longString)
     *longString += s.as<const char *>();
     *longString += "\n";
   }
-  longString->pop_back();
+  if (longString->length() > 0)
+    longString->pop_back();
 }
 
 void handleKeyPadCommand(JsonVariant jsonKeyPad)

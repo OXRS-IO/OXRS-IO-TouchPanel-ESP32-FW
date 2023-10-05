@@ -219,6 +219,10 @@ void classTile::_createIconText()
     setIconText(buf);
     lv_obj_del(dd);
   }
+  else
+  {
+    setIconText("");
+  }
 }
 
 // recolor all effected objects
