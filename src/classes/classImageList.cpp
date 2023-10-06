@@ -8,7 +8,7 @@ using std::list;
 using std::string;
 
 // add icon to list, replaces if exist, sorts list in accending imageStr order
-void classImageList::add(imgListElement_t element)
+void classImageList::add(tp32Image element)
 {
   remove(element.imageStr);
   _listImages.push_back(element);
@@ -16,22 +16,23 @@ void classImageList::add(imgListElement_t element)
 }
 
 // get icom image for imageStr from list
-const void *classImageList::get(string imageStr)
+tp32Image classImageList::get(string imageStr)
 {
-  std::list<imgListElement_t>::iterator it;
+  tp32Image notFound = { "", NULL };
+  std::list<tp32Image>::iterator it;
   it = std::find_if(std::begin(_listImages), std::end(_listImages),
-                    [&](imgListElement_t const &p)
+                    [&](tp32Image const &p)
                     { return p.imageStr == imageStr; });
   if (it == _listImages.end())
-    return NULL;
+      return notFound;
   else
-    return it->img;
+      return *it;
 }
 
 // remove icon from list (if exist)
 void classImageList::remove(string imageStr)
 {
-  _listImages.remove_if([&](imgListElement_t const &p)
+  _listImages.remove_if([&](tp32Image const &p)
                        { return p.imageStr == imageStr; });
 }
 
@@ -53,7 +54,7 @@ string classImageList::getNextImageStr(void)
 // sort list by imageStr
 void classImageList::sort(void)
 {
-  _listImages.sort([](const imgListElement_t &p1, const imgListElement_t &p2)
+  _listImages.sort([](const tp32Image &p1, const tp32Image &p2)
                   { return p1.imageStr < p2.imageStr; });
 }
 

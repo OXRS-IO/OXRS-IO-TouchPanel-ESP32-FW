@@ -45,11 +45,20 @@ protected:
   lv_obj_t *_labelArcValue = NULL;
   lv_obj_t *_labelArcSubValue = NULL;
 
+  struct
+  {
+    int zoom;
+    int angle;
+    int posOffsX;
+    int posOffsY;
+  } _bgImgProperties = { 100, 0, 0, 0 };
+
   classScreen *_parentScreen = NULL;
   int _style = 0;
   string _styleStr;
   int _linkedScreen = 0;
   bool _state = false;
+  bool _touchHold = false;
   int _levelStart = 0;
   int _levelStop = 100;
   int _levelLargeStep = 5;
@@ -57,10 +66,11 @@ protected:
   int _levelBottom = _levelStart;
   int _levelTop = _levelStop;
   uint32_t _lastLevelUpdate = 0;
-  const void *_img = NULL;
-  const void *_imgOn = NULL;
-  const void *_imgConfig = NULL;
-  const void *_imgOnConfig = NULL;
+  tp32Image _img = { "", NULL };
+  tp32Image _imgOn = { "", NULL };
+  tp32Image _imgConfig = { "", NULL };
+  tp32Image _imgOnConfig = { "", NULL };
+  tp32Image _imgBackground = { "", NULL };
   uint16_t _dropDownIndex = 0;
   string _dropDownList;
   string _dropDownLabel;
@@ -76,7 +86,7 @@ protected:
   std::list<post> _feed;
   std::list<post>::iterator _feedIterator;
 
-  void _button(lv_obj_t *parent, const void *img);
+  void _button(lv_obj_t *parent, tp32Image img);
   int _tileWidth(void);
   int _tileHeight(void);
   void _createValueLabels(void);
@@ -95,19 +105,21 @@ public :
   classTile(void){};
   ~classTile();
 
-  void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, const void *img, const char *labelText, int style, const char* styleStr);
-  void setLabel(const char *labelText);
+  void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char* styleStr);
+  void setLabel(const char *labs);
   void setSubLabel(const char *subLabelText);
   void setState(bool state);
   void setColor(lv_color_t color);
   lv_color_t getColor();
   void setBgColor(lv_color_t color);
   void updateBgColor(void);
-  void setIcon(const void *imgIcon);
-  void setNumber(const char *value, const char *units, const char *subValue, const char *subUnits);
-  void setBgImage(const void *img);
+  void setIcon(tp32Image imgIcon);
+  void updateIconImageSource(tp32Image newImg);
+  void setNumber(const char* value, const char* units, const char* subValue, const char* subUnits);
+  void setBgImage(tp32Image img);
   void alignBgImage(int zoom, int posOffsX, int posOffsY, int angle);
-  void setIconForStateOn(const void* imgStateOn);
+  void updateBgImageSource(tp32Image newImg);
+  void setIconForStateOn(tp32Image imgStateOn);
   void setIconText(const char *iconText);
   void getImages(const void* &imgOff, const void* &imgOn);
   void setActionIndicator(const char* symbol);
@@ -122,7 +134,8 @@ public :
   const char* getStyleStr(void);
   bool getState(void);
   char *getLabel(void);
-  
+  bool inHold(bool hold);
+
   void addEventHandler(lv_event_cb_t callBack);
 
   void setLevelBottomTop(int bottom, int top);

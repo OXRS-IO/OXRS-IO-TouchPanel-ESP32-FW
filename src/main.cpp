@@ -1091,11 +1091,11 @@ static void tileEventHandler(lv_event_t * e)
 {
   static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
+  classTile *tPtr = (classTile *)lv_event_get_user_data(e);
 
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
   {
     // get tile* of clicked tile from USER_DATA
-    classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     if (code == LV_EVENT_SHORT_CLICKED)
     {
       // handle the different button styles
@@ -1156,7 +1156,15 @@ static void tileEventHandler(lv_event_t * e)
     {
       // publish long press event
       publishTileEvent(tPtr, "hold");
+      tPtr->inHold(true);
     }
+  }
+
+  if (code == LV_EVENT_RELEASED)
+  {
+    // if in Hold state publish release
+    if (tPtr->inHold(false))
+      publishTileEvent(tPtr, "release");
   }
 }
 
@@ -1281,7 +1289,7 @@ void createRgbProperties(JsonVariant json)
 // Create any tile on any screen
 void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop, lv_color_t colorBg)
 {
-  const void *img = NULL;
+  tp32Image img = {"", NULL};
   int style;
 
   // get the tile_style
@@ -1303,7 +1311,11 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
 
   // get the icon image
   if (iconStr)
+  {
     img = iconVault.get(string(iconStr));
+    if (img.imageStr.empty())
+      img.imageStr = iconStr;
+  }
 
   // create new Tile
   classTile &ref = tileVault.add();
@@ -1472,6 +1484,15 @@ void getApiSnapshot(Request &req, Response &res)
 /**
  * Config Handler
  */
+
+void updateImageSource(tp32Image newImg, bool isIcon)
+{
+  tileVault.setIteratorStart();
+  while (classTile *tile = tileVault.getNextTile())
+  {
+    isIcon ? tile->updateIconImageSource(newImg) : tile->updateBgImageSource(newImg);
+  }
+}
 
 void updateTilesBgColor(void)
 {
@@ -1764,29 +1785,21 @@ void addCustomApis()
 // decode base64 encoded png image to ps_ram
 lv_img_dsc_t *decodeBase64ToImg(const char *imageBase64)
 {
-  // decode image into ps_ram
-  // TODO :
-  //    check if ps_alloc successful
-  size_t inLen = strlen(imageBase64);
   // exit if no data to decode
-  if (inLen == 0)
+  if (strlen(imageBase64) == 0)
     return NULL;
 
   size_t outLen = base64::decodeLength(imageBase64);
   uint8_t *raw = (uint8_t *)ps_malloc(outLen);
   base64::decode(imageBase64, raw);
 
-  // calc width and height from image file (start @ pos [16])
-  uint32_t size[2];
-  memcpy(&size[0], raw + 16, 8);
-
   // prepaare image descriptor
   lv_img_dsc_t *imgPng = (lv_img_dsc_t *)ps_malloc(sizeof(lv_img_dsc_t));
   imgPng->header.cf = LV_IMG_CF_RAW_ALPHA;
   imgPng->header.always_zero = 0;
   imgPng->header.reserved = 0;
-  imgPng->header.w = (lv_coord_t)((size[0] & 0xff000000) >> 24) + ((size[0] & 0x00ff0000) >> 8);
-  imgPng->header.h = (lv_coord_t)((size[1] & 0xff000000) >> 24) + ((size[1] & 0x00ff0000) >> 8);
+  imgPng->header.w = 0;
+  imgPng->header.h = 0;
   imgPng->data_size = outLen;
   imgPng->data = raw;
 
@@ -1801,7 +1814,8 @@ void jsonArrayToString(JsonArray array, string *longString)
     *longString += s.as<const char *>();
     *longString += "\n";
   }
-  longString->pop_back();
+  if (longString->length() > 0)
+    longString->pop_back();
 }
 
 void handleKeyPadCommand(JsonVariant jsonKeyPad)
@@ -1817,7 +1831,7 @@ void handleKeyPadCommand(JsonVariant jsonKeyPad)
   }
   else
   {
-    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.get(jsonKeyPad["icon"]) : NULL;
+    const void *icon = jsonKeyPad.containsKey("icon") ? iconVault.get(jsonKeyPad["icon"]).img : NULL;
     const char *text = jsonKeyPad.containsKey("text") ? jsonKeyPad["text"] : jsonKeyPad["state"];
     lv_color_t color = jsonRgbToColor(jsonKeyPad["iconColorRgb"]);
 
@@ -2101,13 +2115,16 @@ void jsonTileCommand(JsonVariant json)
 
     if (jsonBgImage.size() == 0)
     {
-      tile->setBgImage(NULL);
+      tile->setBgImage(tp32Image{"", NULL});
     }
     else
     {
       if (jsonBgImage.containsKey("name"))
       {
-        tile->setBgImage(imageVault.get(jsonBgImage["name"]));
+        tp32Image img = imageVault.get(jsonBgImage["name"].as<const char *>());
+        if (img.imageStr.empty())
+          img.imageStr = jsonBgImage["name"].as<const char *>();
+        tile->setBgImage(img);
       }
       tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
     }
@@ -2246,40 +2263,56 @@ void jsonTileCommand(JsonVariant json)
   }
 }
 
-// handle image upload via base64 over mqtt 
-void handleImageUpload(JsonVariant json, classImageList *vault)
+// handle image upload via base64 over mqtt
+void handleImageUpload(JsonVariant json, classImageList *vault, bool isIcon)
 {
-  if (!json["name"] || !json["imageBase64"])
-    return;
+  string name = string(json["name"].as<const char *>());
 
-  // check if named icon exist, if yes -> get descriptor
-  lv_img_dsc_t *oldImage = (lv_img_dsc_t *)vault->get(json["name"]);
+  // nothing to do ?
+  if (name.empty() || !json["imageBase64"])
+    return;
+  // check for system reserved names (starting with "_")
+  if (name[0] == '_')
+  {
+    wt32.println(F("[tp32] name reserved for system use"));
+    return;
+  }
+
+  // check if named image exist, if yes -> save it
+  tp32Image oldImage = vault->get(name);
 
   // decode new image
   lv_img_dsc_t *imagePng = decodeBase64ToImg(json["imageBase64"]);
 
   // add custom image to Vault (deletes possible existing one)
-  string imageStr = json["name"];
-  vault->add({imageStr, imagePng});
+  vault->add({ name, imagePng });
 
-  // free ps_ram heap if named image existed allready
-  if (oldImage)
+  // update tiles
+  updateImageSource(vault->get(name), isIcon);
+
+  // clean up if there was an image with the same name
+  if (!oldImage.imageStr.empty())
   {
-    free((void *)oldImage->data);
-    free(oldImage);
+    lv_img_cache_invalidate_src(oldImage.img);
+    lv_img_dsc_t *tmp = (lv_img_dsc_t *)oldImage.img;
+    if (tmp)
+    {
+      free((void *)tmp->data);
+      free(tmp);
+    }
   }
 }
 
 // add image from base64 coded .png image
 void jsonAddImage(JsonVariant json)
 {
-  handleImageUpload(json, &imageVault);
+  handleImageUpload(json, &imageVault, false);
 }
 
 // add icon from base64 coded .png image
 void jsonAddIcon(JsonVariant json)
 {
-  handleImageUpload(json, &iconVault);
+  handleImageUpload(json, &iconVault, true);
 
   // update configutation
   setConfigSchema();
@@ -2460,7 +2493,7 @@ void checkNoActivity(void)
         {
           _noActivityTimeOutToLockTriggered = inactive;
           keyPad = classKeyPad(NULL, keyPadEventHandler, KP_LOCKED);
-          keyPad.setState("locked", iconVault.get("_locked"), lv_color_make(255, 0, 0), "enter code");
+          keyPad.setState("locked", iconVault.get("_locked").img, lv_color_make(255, 0, 0), "enter code");
           keyPad.setLabel("Panel locked after in-activity");
           publishLockStateEvent("locked");
         }

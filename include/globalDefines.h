@@ -45,7 +45,7 @@ typedef struct
 {
   string imageStr;
   const void *img;
-} imgListElement_t;
+} tp32Image;
 
 // definitions in int units
 #define WP_OPA_BG_50      128

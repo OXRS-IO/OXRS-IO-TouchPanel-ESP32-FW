@@ -37,7 +37,7 @@ Everything looks and feels like on the physical wall panel
 
 MQTT topics  `conf/` , `cmnd/` and `stat/` are working as with the FW.
 
-This version is up to date with release 2.4.5 of the FW
+This version is up to date with release 2.4.6 of the FW
 
 
 

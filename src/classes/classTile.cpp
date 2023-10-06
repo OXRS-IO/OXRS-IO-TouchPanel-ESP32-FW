@@ -9,7 +9,7 @@ extern "C" const lv_font_t number_OR_50;
 extern "C" const lv_font_t wp_symbol_font_15;
 
 // create the tile
-void classTile::_button(lv_obj_t *parent, const void *img)
+void classTile::_button(lv_obj_t *parent, tp32Image img)
 {
   _parentContainer = parent;
   _tileBgColor = _parentScreen->getBgColor();
@@ -37,14 +37,14 @@ void classTile::_button(lv_obj_t *parent, const void *img)
   _imgBg = lv_img_create(_btn);
 
   // check the icon image for special handling requirement
-  if (img)
+  if (!img.imageStr.empty())
   {
     _img = img;
     _imgOn = img;
     _imgConfig = img;
     _imgOnConfig = img;
     // create an arc widget as dynamic thumbnail icon
-    if (_isThumbNail(img))
+    if (_isThumbNail(img.img))
     {
       _arcTarget = lv_arc_create(_btn);
       lv_obj_set_size(_arcTarget, 110, 110);
@@ -90,17 +90,17 @@ void classTile::_button(lv_obj_t *parent, const void *img)
     }
   }
   
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, img, NULL, NULL);
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, img.img, NULL, NULL);
   lv_obj_set_style_bg_opa(_btn, opaBgOff, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btn, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
 
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn.img, NULL, NULL);
   lv_obj_set_style_bg_opa(_btn, opaBgOn, LV_STATE_CHECKED);
   lv_obj_set_style_img_recolor(_btn, colorOn, LV_STATE_CHECKED);
   lv_obj_set_style_img_recolor_opa(_btn, 255, LV_STATE_CHECKED);
 
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
 
   lv_obj_clear_flag(_btn, LV_OBJ_FLAG_PRESS_LOCK);
 
@@ -219,6 +219,10 @@ void classTile::_createIconText()
     setIconText(buf);
     lv_obj_del(dd);
   }
+  else
+  {
+    setIconText("");
+  }
 }
 
 // recolor all effected objects
@@ -256,11 +260,11 @@ void classTile::_hideIcon(bool hide)
   }
   else
   {
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
-    if (_isThumbNail(_state ? _imgOn : _img))
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
+    if (_isThumbNail(_state ? _imgOn.img : _img.img))
       _hideThumbNail(false);
   }
 }
@@ -291,7 +295,7 @@ classTile::~classTile()
 }
 
 // initialise existing object
-void classTile::begin(lv_obj_t * parent, classScreen * parentScreen, int tileIdx, const void *img, const char *labelText, int style, const char *styleStr)
+void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char *styleStr)
 {
   _parentScreen = parentScreen;
   tileId.idx.screen = _parentScreen->getScreenNumber();
@@ -350,7 +354,7 @@ void classTile::setSubLabel(const char *subLabelText)
 
 void classTile::setState(bool state)
 {
-  if (_isThumbNail(_state ? _imgOn : _img))
+  if (_isThumbNail(_state ? _imgOn.img : _img.img))
     _hideThumbNail(true);
 
   _state = state;
@@ -375,11 +379,20 @@ void classTile::setState(bool state)
   if (_labelArcValue)
     state == false ? lv_obj_clear_state(_labelArcValue, LV_STATE_CHECKED) : lv_obj_add_state(_labelArcValue, LV_STATE_CHECKED);
 
-  if (_isThumbNail(state ? _imgOn : _img))
+  if (_isThumbNail(state ? _imgOn.img : _img.img))
   {
     if (lv_imgbtn_get_src_left(_btn, _state ? LV_IMGBTN_STATE_CHECKED_RELEASED : LV_IMGBTN_STATE_RELEASED))
       _hideThumbNail(false);
   }
+}
+
+// set hold state and return prev state
+bool classTile::inHold(bool hold)
+{
+  bool prevState = _touchHold;
+  _touchHold = hold;
+
+  return(prevState);
 }
 
 lv_color_t classTile::getColor()
@@ -463,16 +476,33 @@ void classTile::setNumber(const char *value, const char *units, const char *subV
   lv_obj_align_to(_subValueLabel, _valueLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
 }
 
-// update the _imBg object and hide it, will be shown with alignBgImage()
-void classTile::setBgImage(const void *img)
+// update bg image source if it was changed
+void classTile::updateBgImageSource(tp32Image newImg)
 {
+  if (_imgBackground.imageStr == newImg.imageStr)
+  {
+    setBgImage(newImg);
+    alignBgImage(_bgImgProperties.zoom, _bgImgProperties.posOffsX, _bgImgProperties.posOffsY, _bgImgProperties.angle);
+  }
+}
+
+// update the _imBg object and hide it, will be shown with alignBgImage()
+void classTile::setBgImage(tp32Image img)
+{
+  _imgBackground = img;
   lv_obj_add_flag(_imgBg, LV_OBJ_FLAG_HIDDEN);
-  lv_img_set_src(_imgBg, img);
+  lv_img_set_src(_imgBg, _imgBackground.img);
 }
 
 // align _imgBg
 void classTile::alignBgImage(int zoom, int offsetX, int offsetY, int angle)
 {
+  // save image properties
+  _bgImgProperties.zoom = zoom;
+  _bgImgProperties.posOffsX = offsetX;
+  _bgImgProperties.posOffsY = offsetY;
+  _bgImgProperties.angle = angle;
+
   // return if no valid bg image exists
   if (!lv_img_get_src(_imgBg))
     return;
@@ -553,30 +583,50 @@ char *classTile::getLabel(void)
 }
 
 // set 2nd icon to alternate state dependent
-void classTile::setIconForStateOn(const void *imgStateOn)
+void classTile::setIconForStateOn(tp32Image imgStateOn)
 {
-  _imgOn = (imgStateOn != NULL) ? imgStateOn : _img;
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+  _imgOn = (!imgStateOn.imageStr.empty()) ? imgStateOn : _img;
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn.img, NULL, NULL);
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
 }
 
+// update icon image source if it was changed
+void classTile::updateIconImageSource(tp32Image newImg)
+{
+  int changed = 0;
+  if (_img.imageStr == newImg.imageStr) { _img = newImg; changed++; }
+  if (_imgOn.imageStr == newImg.imageStr) { _imgOn = newImg; changed++; }
+  if (_imgConfig.imageStr == newImg.imageStr) { _imgConfig = newImg; changed++; }
+  if (_imgOnConfig.imageStr == newImg.imageStr) { _imgOnConfig = newImg; changed++; }
+
+  if (changed)
+  {
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
+    lv_obj_invalidate(_btn);
+  }
+}
+
+
 // set icon for current state
-void classTile::setIcon(const void *imgIcon)
+void classTile::setIcon(tp32Image imgIcon)
 {
   if (lv_obj_get_state(_btn) & LV_STATE_CHECKED)
   {
-    _imgOn = (imgIcon != NULL) ? imgIcon : _imgOnConfig;
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn, NULL, NULL);
+    _imgOn = (!imgIcon.imageStr.empty()) ? imgIcon : _imgOnConfig;
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_RELEASED, _imgOn.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
   }
   else
   {
-    _img = (imgIcon != NULL) ? imgIcon : _imgConfig;
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img, NULL, NULL);
-    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
+    _img = (!imgIcon.imageStr.empty()) ? imgIcon : _imgConfig;
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_RELEASED, _img.img, NULL, NULL);
+    lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img.img, NULL, NULL);
   }
 
-  _hideThumbNail(_isThumbNail(imgIcon) ? false : true);
+  _hideThumbNail(_isThumbNail(imgIcon.img) ? false : true);
   lv_obj_invalidate(_btn);
 }
 
@@ -601,14 +651,14 @@ void classTile::setIconText(const char *iconText)
 
 void classTile::getImages(const void *&imgOff, const void *&imgOn)
 {
-  imgOff = _img;
-  imgOn = _imgOn;
+  imgOff = _img.img;
+  imgOn = _imgOn.img;
 }
 
 void classTile::addEventHandler(lv_event_cb_t callBack)
 {
   // add click detecttion
-  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img, NULL, NULL);
+  lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_PRESSED, _img.img, NULL, NULL);
   lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_PRESSED, LV_STATE_PRESSED);
   lv_obj_set_style_img_recolor(_btn, lv_color_hex(0x404040), LV_STATE_PRESSED);
   lv_obj_set_style_img_recolor_opa(_btn, 255, LV_STATE_PRESSED);
