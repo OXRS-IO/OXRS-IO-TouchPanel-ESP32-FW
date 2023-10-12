@@ -48,7 +48,8 @@ This version has additional executables:
 These offer the capability to span a tile over multiple tiles (cells) to make the layout more flexible.
 
 To configure a spanned tile add the key "span" to the tile config payload:
-"span":{"x": <number of tiles to span right>, "y": <number of tiles to span down>}
+
+`"span":{"x": <number of tiles to span right>, "y": <number of tiles to span down>}`
 
 The tile indexes are still following the grid layout, not the larger spanned tiles. Make sure NOT to config tiles (cells) which are allocated by a spanned tile (would create cluttered screens)
 
