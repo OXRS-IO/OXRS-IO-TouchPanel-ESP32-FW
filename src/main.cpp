@@ -1287,7 +1287,9 @@ void createRgbProperties(JsonVariant json)
 }
 
 // Create any tile on any screen
-void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop, lv_color_t colorBg)
+void createTile(const char *styleStr, int screenIdx, int tileIdx,
+                const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop,
+                lv_color_t colorBg, int spanX, int spanY)
 {
   tp32Image img = {"", NULL};
   int style;
@@ -1317,9 +1319,15 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
       img.imageStr = iconStr;
   }
 
+  tileSpan_t tileSpan = {1, 1};
+  if (spanX)
+    tileSpan.x = spanX;
+  if (spanY)
+    tileSpan.y = spanY;
+
   // create new Tile
   classTile &ref = tileVault.add();
-  ref.begin(screenVault.get(screenIdx)->container, screenVault.get(screenIdx), tileIdx, img, label, style, styleStr);
+  ref.begin(screenVault.get(screenIdx)->container, screenVault.get(screenIdx), tileIdx, img, label, style, styleStr, tileSpan);
 
   // handle tiles depending on style capabilities
   if ((style == TS_LINK) && linkedScreen)
@@ -1539,7 +1547,9 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
     return;
   }
 
-  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]));
+  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], 
+            json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]), 
+            json["span"]["right"], json["span"]["down"]);
 
   classTile *tile = tileVault.get(screenIdx, tileIdx);
 

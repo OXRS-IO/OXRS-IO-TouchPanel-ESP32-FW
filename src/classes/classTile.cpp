@@ -138,13 +138,13 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
 // tile width from grid
 int classTile::_tileWidth()
 {
-  return *lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) - (TILE_PADDING * 2);
+  return *lv_obj_get_style_grid_column_dsc_array(_parentContainer, 0) * _tileSpan.x - (TILE_PADDING * 2);
 }
 
 // tile width from grid
 int classTile::_tileHeight()
 {
-  return *lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) - (TILE_PADDING * 2);
+  return *lv_obj_get_style_grid_row_dsc_array(_parentContainer, 0) * _tileSpan.y - (TILE_PADDING * 2);
 }
 
 void classTile::_createValueLabels()
@@ -295,7 +295,7 @@ classTile::~classTile()
 }
 
 // initialise existing object
-void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char *styleStr)
+void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char *styleStr, tileSpan_t tileSpan)
 {
   _parentScreen = parentScreen;
   tileId.idx.screen = _parentScreen->getScreenNumber();
@@ -303,13 +303,22 @@ void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, 
   _style = style;
   _styleStr = styleStr;
 
-  _button(parent, img);
-  lv_label_set_text(_label, labelText);
 
   // position tile in grid after tile and screen are known
   int col = (tileIdx - 1) % SCREEN_COLS;
   int row = (tileIdx - 1) / SCREEN_COLS;
-  lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+
+  // clip span to grid size
+  _tileSpan = tileSpan;
+  if (_tileSpan.x + col > SCREEN_COLS)
+    _tileSpan.x = SCREEN_COLS - col;
+  if (_tileSpan.y + row > SCREEN_ROWS)
+    _tileSpan.y = SCREEN_ROWS - row;
+
+  _button(parent, img);
+  lv_label_set_text(_label, labelText);
+
+  lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, _tileSpan.x, LV_GRID_ALIGN_CENTER, row, _tileSpan.y);
 }
 
 // cover tile with grey semi transparent layer to put into disabled state

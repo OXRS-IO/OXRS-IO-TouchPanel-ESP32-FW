@@ -5,6 +5,11 @@
 #include <classScreen.h>
 
 #define ARC_STEP 5
+typedef struct
+{
+    int x;
+    int y;
+} tileSpan_t ;
 
 // object to handle feed posts
 class post
@@ -57,6 +62,7 @@ protected:
   int _style = 0;
   string _styleStr;
   int _linkedScreen = 0;
+  tileSpan_t _tileSpan = { 1, 1 };
   bool _state = false;
   bool _touchHold = false;
   int _levelStart = 0;
@@ -105,7 +111,7 @@ public :
   classTile(void){};
   ~classTile();
 
-  void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char* styleStr);
+  void begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, tp32Image img, const char *labelText, int style, const char* styleStr, tileSpan_t tileSpan);
   void setLabel(const char *labs);
   void setSubLabel(const char *subLabelText);
   void setState(bool state);
