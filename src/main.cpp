@@ -1540,7 +1540,24 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
   }
 
   createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]));
+
+  classTile *tile = tileVault.get(screenIdx, tileIdx);
+
+  if (json.containsKey("backgroundImage"))
+  {
+    JsonVariant jsonBgImage = json["backgroundImage"];
+
+    if (jsonBgImage.containsKey("name"))
+    {
+      tp32Image img = imageVault.get(jsonBgImage["name"].as<const char *>());
+      if (img.imageStr.empty())
+        img.imageStr = jsonBgImage["name"].as<const char *>();
+      tile->setBgImage(img);
+    }
+    tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
+  }
 }
+
 
 void jsonTileBrightnessOnConfig(int brightness)
 {
