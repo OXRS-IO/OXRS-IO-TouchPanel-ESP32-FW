@@ -1781,6 +1781,24 @@ void jsonConfigSchema(JsonVariant json)
   tileBackgroundColorRgb["description"] = "RGB color of tile background (defaults to black - R0, G0, B0).";
   createRgbProperties(tileBackgroundColorRgb);
 
+  JsonObject tileSpan = tilesProperties.createNestedObject("span");
+  tileSpan["title"] = "Span Tile over Tiles right and down";
+  tileSpan["description"] = "Number of Tiles to span to the right or down. (defaults to 1, auto clipped to availible space)";
+
+  JsonObject spanProperties = tileSpan.createNestedObject("properties");
+
+  JsonObject right = spanProperties.createNestedObject("right");
+  right["title"] = "span Tiles right";
+  right["type"] = "integer";
+  right["minimum"] = 0;
+  right["maximum"] = SCREEN_COLS_MAX;
+
+  JsonObject down = spanProperties.createNestedObject("down");
+  down["title"] = "span Tiles down";
+  down["type"] = "integer";
+  down["minimum"] = 0;
+  down["maximum"] = SCREEN_ROWS_MAX;
+
   JsonArray tilesRequired = tilesItems.createNestedArray("required");
   tilesRequired.add("tile");
   tilesRequired.add("style");
