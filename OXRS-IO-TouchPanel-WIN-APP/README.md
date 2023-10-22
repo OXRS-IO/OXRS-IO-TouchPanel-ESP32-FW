@@ -37,36 +37,5 @@ Everything looks and feels like on the physical wall panel
 
 MQTT topics  `conf/` , `cmnd/` and `stat/` are working as with the FW.
 
-This version is up to date with release 2.4.6 of the FW
-
-EDIT:
-
-This version has additional executables:
-- OXRS-IO-TouchPanel-WIN-APP-FLEX_320x480
-- OXRS-IO-TouchPanel-WIN-APP-FLEX_480x480
-
-These offer 2 new features to customize the screen layout.
-- configure the number of tiles per screen
-  - add the key `"screenLayout"` to the `screen config payload` to configure the number of tiles in horizontal (columns) and vertical (rows) direction
-  ```JSON
-  "screenLayout":{"horizontal":<number>, "vertical":<number>}
-  ```
-- configure if a single tile should span over multiple tiles (cells)
-  - add the key `"span"` to the `tile config payload` to configure spanning to the right and/or down
-  ```JSON
-  "span":{"right":<number>, "down":<number>}
-  ```
-
-
-The tile indexes are still following the grid layout, not the larger spanned tiles. Make sure NOT to config tiles (cells) which are allocated by a spanned tile (would create cluttered screens)
-
-The `screenLayout` can be set via AdminUI.
-
-The AdminUI uses always the native screenLayout to check for valid tile index ranges, screen specific range check is not supported.
-
-Spanning tiles is not part of the AdminUI yet.
-
-
-
-
+This version is up to date with release 2.4.7 of the FW
 
