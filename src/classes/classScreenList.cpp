@@ -10,10 +10,10 @@ bool _isNotHidden(classScreen &screen)
   return !screen.isHidden();
 }
 
-classScreen &classScreenList::add(int screenIdx, int style)
+classScreen &classScreenList::add(int screenIdx, int style, int cols, int rows)
 {
   _listScreens.emplace_back(classScreen());
-  _listScreens.back().begin(screenIdx, style);
+  _listScreens.back().begin(screenIdx, style, cols, rows);
   return _listScreens.back();
 }
 

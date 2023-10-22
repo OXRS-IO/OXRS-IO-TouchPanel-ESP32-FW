@@ -77,6 +77,9 @@ typedef struct
   #define SCREEN_FOOTER_HEIGHT 33
 #endif
 
+#define SCREEN_COLS_MAX   10
+#define SCREEN_ROWS_MAX   10
+
 #define SCREEN_START      1
 #define SCREEN_END        32
 #define SCREEN_HOME       SCREEN_START

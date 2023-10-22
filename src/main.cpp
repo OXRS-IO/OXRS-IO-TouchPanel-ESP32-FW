@@ -128,6 +128,9 @@ const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 int _actBackLight;
 int _retainedBackLight;
 
+// last loaded screen
+int _actScreenIdx;
+
 connectionState_t _connectionState  = CONNECTED_NONE;
 uint32_t _noActivityTimeOutToHome   = 0L;
 uint32_t _noActivityTimeOutToSleep  = 0L;
@@ -811,6 +814,7 @@ void screenEventHandler(lv_event_t * e)
   {
     classScreen *sPtr = (classScreen *)lv_event_get_user_data(e);
     publishScreenEvent(sPtr->screenIdx, "loaded");
+    _actScreenIdx = sPtr->screenIdx;
   }
 }
 
@@ -1219,14 +1223,36 @@ static void backLightSliderEventHandler(lv_event_t * e)
   }
 }
 
-// create screen for tiles in screenVault if not exists
-void createScreen(int screenIdx)
+// remove screen with all it's containing tiles
+void removeScreen(int screenIdx)
 {
-  // exit if screenIdx exits
+  tileVault.setIteratorStart();
+  while (classTile *tile = tileVault.getNextTile())
+  {
+    if (tile->tileId.idx.screen == screenIdx)
+      tileVault.remove(screenIdx, tile->tileId.idx.tile);
+  }
+  screenVault.remove(screenIdx);
+  screenVault.sort();
+}
+
+// create screen for tiles in screenVault if not exists
+void createScreen(int screenIdx, int cols, int rows)
+{
+  int _cols = (cols) ? cols : SCREEN_COLS;
+  int _rows = (rows) ? rows : SCREEN_ROWS;
+
+  // exit if screenIdx with the same grid exits
   if (screenVault.exist(screenIdx))
-    return;
+  {
+    classScreen *screen = screenVault.get(screenIdx);
+    if (screen->getScreenCols() == _cols && screen->getScreenRows() == _rows)
+      return;
+    // requested screen is different -> delete existing screen including content
+    removeScreen(screenIdx);
+  }
   // create new screen with grid container
-  classScreen &ref = screenVault.add(screenIdx, 1);
+  classScreen &ref = screenVault.add(screenIdx, 1, _cols, _rows);
   ref.createHomeButton(footerButtonEventHandler, imgHome);
   ref.createSettingsButton(footerButtonEventHandler, imgSettings);
   ref.adScreenEventHandler(screenEventHandler);
@@ -1287,7 +1313,9 @@ void createRgbProperties(JsonVariant json)
 }
 
 // Create any tile on any screen
-void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop, lv_color_t colorBg)
+void createTile(const char *styleStr, int screenIdx, int tileIdx,
+                const char *iconStr, const char *label, int linkedScreen, int levelBottom, int levelTop,
+                lv_color_t colorBg, int spanX, int spanY)
 {
   tp32Image img = {"", NULL};
   int style;
@@ -1302,9 +1330,6 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
     wt32.println(tileIdx);
     return;
   }
-  
-  // create screen if not exist
-  createScreen(screenIdx);
 
   // delete tile reference if exist
   tileVault.remove(screenIdx, tileIdx);
@@ -1317,16 +1342,22 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx, const char *ic
       img.imageStr = iconStr;
   }
 
+  tileSpan_t tileSpan = {1, 1};
+  if (spanX)
+    tileSpan.x = spanX;
+  if (spanY)
+    tileSpan.y = spanY;
+
   // create new Tile
   classTile &ref = tileVault.add();
-  ref.begin(screenVault.get(screenIdx)->container, screenVault.get(screenIdx), tileIdx, img, label, style, styleStr);
+  ref.begin(screenVault.get(screenIdx)->container, screenVault.get(screenIdx), tileIdx, img, label, style, styleStr, tileSpan);
 
   // handle tiles depending on style capabilities
   if ((style == TS_LINK) && linkedScreen)
   {
     ref.setLink(linkedScreen);
     // create screen if not exist
-    createScreen(linkedScreen);
+    createScreen(linkedScreen, SCREEN_COLS, SCREEN_ROWS);
   }
 
   // set the event handler if NOT (INDICATOR_*)
@@ -1433,42 +1464,32 @@ void getApiSnapshot(Request &req, Response &res)
     uint32_t bdMask[4] = {0x0000F800, 0x000007E0, 0x0000001F, 0x00000000};
   } __attribute__((packed)) bmpHeader;
 
-  // preset for full screen
-  int rowStart = 0;
-  int colStart = 0;
-  int rows = SCREEN_HEIGHT;
-  int cols = SCREEN_WIDTH;
+  // set variables for my_disp_flush snapShotMode to return the image content
+  snapShotArea.x1 = 0;
+  snapShotArea.y1 = 0;
+  snapShotArea.x2 = SCREEN_WIDTH - 1;
+  snapShotArea.y2 = SCREEN_HEIGHT - 1;
 
-  // handle one tile only request
-  if ((tileIdx >= TILE_START) && (tileIdx <= TILE_END))
+  // handle one tile only request (return full screen if tile NA)
+  classTile* tile = tileVault.get(_actScreenIdx, tileIdx);
+  if (tile)
   {
-    int tileRow = (tileIdx - 1) / SCREEN_COLS;
-    int tileCol = (tileIdx - 1) % SCREEN_COLS;
-    int tileRows = (SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / SCREEN_ROWS;
-    int tileCols = SCREEN_WIDTH / SCREEN_COLS;
-    rows = tileRows - (TILE_PADDING * 2);
-    cols = tileCols - (TILE_PADDING * 2);
+    tile->getCoordinates(&snapShotArea);
 
-    rowStart = tileRow * tileRows + TILE_PADDING;
-    colStart = tileCol * tileCols + TILE_PADDING;
-    uint32_t size = rows * cols * bytePerPixel;
+    int width = snapShotArea.x2 - snapShotArea.x1 + 1;
+    int height = snapShotArea.y2 - snapShotArea.y1 + 1;
+    uint32_t size = width * height * bytePerPixel;
 
     // update header with recent values for tile only mode
     bmpHeader.bfSize = size;
     bmpHeader.biSizeImage = bmpHeader.bfSize;
-    bmpHeader.biWidth = cols;
-    bmpHeader.biHeight = -rows;
+    bmpHeader.biWidth = width;
+    bmpHeader.biHeight = -height;
   }
 
   // return the snapshot image to the caller (start with the header)
   res.set("Content-Type", "image/bmp");
   res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
-
-  // set variables for my_disp_flush snapShotMode to return the image content
-  snapShotArea.x1 = colStart;
-  snapShotArea.y1 = rowStart;
-  snapShotArea.x2 = colStart + cols -1;
-  snapShotArea.y2 = rowStart + rows -1;
   snapShotResponse = &res;
 
   // invalidate whole screen
@@ -1531,16 +1552,36 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
     return;
   }
 
+  int tileEnd = screenVault.get(screenIdx)->getScreenCols() * screenVault.get(screenIdx)->getScreenRows();
   int tileIdx = json["tile"].as<int>();
-  if ((tileIdx < TILE_START) || (tileIdx > TILE_END))
+  if ((tileIdx < TILE_START) || (tileIdx > tileEnd))
   {
     wt32.print(F("[tp32] invalid tile: "));
     wt32.println(tileIdx);
     return;
   }
 
-  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]));
+  createTile(json["style"], screenIdx, tileIdx, json["icon"], json["label"], json["link"], 
+            json["levelBottom"], json["levelTop"], jsonRgbToColor(json["backgroundColorRgb"]), 
+            json["span"]["right"], json["span"]["down"]);
+
+  classTile *tile = tileVault.get(screenIdx, tileIdx);
+
+  if (json.containsKey("backgroundImage"))
+  {
+    JsonVariant jsonBgImage = json["backgroundImage"];
+
+    if (jsonBgImage.containsKey("name"))
+    {
+      tp32Image img = imageVault.get(jsonBgImage["name"].as<const char *>());
+      if (img.imageStr.empty())
+        img.imageStr = jsonBgImage["name"].as<const char *>();
+      tile->setBgImage(img);
+    }
+    tile->alignBgImage(jsonBgImage["zoom"], jsonBgImage["offset"][0], jsonBgImage["offset"][1], jsonBgImage["angle"]);
+  }
 }
+
 
 void jsonTileBrightnessOnConfig(int brightness)
 {
@@ -1601,10 +1642,23 @@ void jsonConfig(JsonVariant json)
 
   if (json.containsKey("screens"))
   {
+    lv_obj_t *blankScreen = lv_obj_create(NULL);
+
     for (JsonVariant screenJson : json["screens"].as<JsonArray>())
     {
       int screenIdx = screenJson["screen"].as<int>();
-      createScreen(screenIdx);
+      int cols = screenJson["screenLayout"]["horizontal"].as<int>();
+      int rows = screenJson["screenLayout"]["vertical"].as<int>();
+
+      if (cols > SCREEN_COLS_MAX || rows > SCREEN_ROWS_MAX)
+      {
+        wt32.println(F("[tp32] Tile layout hor/vert out of range."));
+        continue;
+      }
+      // avoid conflicts with loaded screens
+      lv_disp_load_scr(blankScreen);
+
+      createScreen(screenIdx, cols, rows);
 
       classScreen *screen = screenVault.get(screenIdx);
       screen->setLabel(screenJson["label"]);
@@ -1620,6 +1674,8 @@ void jsonConfig(JsonVariant json)
         jsonTilesConfig(screenIdx, tileJson);
       }
     }
+    screenVault.show(SCREEN_HOME);
+    lv_obj_del(blankScreen);
   }
 }
 
@@ -1645,6 +1701,24 @@ void jsonConfigSchema(JsonVariant json)
   JsonObject screenLabel = screensProperties.createNestedObject("label");
   screenLabel["title"] = "Label";
   screenLabel["type"] = "string";
+
+  JsonObject screenLayout = screensProperties.createNestedObject("screenLayout");
+  screenLayout["title"] = "Screen Layout, horizontal and vertical tiles";
+  screenLayout["description"] = "Number of tiles per screen in horizontal (columns) and vertical (rows) direction. (defaults to the native layout)";
+
+  JsonObject properties = screenLayout.createNestedObject("properties");
+
+  JsonObject cols = properties.createNestedObject("horizontal");
+  cols["title"] = "Tiles horizontal";
+  cols["type"] = "integer";
+  cols["minimum"] = 0;
+  cols["maximum"] = SCREEN_COLS_MAX;
+
+  JsonObject rows = properties.createNestedObject("vertical");
+  rows["title"] = "Tiles vertical";
+  rows["type"] = "integer";
+  rows["minimum"] = 0;
+  rows["maximum"] = SCREEN_ROWS_MAX;
 
   JsonObject screenBackgroundColorRgb = screensProperties.createNestedObject("backgroundColorRgb");
   screenBackgroundColorRgb["title"] = "Screen Background Color";
@@ -1706,6 +1780,24 @@ void jsonConfigSchema(JsonVariant json)
   tileBackgroundColorRgb["title"] = "Tile Background Color";
   tileBackgroundColorRgb["description"] = "RGB color of tile background (defaults to black - R0, G0, B0).";
   createRgbProperties(tileBackgroundColorRgb);
+
+  JsonObject tileSpan = tilesProperties.createNestedObject("span");
+  tileSpan["title"] = "Span Tile over Tiles right and down";
+  tileSpan["description"] = "Number of Tiles to span to the right or down. (defaults to 1, auto clipped to availible space)";
+
+  JsonObject spanProperties = tileSpan.createNestedObject("properties");
+
+  JsonObject right = spanProperties.createNestedObject("right");
+  right["title"] = "span Tiles right";
+  right["type"] = "integer";
+  right["minimum"] = 0;
+  right["maximum"] = SCREEN_COLS_MAX;
+
+  JsonObject down = spanProperties.createNestedObject("down");
+  down["title"] = "span Tiles down";
+  down["type"] = "integer";
+  down["minimum"] = 0;
+  down["maximum"] = SCREEN_ROWS_MAX;
 
   JsonArray tilesRequired = tilesItems.createNestedArray("required");
   tilesRequired.add("tile");
@@ -1958,24 +2050,22 @@ void jsonScreenCommand(JsonVariant json)
     return;
   }
 
- if (json.containsKey("action"))
+  if (json.containsKey("action"))
   {
     if (strcmp(json["action"], "remove") == 0)
     {
-      for (int tileIdx = TILE_START; tileIdx <= TILE_END; tileIdx++)
-      {
-        tileVault.remove(screenIdx, tileIdx);
-      }
-      screenVault.remove(screenIdx);
+      screenVault.show(SCREEN_SETTINGS);
+
+      removeScreen(screenIdx);
       if (screenIdx == SCREEN_HOME)
-        createScreen(SCREEN_HOME);
+        createScreen(SCREEN_HOME, SCREEN_COLS, SCREEN_ROWS);
 
       screenVault.show(SCREEN_HOME);
       // early exit after screen removed
       return;
     }
   }
- 
+
   if (json.containsKey("backgroundColorRgb"))
   {
     screen->setBgColor(jsonRgbToColor(json["backgroundColorRgb"]));
@@ -1999,8 +2089,9 @@ void jsonTileCommand(JsonVariant json)
     return;
   }
 
+  int tileEnd = screenVault.get(screenIdx)->getScreenCols() * screenVault.get(screenIdx)->getScreenRows();
   int tileIdx = json["tile"].as<int>();
-  if ((tileIdx < TILE_START) || (tileIdx > TILE_END))
+  if ((tileIdx < TILE_START) || (tileIdx > tileEnd))
   {
     wt32.print(F("[tp32] invalid tile: "));
     wt32.println(tileIdx);
@@ -2431,7 +2522,7 @@ void ui_init(void)
   new_theme_init_and_set();
 
   // HomeScreen
-  createScreen(SCREEN_HOME);
+  createScreen(SCREEN_HOME, SCREEN_COLS, SCREEN_ROWS);
 
   // setup Settings Screen as screen[SCREEN_SETTINGS]
   classScreen &ref = screenVault.add(SCREEN_SETTINGS, 0);
