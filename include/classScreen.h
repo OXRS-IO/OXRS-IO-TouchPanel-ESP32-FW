@@ -22,6 +22,12 @@ private:
   lv_color_t _screenBgColor = {0, 0, 0};
   bool _hidden = false;
 
+  // grid definitions
+  lv_coord_t colDsc[SCREEN_COLS_MAX + 1];
+  lv_coord_t rowDsc[SCREEN_ROWS_MAX + 1];
+  int _screenCols = SCREEN_COLS;
+  int _screenRows = SCREEN_ROWS;
+
   void _makeScreenLayout(void);
 
 public:
@@ -32,7 +38,7 @@ public:
 
   classScreen(void){};
   ~classScreen();
-  void begin(int screenIdx, int style);
+  void begin(int screenIdx, int style, int cols, int rows);
 
   void setHidden(bool hidden);
   bool isHidden();
@@ -51,6 +57,8 @@ public:
   void showConnectionStatus(bool connected);
   
   int getScreenNumber(void);
- 
+  int getScreenCols(void);
+  int getScreenRows(void);
+
   void adScreenEventHandler(lv_event_cb_t callBack);
 };

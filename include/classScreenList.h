@@ -15,7 +15,7 @@ private:
 
 public:
   classScreenList(void){};
-  classScreen &add(int screenIdx, int style);
+  classScreen &add(int screenIdx, int style, int cols = SCREEN_COLS, int rows = SCREEN_ROWS);
   classScreen *get(int screenIdx);
 
   void setIteratorStart(void);

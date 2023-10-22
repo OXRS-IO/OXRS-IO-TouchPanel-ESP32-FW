@@ -303,21 +303,21 @@ void classTile::begin(lv_obj_t *parent, classScreen *parentScreen, int tileIdx, 
   _style = style;
   _styleStr = styleStr;
 
-
-  // position tile in grid after tile and screen are known
-  int col = (tileIdx - 1) % SCREEN_COLS;
-  int row = (tileIdx - 1) / SCREEN_COLS;
+  // find cell
+  int col = (tileIdx - 1) % _parentScreen->getScreenCols();
+  int row = (tileIdx - 1) / _parentScreen->getScreenCols();
 
   // clip span to grid size
   _tileSpan = tileSpan;
-  if (_tileSpan.x + col > SCREEN_COLS)
-    _tileSpan.x = SCREEN_COLS - col;
-  if (_tileSpan.y + row > SCREEN_ROWS)
-    _tileSpan.y = SCREEN_ROWS - row;
+  if (_tileSpan.x + col > _parentScreen->getScreenCols())
+    _tileSpan.x = _parentScreen->getScreenCols() - col;
+  if (_tileSpan.y + row > _parentScreen->getScreenRows())
+    _tileSpan.y = _parentScreen->getScreenRows() - row;
 
   _button(parent, img);
   lv_label_set_text(_label, labelText);
 
+  // position tile in grid after tile and screen are known
   lv_obj_set_grid_cell(_tileBg, LV_GRID_ALIGN_CENTER, col, _tileSpan.x, LV_GRID_ALIGN_CENTER, row, _tileSpan.y);
 }
 
@@ -328,8 +328,8 @@ void classTile::setTileDisabled(bool disable)
   {
     if (!_tileFg)
     {
-      int row = (tileId.idx.tile - 1) / 2;
-      int col = (tileId.idx.tile - 1) % 2;
+      int row = (tileId.idx.tile - 1) / _parentScreen->getScreenCols();
+      int col = (tileId.idx.tile - 1) % _parentScreen->getScreenCols();
 
       _tileFg = lv_obj_create(_btn);
       lv_obj_remove_style_all(_tileFg);

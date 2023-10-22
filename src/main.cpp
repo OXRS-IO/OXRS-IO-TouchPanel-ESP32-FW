@@ -1219,14 +1219,36 @@ static void backLightSliderEventHandler(lv_event_t * e)
   }
 }
 
-// create screen for tiles in screenVault if not exists
-void createScreen(int screenIdx)
+// remove screen with all it's containing tiles
+void removeScreen(int screenIdx)
 {
-  // exit if screenIdx exits
+  tileVault.setIteratorStart();
+  while (classTile *tile = tileVault.getNextTile())
+  {
+    if (tile->tileId.idx.screen == screenIdx)
+      tileVault.remove(screenIdx, tile->tileId.idx.tile);
+  }
+  screenVault.remove(screenIdx);
+  screenVault.sort();
+}
+
+// create screen for tiles in screenVault if not exists
+void createScreen(int screenIdx, int cols, int rows)
+{
+  int _cols = (cols) ? cols : SCREEN_COLS;
+  int _rows = (rows) ? rows : SCREEN_ROWS;
+
+  // exit if screenIdx with the same grid exits
   if (screenVault.exist(screenIdx))
-    return;
+  {
+    classScreen *screen = screenVault.get(screenIdx);
+    if (screen->getScreenCols() == _cols && screen->getScreenRows() == _rows)
+      return;
+    // requested screen is different -> delete existing screen including content
+    removeScreen(screenIdx);
+  }
   // create new screen with grid container
-  classScreen &ref = screenVault.add(screenIdx, 1);
+  classScreen &ref = screenVault.add(screenIdx, 1, _cols, _rows);
   ref.createHomeButton(footerButtonEventHandler, imgHome);
   ref.createSettingsButton(footerButtonEventHandler, imgSettings);
   ref.adScreenEventHandler(screenEventHandler);
@@ -1304,9 +1326,6 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx,
     wt32.println(tileIdx);
     return;
   }
-  
-  // create screen if not exist
-  createScreen(screenIdx);
 
   // delete tile reference if exist
   tileVault.remove(screenIdx, tileIdx);
@@ -1334,7 +1353,7 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx,
   {
     ref.setLink(linkedScreen);
     // create screen if not exist
-    createScreen(linkedScreen);
+    createScreen(linkedScreen, SCREEN_COLS, SCREEN_ROWS);
   }
 
   // set the event handler if NOT (INDICATOR_*)
@@ -1539,8 +1558,9 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
     return;
   }
 
+  int tileEnd = screenVault.get(screenIdx)->getScreenCols() * screenVault.get(screenIdx)->getScreenRows();
   int tileIdx = json["tile"].as<int>();
-  if ((tileIdx < TILE_START) || (tileIdx > TILE_END))
+  if ((tileIdx < TILE_START) || (tileIdx > tileEnd))
   {
     wt32.print(F("[tp32] invalid tile: "));
     wt32.println(tileIdx);
@@ -1628,10 +1648,23 @@ void jsonConfig(JsonVariant json)
 
   if (json.containsKey("screens"))
   {
+    lv_obj_t *blankScreen = lv_obj_create(NULL);
+
     for (JsonVariant screenJson : json["screens"].as<JsonArray>())
     {
       int screenIdx = screenJson["screen"].as<int>();
-      createScreen(screenIdx);
+      int cols = screenJson["screenLayout"]["horizontal"].as<int>();
+      int rows = screenJson["screenLayout"]["vertical"].as<int>();
+
+      if (cols > SCREEN_COLS_MAX || rows > SCREEN_ROWS_MAX)
+      {
+        wt32.println(F("[tp32] Tile layout hor/vert out of range."));
+        continue;
+      }
+      // avoid conflicts with loaded screens
+      lv_disp_load_scr(blankScreen);
+      
+      createScreen(screenIdx, cols, rows);
 
       classScreen *screen = screenVault.get(screenIdx);
       screen->setLabel(screenJson["label"]);
@@ -1647,6 +1680,8 @@ void jsonConfig(JsonVariant json)
         jsonTilesConfig(screenIdx, tileJson);
       }
     }
+    screenVault.show(SCREEN_HOME);
+    lv_obj_del(blankScreen);
   }
 }
 
@@ -1672,6 +1707,24 @@ void jsonConfigSchema(JsonVariant json)
   JsonObject screenLabel = screensProperties.createNestedObject("label");
   screenLabel["title"] = "Label";
   screenLabel["type"] = "string";
+
+  JsonObject screenLayout = screensProperties.createNestedObject("screenLayout");
+  screenLayout["title"] = "Screen Layout, horizontal and vertical tiles";
+  screenLayout["description"] = "Number of tiles per screen in horizontal (columns) and vertical (rows) direction. (defaults to the native layout)";
+
+  JsonObject properties = screenLayout.createNestedObject("properties");
+
+  JsonObject cols = properties.createNestedObject("horizontal");
+  cols["title"] = "Tiles horizontal";
+  cols["type"] = "integer";
+  cols["minimum"] = 0;
+  cols["maximum"] = SCREEN_COLS_MAX;
+
+  JsonObject rows = properties.createNestedObject("vertical");
+  rows["title"] = "Tiles vertical";
+  rows["type"] = "integer";
+  rows["minimum"] = 0;
+  rows["maximum"] = SCREEN_ROWS_MAX;
 
   JsonObject screenBackgroundColorRgb = screensProperties.createNestedObject("backgroundColorRgb");
   screenBackgroundColorRgb["title"] = "Screen Background Color";
@@ -1985,24 +2038,22 @@ void jsonScreenCommand(JsonVariant json)
     return;
   }
 
- if (json.containsKey("action"))
+  if (json.containsKey("action"))
   {
     if (strcmp(json["action"], "remove") == 0)
     {
-      for (int tileIdx = TILE_START; tileIdx <= TILE_END; tileIdx++)
-      {
-        tileVault.remove(screenIdx, tileIdx);
-      }
-      screenVault.remove(screenIdx);
+      screenVault.show(SCREEN_SETTINGS);
+
+      removeScreen(screenIdx);
       if (screenIdx == SCREEN_HOME)
-        createScreen(SCREEN_HOME);
+        createScreen(SCREEN_HOME, SCREEN_COLS, SCREEN_ROWS);
 
       screenVault.show(SCREEN_HOME);
       // early exit after screen removed
       return;
     }
   }
- 
+
   if (json.containsKey("backgroundColorRgb"))
   {
     screen->setBgColor(jsonRgbToColor(json["backgroundColorRgb"]));
@@ -2026,8 +2077,9 @@ void jsonTileCommand(JsonVariant json)
     return;
   }
 
+  int tileEnd = screenVault.get(screenIdx)->getScreenCols() * screenVault.get(screenIdx)->getScreenRows();
   int tileIdx = json["tile"].as<int>();
-  if ((tileIdx < TILE_START) || (tileIdx > TILE_END))
+  if ((tileIdx < TILE_START) || (tileIdx > tileEnd))
   {
     wt32.print(F("[tp32] invalid tile: "));
     wt32.println(tileIdx);
@@ -2458,7 +2510,7 @@ void ui_init(void)
   new_theme_init_and_set();
 
   // HomeScreen
-  createScreen(SCREEN_HOME);
+  createScreen(SCREEN_HOME, SCREEN_COLS, SCREEN_ROWS);
 
   // setup Settings Screen as screen[SCREEN_SETTINGS]
   classScreen &ref = screenVault.add(SCREEN_SETTINGS, 0);

@@ -9,25 +9,28 @@ static lv_coord_t rowDsc[SCREEN_ROWS + 1];
 
 void classScreen::_makeScreenLayout()
 {
-  int colSize = (SCREEN_WIDTH / SCREEN_COLS);
-  int rowSize = ((SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / SCREEN_ROWS);
+  int colSize = (SCREEN_WIDTH / _screenCols);
+  int rowSize = ((SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / _screenRows);
 
-  for (int c = 0; c < SCREEN_COLS; c++)
+  for (int c = 0; c < _screenCols; c++)
   {
     colDsc[c] = colSize;
   }
-  colDsc[SCREEN_COLS] = LV_GRID_TEMPLATE_LAST;
+  colDsc[_screenCols] = LV_GRID_TEMPLATE_LAST;
 
-  for (int r = 0; r < SCREEN_ROWS; r++)
+  for (int r = 0; r < _screenRows; r++)
   {
     rowDsc[r] = rowSize;
   }
-  rowDsc[SCREEN_ROWS] = LV_GRID_TEMPLATE_LAST;
+  rowDsc[_screenRows] = LV_GRID_TEMPLATE_LAST;
 }
 
-void classScreen::begin(int number, int style)
+void classScreen::begin(int number, int style, int cols, int rows)
 {
   screenIdx = number;
+
+  _screenCols = cols;
+  _screenRows = rows;
 
   screen = lv_obj_create(NULL);
   lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
@@ -102,6 +105,16 @@ classScreen::~classScreen()
 int classScreen::getScreenNumber(void)
 {
   return screenIdx;
+}
+
+int classScreen::getScreenCols(void)
+{
+  return _screenCols;
+}
+
+int classScreen::getScreenRows(void)
+{
+  return _screenRows;
 }
 
 void classScreen::setHidden(bool hidden)
