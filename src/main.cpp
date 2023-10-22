@@ -128,6 +128,9 @@ const void *imgPseudoThermostat = &wp_pseudo_thermostat;
 int _actBackLight;
 int _retainedBackLight;
 
+// last loaded screen
+int _actScreenIdx;
+
 connectionState_t _connectionState  = CONNECTED_NONE;
 uint32_t _noActivityTimeOutToHome   = 0L;
 uint32_t _noActivityTimeOutToSleep  = 0L;
@@ -811,6 +814,7 @@ void screenEventHandler(lv_event_t * e)
   {
     classScreen *sPtr = (classScreen *)lv_event_get_user_data(e);
     publishScreenEvent(sPtr->screenIdx, "loaded");
+    _actScreenIdx = sPtr->screenIdx;
   }
 }
 
@@ -1460,42 +1464,32 @@ void getApiSnapshot(Request &req, Response &res)
     uint32_t bdMask[4] = {0x0000F800, 0x000007E0, 0x0000001F, 0x00000000};
   } __attribute__((packed)) bmpHeader;
 
-  // preset for full screen
-  int rowStart = 0;
-  int colStart = 0;
-  int rows = SCREEN_HEIGHT;
-  int cols = SCREEN_WIDTH;
+  // set variables for my_disp_flush snapShotMode to return the image content
+  snapShotArea.x1 = 0;
+  snapShotArea.y1 = 0;
+  snapShotArea.x2 = SCREEN_WIDTH - 1;
+  snapShotArea.y2 = SCREEN_HEIGHT - 1;
 
-  // handle one tile only request
-  if ((tileIdx >= TILE_START) && (tileIdx <= TILE_END))
+  // handle one tile only request (return full screen if tile NA)
+  classTile* tile = tileVault.get(_actScreenIdx, tileIdx);
+  if (tile)
   {
-    int tileRow = (tileIdx - 1) / SCREEN_COLS;
-    int tileCol = (tileIdx - 1) % SCREEN_COLS;
-    int tileRows = (SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / SCREEN_ROWS;
-    int tileCols = SCREEN_WIDTH / SCREEN_COLS;
-    rows = tileRows - (TILE_PADDING * 2);
-    cols = tileCols - (TILE_PADDING * 2);
+    tile->getCoordinates(&snapShotArea);
 
-    rowStart = tileRow * tileRows + TILE_PADDING;
-    colStart = tileCol * tileCols + TILE_PADDING;
-    uint32_t size = rows * cols * bytePerPixel;
+    int width = snapShotArea.x2 - snapShotArea.x1 + 1;
+    int height = snapShotArea.y2 - snapShotArea.y1 + 1;
+    uint32_t size = width * height * bytePerPixel;
 
     // update header with recent values for tile only mode
     bmpHeader.bfSize = size;
     bmpHeader.biSizeImage = bmpHeader.bfSize;
-    bmpHeader.biWidth = cols;
-    bmpHeader.biHeight = -rows;
+    bmpHeader.biWidth = width;
+    bmpHeader.biHeight = -height;
   }
 
   // return the snapshot image to the caller (start with the header)
   res.set("Content-Type", "image/bmp");
   res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
-
-  // set variables for my_disp_flush snapShotMode to return the image content
-  snapShotArea.x1 = colStart;
-  snapShotArea.y1 = rowStart;
-  snapShotArea.x2 = colStart + cols -1;
-  snapShotArea.y2 = rowStart + rows -1;
   snapShotResponse = &res;
 
   // invalidate whole screen
@@ -1663,7 +1657,7 @@ void jsonConfig(JsonVariant json)
       }
       // avoid conflicts with loaded screens
       lv_disp_load_scr(blankScreen);
-      
+
       createScreen(screenIdx, cols, rows);
 
       classScreen *screen = screenVault.get(screenIdx);

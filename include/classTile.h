@@ -130,6 +130,7 @@ public :
   void getImages(const void* &imgOff, const void* &imgOn);
   void setActionIndicator(const char* symbol);
   void setTileDisabled(bool disable);
+  void getCoordinates(lv_area_t *coords);
 
   void setLink(int linkedScreen);
   int getLink(void);

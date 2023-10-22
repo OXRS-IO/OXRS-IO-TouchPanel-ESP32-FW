@@ -571,6 +571,11 @@ int classTile::getTileIdx(void)
   return tileId.idx.tile;
 }
 
+void classTile::getCoordinates(lv_area_t *coords)
+{
+  lv_obj_get_coords(_btn, coords);
+}
+
 int classTile::getStyle(void)
 {
   return _style;
