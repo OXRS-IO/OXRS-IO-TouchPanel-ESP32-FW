@@ -1970,6 +1970,7 @@ void jsonShowMessageBox(JsonVariant json)
     {
       lv_obj_remove_event_cb(messageBox, messageBoxEventHandler);
       lv_msgbox_close(messageBox);
+      messageBox = NULL;
       publishMessageBoxEvent("revoke", "closed");
     }
     return;
@@ -1980,6 +1981,7 @@ void jsonShowMessageBox(JsonVariant json)
   {
     lv_obj_remove_event_cb(messageBox, messageBoxEventHandler);
     lv_msgbox_close(messageBox);
+    messageBox = NULL;
     publishMessageBoxEvent("remove", "closed");
   }
 
