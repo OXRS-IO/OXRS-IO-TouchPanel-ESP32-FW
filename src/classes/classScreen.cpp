@@ -9,8 +9,8 @@ static lv_coord_t rowDsc[SCREEN_ROWS + 1];
 
 void classScreen::_makeScreenLayout()
 {
-  int colSize = (SCREEN_WIDTH / _screenCols);
-  int rowSize = ((SCREEN_HEIGHT - SCREEN_FOOTER_HEIGHT) / _screenRows);
+  int colSize = (lv_obj_get_width(screen) / _screenCols);
+  int rowSize = ((lv_obj_get_height(screen) - SCREEN_FOOTER_HEIGHT) / _screenRows);
 
   for (int c = 0; c < _screenCols; c++)
   {
@@ -43,7 +43,7 @@ void classScreen::begin(int number, int style, int cols, int rows)
     lv_obj_t *cont = lv_obj_create(screen);
 
     lv_obj_remove_style_all(cont);
-    lv_obj_set_size(cont, SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_obj_set_size(cont, lv_obj_get_width(screen), lv_obj_get_height(screen));
     lv_obj_set_align(cont, LV_ALIGN_TOP_MID);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
     lv_obj_set_style_pad_top(cont, 0, 0);
