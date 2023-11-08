@@ -97,6 +97,7 @@ protected:
   int _thermostatCurrent = 0;
   string _units = "";
   lv_color_t _tileBgColor = {0, 0, 0};
+  string _tag = "";
 
   std::list<post> _feed;
   std::list<post>::iterator _feedIterator;
@@ -197,6 +198,9 @@ public :
   void removePost(int id);
   std::list<post>::iterator getFeedIterator(void);
   int getFeedSize(void);
+
+  void setTag(const char *tag);
+  const char *getTag(void);
 
   void updateSlider(lv_point_t point);
   void setSliderState(int sliderState, lv_point_t point = {0, 0});

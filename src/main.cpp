@@ -358,6 +358,8 @@ void publishTileEvent(classTile *tPtr, const char *event)
   json["type"] = "button";
   json["event"] = event;
   json["state"] = (tPtr->getState() == true) ? "on" : "off";
+  if (strlen(tPtr->getTag()) > 0)
+    json["tag"] = tPtr->getTag();
 
   wt32.publishStatus(json.as<JsonVariant>());
 }
@@ -2257,6 +2259,11 @@ void jsonTileCommand(JsonVariant json)
   if (json.containsKey("text"))
   {
     tile->setIconText(json["text"]);
+  }
+
+  if (json.containsKey("tag"))
+  {
+    tile->setTag(json["tag"].as<const char *>());
   }
 
   if (json.containsKey("backgroundImage"))

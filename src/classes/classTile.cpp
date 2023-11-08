@@ -1160,3 +1160,13 @@ int classTile::getFeedSize(void)
 {
   return _feed.size();
 }
+
+void classTile::setTag(const char *tag)
+{
+  _tag = !tag ? "" : tag;
+}
+
+const char *classTile::getTag(void)
+{
+  return _tag.c_str();
+}
