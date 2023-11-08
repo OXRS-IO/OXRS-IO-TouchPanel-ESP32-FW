@@ -1620,6 +1620,9 @@ void jsonTilesConfig(int screenIdx, JsonVariant json)
 
   classTile *tile = tileVault.get(screenIdx, tileIdx);
 
+  if (json.containsKey("tag"))
+    tile->setTag(json["tag"].as<const char *>());
+
   if (json.containsKey("backgroundImage"))
   {
     JsonVariant jsonBgImage = json["backgroundImage"];
