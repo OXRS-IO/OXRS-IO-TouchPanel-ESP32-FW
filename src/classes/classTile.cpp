@@ -18,6 +18,7 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
   _tileBg = lv_obj_create(_parentContainer);
   lv_obj_remove_style_all(_tileBg);
   lv_obj_set_style_radius(_tileBg, 5, LV_PART_MAIN);
+  lv_obj_clear_flag(_tileBg, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_color(_tileBg, lv_color_hex(0xffffff), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_tileBg, 0, LV_PART_MAIN);
   lv_obj_set_style_clip_corner(_tileBg, true, LV_PART_MAIN );
@@ -28,7 +29,6 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
   lv_obj_set_style_bg_color(_fullBar, lv_color_hex(0xffffff), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_fullBar, 255 - (255 - opaBgOn) * 2, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_set_style_bg_opa(_fullBar, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
 
   // create the image button as root parent for all content
   _btn = lv_imgbtn_create(_tileBg);
@@ -103,6 +103,7 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
   lv_imgbtn_set_src(_btn, LV_IMGBTN_STATE_CHECKED_PRESSED, _imgOn.img, NULL, NULL);
 
   lv_obj_clear_flag(_btn, LV_OBJ_FLAG_PRESS_LOCK);
+  lv_obj_clear_flag(_btn, LV_OBJ_FLAG_SCROLLABLE);
 
   // main Label (placeholder)
   _label = lv_label_create(_btn);
@@ -121,12 +122,25 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
   lv_obj_set_style_text_color(_subLabel, lv_color_hex(0x000000), LV_STATE_CHECKED);
   lv_obj_set_style_text_opa(_subLabel, WP_OPA_BG_70, LV_STATE_CHECKED);
 
+  // create layer for slider handle (if level used as slider)
+  _sliderHandle = lv_imgbtn_create(_btn);
+  lv_obj_remove_style_all(_sliderHandle);
+  lv_obj_set_style_radius(_sliderHandle, 5, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(_sliderHandle, colorOn, LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(_sliderHandle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(_sliderHandle, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_add_flag(_sliderHandle, LV_OBJ_FLAG_EVENT_BUBBLE);
+
   // set tile bg, button and label size from grid
   int width = _tileWidth();
   int height = _tileHeight();
 
   lv_obj_set_size(_tileBg, width, height);
   lv_obj_set_size(_fullBar, width, 0);
+  if (getLevelDirection() < 2)
+    lv_obj_set_size(_sliderHandle, width - 20, 10);
+  else
+    lv_obj_set_size(_sliderHandle, 10, height - 20);
   lv_obj_set_size(_btn, width, height);
 
   lv_obj_set_size(_label, width - 10, LV_SIZE_CONTENT);
@@ -363,6 +377,10 @@ void classTile::setSubLabel(const char *subLabelText)
 
 void classTile::setState(bool state)
 {
+  // nothing to do if in state already
+  if (state == _state) 
+    return;
+  
   if (_isThumbNail(_state ? _imgOn.img : _img.img))
     _hideThumbNail(true);
 
@@ -387,6 +405,8 @@ void classTile::setState(bool state)
     state == false ? lv_obj_clear_state(_arcTarget, LV_STATE_CHECKED) : lv_obj_add_state(_arcTarget, LV_STATE_CHECKED);
   if (_labelArcValue)
     state == false ? lv_obj_clear_state(_labelArcValue, LV_STATE_CHECKED) : lv_obj_add_state(_labelArcValue, LV_STATE_CHECKED);
+
+  setSliderState(state ? SL_STATE_ON : SL_STATE_OFF);
 
   if (_isThumbNail(state ? _imgOn.img : _img.img))
   {
@@ -715,11 +735,21 @@ void classTile::setLevel(int level, bool force)
   }
 
   _level = level;
-  if (_level > _levelStop) _level = _levelStop;
-  if (_level < _levelStart) _level = _levelStart;
+  if (_level > _levelStop)
+    _level = _levelStop;
+  if (_level < _levelStart)
+    _level = _levelStart;
 
-   _levelTop > _levelBottom ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_height(_fullBar, _tileHeight() * (_level - _levelStart) / (_levelStop - _levelStart));
+  if (getLevelDirection() < 2)
+  {
+    getLevelDirection() == 0 ? lv_obj_align(_fullBar, LV_ALIGN_BOTTOM_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_size(_fullBar, _tileWidth(), ((_tileHeight() * 10000 * (_level - _levelStart) / (_levelStop - _levelStart)) + 5000) / 10000);
+  }
+  else
+  {
+    getLevelDirection() == 2 ? lv_obj_align(_fullBar, LV_ALIGN_LEFT_MID, 0, 0) : lv_obj_align(_fullBar, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_size(_fullBar, ((_tileWidth() * 10000 * (_level - _levelStart) / (_levelStop - _levelStart)) + 5000) / 10000, _tileHeight());
+  }
   // level bar display requested
   lv_obj_set_style_bg_opa(_btn, WP_OPA_BG_50, LV_STATE_CHECKED);
 }
@@ -742,6 +772,110 @@ int classTile::getLevelStop(void)
 int classTile::getLevelLargeStep(void)
 {
   return _levelLargeStep;
+}
+
+int classTile::getLevelDirection(void)
+{
+  int direction = 0;
+  // if top < bottom  -> down (left)
+  if (_levelTop < _levelBottom)
+    direction = 1;
+  // horizontal only if NOT buttonUpDown
+  // if width > 120% of height -> horizontal
+  if (!_btnUp && (_tileWidth() * 100 / _tileHeight()) > 120)
+    direction += 2;
+
+  return direction;
+}
+
+void classTile::updateSlider(lv_point_t point)
+{
+  lv_area_t tileCoords;
+  lv_obj_get_coords(_btn, &tileCoords);
+
+  int direction = getLevelDirection();
+  if (direction < 2)
+  {
+    // limit touch point to tile size
+    point.y += _sliderTouchOffset.y;
+    if (point.y < tileCoords.y1)
+      point.y = tileCoords.y1;
+    if (point.y > tileCoords.y2)
+      point.y = tileCoords.y2;
+    int touchPixel = direction == 0 ? tileCoords.y2 - point.y : point.y - tileCoords.y1;
+    touchPixel++;
+
+    int levelPerCent = (touchPixel * 10000) / (tileCoords.y2 - tileCoords.y1 + 1);
+    int levelVal = ((levelPerCent * (_levelStop - _levelStart) + 5000) / 10000) + _levelStart;
+    if (levelVal != _level)
+    {
+      setLevel(levelVal, true);
+      direction == 0 ? lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_TOP_MID, 0, 5) : lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_BOTTOM_MID, 0, -5);
+    }
+  }
+  else
+  {
+    // limit touch point to tile size
+    point.x += _sliderTouchOffset.x;
+    if (point.x < tileCoords.x1)
+      point.x = tileCoords.x1;
+    if (point.x > tileCoords.x2)
+      point.x = tileCoords.x2;
+    int touchPixel = direction == 2 ? point.x - tileCoords.x1 : tileCoords.x2 - point.x;
+    touchPixel++;
+
+    int levelPerCent = touchPixel * 10000 / (tileCoords.x2 - tileCoords.x1 + 1);
+    int levelVal = ((levelPerCent * (_levelStop - _levelStart) + 5000) / 10000) + _levelStart;
+    if (levelVal != _level)
+    {
+      setLevel(levelVal, true);
+      direction == 2 ? lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_RIGHT_MID, -5, 0) : lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_LEFT_MID, 5, 0);
+    }
+  }
+}
+
+// slider state machine
+void classTile::setSliderState(int sliderState, lv_point_t point)
+{
+  _sliderState = sliderState;
+  switch (_sliderState)
+  {
+  case SL_STATE_OFF:
+  case SL_STATE_ON:
+    lv_obj_clear_state(_sliderHandle, LV_STATE_CHECKED);
+    break;
+  case SL_STATE_ACTIVE:
+    lv_obj_add_state(_sliderHandle, LV_STATE_CHECKED);
+    lv_area_t barCoords;
+    lv_obj_get_coords(_fullBar, &barCoords);
+    _sliderTouchOffset = {0, 0};
+
+    switch (getLevelDirection())
+    {
+    case 0:
+      _sliderTouchOffset.y = point.y > 0 ? barCoords.y1 - point.y : 0;
+      lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_TOP_MID, 0, 5);
+      break;
+    case 1:
+      _sliderTouchOffset.y = point.y > 0 ? barCoords.y2 - point.y : 0;
+      lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_BOTTOM_MID, 0, -5);
+      break;
+    case 2:
+      _sliderTouchOffset.x = point.x > 0 ? barCoords.x2 - point.x : 0;
+      lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_RIGHT_MID, -5, 0);
+      break;
+    case 3:
+      _sliderTouchOffset.x = point.x > 0 ? barCoords.x1 - point.x : 0;
+      lv_obj_align_to(_sliderHandle, _fullBar, LV_ALIGN_OUT_LEFT_MID, 5, 0);
+      break;
+    }
+  break;
+  }
+}
+
+int classTile::getSliderState(void)
+{
+  return (_sliderState);
 }
 
 void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton)
@@ -788,6 +922,9 @@ void classTile::addUpDownControl(lv_event_cb_t upDownEventHandler, const void *i
 
   // reduced width for main label
   lv_obj_set_size(_label, 80, LV_SIZE_CONTENT);
+
+  // always vertical
+  lv_obj_set_size(_sliderHandle, _tileWidth() - 20, 10);
 }
 
 // additional methods for drop down (interface)

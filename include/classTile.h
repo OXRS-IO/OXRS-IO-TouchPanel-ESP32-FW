@@ -5,6 +5,12 @@
 #include <classScreen.h>
 
 #define ARC_STEP 5
+
+// slider states
+#define SL_STATE_OFF      0
+#define SL_STATE_ON       1
+#define SL_STATE_ACTIVE   2
+
 typedef struct
 {
     int x;
@@ -34,6 +40,7 @@ protected:
   lv_obj_t *_tileBg = NULL;
   lv_obj_t *_tileFg = NULL;
   lv_obj_t *_fullBar = NULL;
+  lv_obj_t *_sliderHandle = NULL;
   lv_obj_t *_btn = NULL;
   lv_obj_t *_label = NULL;
   lv_obj_t *_subLabel = NULL;
@@ -65,6 +72,8 @@ protected:
   tileSpan_t _tileSpan = { 1, 1 };
   bool _state = false;
   bool _touchHold = false;
+  int _sliderState = 0;
+  lv_point_t _sliderTouchOffset = {0, 0};
   int _levelStart = 0;
   int _levelStop = 100;
   int _levelLargeStep = 5;
@@ -151,8 +160,9 @@ public :
   int getLevelStart(void);
   int getLevelStop(void);
   int getLevelLargeStep(void);
-  void addUpDownControl(lv_event_cb_t upDownEventHandler, const void* imgUpperButton, const void* imgLowerButton);
- 
+  int getLevelDirection(void);
+  void addUpDownControl(lv_event_cb_t upDownEventHandler, const void *imgUpperButton, const void *imgLowerButton);
+
   void setDropDownList(string list);
   void setDropDownIndex(uint16_t index);
   void setDropDownLabel(const char *label);
@@ -187,4 +197,8 @@ public :
   void removePost(int id);
   std::list<post>::iterator getFeedIterator(void);
   int getFeedSize(void);
+
+  void updateSlider(lv_point_t point);
+  void setSliderState(int sliderState, lv_point_t point = {0, 0});
+  int getSliderState(void);
 };

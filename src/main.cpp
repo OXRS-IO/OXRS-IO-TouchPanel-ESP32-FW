@@ -306,6 +306,7 @@ void initStyleLut(void)
   styleLut[TS_BUTTON_LEFT_RIGHT] = {TS_BUTTON_LEFT_RIGHT, "buttonLeftRight"};
   styleLut[TS_BUTTON_PREV_NEXT] = {TS_BUTTON_PREV_NEXT, "buttonPrevNext"};
   styleLut[TS_BUTTON_SELECTOR] = {TS_BUTTON_SELECTOR, "buttonSelector"};
+  styleLut[TS_BUTTON_SLIDER] = {TS_BUTTON_SLIDER, "buttonSlider"};
   styleLut[TS_INDICATOR] = {TS_INDICATOR, "indicator"};
   styleLut[TS_COLOR_PICKER_RGB_CCT] = {TS_COLOR_PICKER_RGB_CCT, "colorPickerRgbCct"};
   styleLut[TS_COLOR_PICKER_RGB] = {TS_COLOR_PICKER_RGB, "colorPickerRgb"};
@@ -1091,12 +1092,55 @@ static void thermostatEventHandler(lv_event_t *e)
 }
 
 // general Tile Event Handler
-static void tileEventHandler(lv_event_t * e)
+static void tileEventHandler(lv_event_t *e)
 {
   static uint32_t tilePressStarted;
   lv_event_code_t code = lv_event_get_code(e);
   classTile *tPtr = (classTile *)lv_event_get_user_data(e);
 
+  // special handling for in tile slider
+  if (tPtr->getStyle() == TS_BUTTON_SLIDER && tPtr->getState() == true)
+  {
+    // get coordinates of touch point
+    lv_point_t point;
+    lv_indev_t *myInputDevice = lv_indev_get_act();
+    lv_indev_get_point(myInputDevice, &point);
+
+    // LONG_PRESS supressed if tile in ON
+    if (code == LV_EVENT_LONG_PRESSED)
+    {
+        return;
+    }
+
+    // PRESS on tile enables slider function
+    if (code == LV_EVENT_PRESSED && tPtr->getSliderState() >= SL_STATE_ON)
+    {
+      tPtr->setSliderState(SL_STATE_ACTIVE, point);
+      return;
+    }
+
+    // PRESSING when slider state == ACTIVE updates level
+    if (code == LV_EVENT_PRESSING && tPtr->getSliderState() == SL_STATE_ACTIVE)
+    {
+      int oldLevel = tPtr->getLevel();
+      tPtr->updateSlider(point);
+      int newLevel = tPtr->getLevel();
+
+      if (newLevel != oldLevel)
+        publishLevelEvent(tPtr, "slide", newLevel);
+
+      return;
+    }
+
+    // terminate slider movement (removes handle)
+    if ((code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) && tPtr->getSliderState() == SL_STATE_ACTIVE)
+    {
+      tPtr->setSliderState(SL_STATE_ON);
+      return;
+    }
+  }
+
+  // default tile handling
   if ((code == LV_EVENT_SHORT_CLICKED) || (code == LV_EVENT_LONG_PRESSED))
   {
     // get tile* of clicked tile from USER_DATA
@@ -1412,6 +1456,13 @@ void createTile(const char *styleStr, int screenIdx, int tileIdx,
   if (style == TS_BUTTON_LEFT_RIGHT)
   {
     ref.addUpDownControl(prevNextEventHandler, imgLeft, imgRight);
+  }
+
+  // enable on-tile slider
+  if (style == TS_BUTTON_SLIDER)
+  {
+    // force level bar
+    ref.setLevel(ref.getLevelStart(), false);
   }
 
   // set action indicator if required (depends on tile style)
@@ -1747,8 +1798,6 @@ void jsonConfigSchema(JsonVariant json)
   JsonObject tile = tilesProperties.createNestedObject("tile");
   tile["title"] = "Index";
   tile["type"] = "integer";
-  tile["minimum"] = TILE_START;
-  tile["maximum"] = TILE_END;
 
   JsonObject style = tilesProperties.createNestedObject("style");
   style["title"] = "Style";
@@ -2087,6 +2136,14 @@ void jsonTileCommand(JsonVariant json)
   if ((screenIdx < SCREEN_START) || (screenIdx > SCREEN_END))
   {
     wt32.print(F("[tp32] invalid screen: "));
+    wt32.println(screenIdx);
+    return;
+  }
+
+  classScreen *screen = screenVault.get(screenIdx);
+  if (!screen)
+  {
+    wt32.print(F("[tp32] screen not found: "));
     wt32.println(screenIdx);
     return;
   }
