@@ -42,6 +42,8 @@ void classThermostat::_createThermostat(void)
   lv_obj_set_style_border_side(_arcTarget, LV_BORDER_SIDE_FULL, LV_PART_KNOB | LV_STATE_DEFAULT);
   lv_obj_set_style_pad_all(_arcTarget, 7, LV_PART_KNOB | LV_STATE_DEFAULT);
 
+  lv_obj_clear_flag(_arcTarget, LV_OBJ_FLAG_GESTURE_BUBBLE);
+
   // label target
   _labelTarget = lv_label_create(_panel);
   lv_obj_set_size(_labelTarget, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
