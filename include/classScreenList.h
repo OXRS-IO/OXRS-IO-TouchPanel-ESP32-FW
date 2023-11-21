@@ -20,6 +20,8 @@ public:
 
   void setIteratorStart(void);
   classScreen *getNextScreen(void);
+  classScreen* getNextScreen(int screenIdx);
+  classScreen* getPreviousScreen(int screenIdx);
 
   void remove(int screenIdx);
   bool exist(int screenIdx);

@@ -19,12 +19,10 @@ static const char *btnm_map[] = {"1", "2", "3", "\n",
 
 void classKeyPad::_createKeyPad(void)
 {
-  int heightOffset = (!_callingTile) ? 45 : 0;
-  lv_obj_set_style_height(_panel, lv_obj_get_style_height(_panel, LV_PART_MAIN) + heightOffset, LV_PART_MAIN);
   _btnm1 = lv_btnmatrix_create(_panel);
   lv_obj_set_style_text_font(_btnm1, &lv_font_montserrat_20, LV_PART_ITEMS);
-  lv_obj_set_style_height(_btnm1, 320 + heightOffset, LV_PART_MAIN);
-  lv_obj_set_style_width(_btnm1, (320 + heightOffset) * 3 / 4, LV_PART_MAIN);
+  lv_obj_set_style_height(_btnm1, 365, LV_PART_MAIN);
+  lv_obj_set_style_width(_btnm1, 365 * 3 / 4, LV_PART_MAIN);
   lv_obj_set_style_bg_opa(_btnm1, 0, LV_PART_MAIN);
   lv_obj_set_style_radius(_btnm1, 80, LV_PART_ITEMS);
   lv_obj_set_style_bg_color(_btnm1, lv_color_hex(0xffffff), LV_PART_ITEMS);
@@ -78,9 +76,6 @@ classKeyPad::classKeyPad(classTile *tile, lv_event_cb_t keyPadEventHandler, keyP
   }
   _createKeyPad();
   _kpType = kpType;
-  // hide exit button if called by direct command (no parent tile)
-  if (!_callingTile)
-    lv_obj_add_flag(_btnExit, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_event_cb(_btnm1, keyPadEventHandler, LV_EVENT_SHORT_CLICKED, _callingTile);
 }
 

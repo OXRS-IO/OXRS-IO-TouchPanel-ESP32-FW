@@ -49,12 +49,12 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_style_bg_color(_panelSlider, lv_color_hex(0xffffff), 0);
   lv_obj_set_style_bg_opa(_panelSlider, 40, 0);
   lv_obj_set_style_border_width(_panelSlider, 0, 0);
+  lv_obj_clear_flag(_panelSlider, LV_OBJ_FLAG_GESTURE_BUBBLE);
 
   // ui_Slider2
   _slider = lv_slider_create(_panelSlider);
   lv_slider_set_range(_slider, 1, 100);
   lv_slider_set_value(_slider, 50, LV_ANIM_OFF);
-  // if (lv_slider_get_mode(_slider) == LV_SLIDER_MODE_RANGE)
   lv_slider_set_left_value(_slider, 2, LV_ANIM_OFF);
   lv_obj_set_size(_slider, 280, 15);
   lv_obj_set_align(_slider, LV_ALIGN_BOTTOM_MID);
@@ -90,7 +90,7 @@ classScreenSettings::classScreenSettings(lv_obj_t *parent, const void *img)
   lv_obj_set_style_img_recolor(_btnRestart, lv_color_hex(0xffffff), LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_style_img_recolor_opa(_btnRestart, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
   lv_obj_set_size(_btnRestart, 150, 50);
-  lv_obj_align_to(_btnRestart, _panelSlider, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 20);
+  lv_obj_align_to(_btnRestart, _panelSlider, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 10);
 
   lv_obj_t *_labelRestart = lv_label_create(_btnRestart);
   lv_obj_set_size(_labelRestart, LV_SIZE_CONTENT, LV_SIZE_CONTENT);

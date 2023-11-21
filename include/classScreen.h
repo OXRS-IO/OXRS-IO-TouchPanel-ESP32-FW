@@ -10,11 +10,6 @@ private:
   lv_obj_t *_parent = NULL;
   lv_obj_t *_labelFooter = NULL;
   lv_obj_t *_labelWarning = NULL;
-  lv_obj_t *_btnHome = NULL;
-  lv_obj_t *_btnHomeImg;
-  lv_obj_t *_btnSettings = NULL;
-  lv_obj_t *_btnSettingsImg = NULL;
-  lv_obj_t *_btnFooter = NULL;
   lv_obj_t *_labelLeft = NULL;
   lv_obj_t *_labelCenter = NULL;
   lv_obj_t *_labelRight = NULL;
@@ -52,8 +47,6 @@ public:
   lv_color_t getBgColor(void);
   void updateBgColor(void);
 
-  void createHomeButton(lv_event_cb_t callBack, const void *img);
-  void createSettingsButton(lv_event_cb_t callBack, const void *img);
   void showConnectionStatus(bool connected);
   
   int getScreenNumber(void);

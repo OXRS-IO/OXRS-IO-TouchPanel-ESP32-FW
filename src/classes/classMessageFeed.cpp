@@ -11,7 +11,7 @@ classMessageFeed::classMessageFeed(classTile *tile) : classPopUpContainer(1)
 
   lv_obj_t *_flexGrid = lv_obj_create(_ovlPanel);
   lv_obj_remove_style_all(_flexGrid);
-  lv_obj_set_size(_flexGrid, SCREEN_WIDTH - 10, 480 - 40 - 5 * 3);
+  lv_obj_set_size(_flexGrid, SCREEN_WIDTH - 10, SCREEN_HEIGHT - 10);
   lv_obj_set_style_radius(_flexGrid, 5, 0);
   lv_obj_align(_flexGrid, LV_ALIGN_TOP_MID, 0, 5);
   lv_obj_set_flex_flow(_flexGrid, LV_FLEX_FLOW_COLUMN);

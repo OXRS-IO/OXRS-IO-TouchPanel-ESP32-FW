@@ -216,6 +216,8 @@ static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[screenWidth * DRAW_BUF_ROWS];
 lv_indev_t *myInputDevice;
 
+bool ignoreTileEvents = false;
+
 #if LV_USE_LOG != 0
 // Serial debugging if enabled
 void my_print(const char *buf)
@@ -803,6 +805,36 @@ void updateConnectionStatus(void)
 
 /*--------------------------- Event Handler ------------------------------------*/
 
+// screen select drop down Event Handler
+static void screenDropDownEventHandler(lv_event_t * e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *obj = lv_event_get_target(e);
+  if (code == LV_EVENT_CANCEL)
+  {
+    int listIndex = lv_dropdown_get_selected(obj);
+    dropDownOverlay.close();
+    screenVault.showByIndex(listIndex);
+  }
+}
+
+// swipe down when in pop-up returns to parent
+static void popUpSwipeEventHandler(lv_event_t* e)
+{
+    classPopUpContainer* popUp = (classPopUpContainer*)lv_event_get_user_data(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_GESTURE)
+    {
+        lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+        if (dir == LV_DIR_BOTTOM)
+        {
+            lv_indev_wait_release(lv_indev_get_act());
+            popUp->close();
+        }
+    }
+}
+
+
 // screen event handler
 // detects unload and load
 void screenEventHandler(lv_event_t * e)
@@ -819,6 +851,61 @@ void screenEventHandler(lv_event_t * e)
     publishScreenEvent(sPtr->screenIdx, "loaded");
     _actScreenIdx = sPtr->screenIdx;
   }
+
+  if (code == LV_EVENT_GESTURE)
+  {
+    ignoreTileEvents = true;
+    classScreen* sPtr = (classScreen*)lv_event_get_user_data(e);
+    classScreen* newScreen = NULL;
+    lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+    switch (dir)
+    {
+    case LV_DIR_LEFT:
+      newScreen = screenVault.getNextScreen(sPtr->screenIdx);
+      break;
+    case LV_DIR_RIGHT:
+      newScreen = screenVault.getPreviousScreen(sPtr->screenIdx);
+      break;
+    case LV_DIR_BOTTOM:
+      newScreen = screenVault.get(SCREEN_HOME);
+      break;
+    case LV_DIR_TOP:
+      char buf[SCREEN_END * 32];
+      int index = screenVault.makeDropDownList(buf, lv_scr_act()) + 1;
+      dropDownOverlay = classDropDown(NULL, screenDropDownEventHandler);
+      dropDownOverlay.setDropDownList(buf);
+      dropDownOverlay.setDropDownIndex(index);
+      dropDownOverlay.setDropDownLabel("Select Screen");
+      dropDownOverlay.addEventHandler(popUpSwipeEventHandler);
+      dropDownOverlay.open();
+      break;
+    }
+
+    if (newScreen)
+    {
+      int currentBackLight = _actBackLight;
+      int bl = currentBackLight;
+      int microSeconds = 200 * 1000 / currentBackLight;
+      while (bl > 0)
+      {
+        _setBackLightLED(--bl);
+        delayMicroseconds(microSeconds);
+      }
+
+      screenVault.show(newScreen->screenIdx);
+      lv_refr_now(NULL);
+
+      bl = 0;
+      microSeconds = 200 * 1000 / currentBackLight;
+      while (bl < currentBackLight)
+      {
+        _setBackLightLED(++bl);
+        delayMicroseconds(microSeconds);
+      }
+    }
+    lv_indev_wait_release(lv_indev_get_act());
+  }
+
 }
 
 // message box closed event handler
@@ -983,19 +1070,6 @@ static void dropDownEventHandler(lv_event_t * e)
   }
 }
 
-// screen select drop down Event Handler
-static void screenDropDownEventHandler(lv_event_t * e)
-{
-  lv_event_code_t code = lv_event_get_code(e);
-  lv_obj_t *obj = lv_event_get_target(e);
-  if (code == LV_EVENT_CANCEL)
-  {
-    int listIndex = lv_dropdown_get_selected(obj);
-    screenVault.showByIndex(listIndex);
-    dropDownOverlay.close();
-  }
-}
-
 // color picker color wheel
 static void colorPickerCwEventHandler(lv_event_t *e)
 {
@@ -1100,6 +1174,12 @@ static void tileEventHandler(lv_event_t *e)
   lv_event_code_t code = lv_event_get_code(e);
   classTile *tPtr = (classTile *)lv_event_get_user_data(e);
 
+  // restart tileEventHandling with PRESSED to make sure a swipe gesture has finished
+  if (code == LV_EVENT_PRESSED)
+    ignoreTileEvents = false;
+  if (ignoreTileEvents)
+    return;
+
   // special handling for in tile slider
   if (tPtr->getStyle() == TS_BUTTON_SLIDER && tPtr->getState() == true)
   {
@@ -1159,41 +1239,49 @@ static void tileEventHandler(lv_event_t *e)
       case TS_DROPDOWN:
         // button is style DROPDOWN -> show drop down overlay
         dropDownOverlay = classDropDown(tPtr, dropDownEventHandler);
+        dropDownOverlay.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_REMOTE:
         // button is style REMOTE -> show remote overlay
         remoteControl = classRemote(tPtr, navigationButtonEventHandler);
+        remoteControl.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_KEYPAD:
         // button is style keypad
         keyPad = classKeyPad(tPtr, keyPadEventHandler, KP_TILE);
+        keyPad.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_COLOR_PICKER_RGB_CCT:
         // style colorpicker (RGB + CCT)
         colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR | CP_MODE_TEMP);
-        break;
+        colorPicker.addEventHandler(popUpSwipeEventHandler);
+       break;
 
       case TS_COLOR_PICKER_RGB:
         // style colorpicker (RGB only)
         colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_COLOR);
+        colorPicker.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_COLOR_PICKER_CCT:
         // style colorpicker (CCT only)
         colorPicker = classColorPicker(tPtr, colorPickerEventHandler, colorPickerCwEventHandler, lv_canvas_get_img(_canvasCw), CP_MODE_TEMP);
+        colorPicker.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_THERMOSTAT:
         // button is style thermostat
         thermostat = classThermostat(tPtr, thermostatEventHandler);
+        thermostat.addEventHandler(popUpSwipeEventHandler);
         break;
 
       case TS_FEED:
         // button is style FEED -> show feed in pop-up
         messageFeed = classMessageFeed(tPtr);
+        messageFeed.addEventHandler(popUpSwipeEventHandler);
         break;
 
       default:
@@ -1218,38 +1306,6 @@ static void tileEventHandler(lv_event_t *e)
   }
 }
 
-// screen footer button Event handler
-//    HomeButton            -> displays Home screen
-//    SettingsButton        -> displays Settings
-//    Center Button (label) -> show screen select drop down
-static void footerButtonEventHandler(lv_event_t * e)
-{
-  lv_event_code_t event = lv_event_get_code(e);
-  lv_obj_t *ta = lv_event_get_target(e);
-  if (event == LV_EVENT_SHORT_CLICKED)
-  {
-    if (lv_obj_has_flag(ta, LV_OBJ_FLAG_USER_1))
-      screenVault.show(SCREEN_HOME);
-    if (lv_obj_has_flag(ta, LV_OBJ_FLAG_USER_3))
-      screenVault.show(SCREEN_SETTINGS);
-    if (lv_obj_has_flag(ta, LV_OBJ_FLAG_USER_2))
-    {
-      dropDownOverlay = classDropDown(NULL, screenDropDownEventHandler);
-      char buf[SCREEN_END * 32];
-      int index = screenVault.makeDropDownList(buf, lv_scr_act()) + 1;
-      dropDownOverlay.setDropDownList(buf);
-      dropDownOverlay.setDropDownIndex(index);
-      dropDownOverlay.setDropDownLabel("Select Screen");
-      dropDownOverlay.open();
-    }
-  }
-  if (event == LV_EVENT_LONG_PRESSED)
-  {
-    // long press of footer center loads hom screen
-    if (lv_obj_has_flag(ta, LV_OBJ_FLAG_USER_2))
-      screenVault.show(SCREEN_HOME);
-  }
-}
 
 // BackLight slider event handler
 static void backLightSliderEventHandler(lv_event_t * e)
@@ -1299,8 +1355,6 @@ void createScreen(int screenIdx, int cols, int rows)
   }
   // create new screen with grid container
   classScreen &ref = screenVault.add(screenIdx, 1, _cols, _rows);
-  ref.createHomeButton(footerButtonEventHandler, imgHome);
-  ref.createSettingsButton(footerButtonEventHandler, imgSettings);
   ref.adScreenEventHandler(screenEventHandler);
   // sort screenIdx in ascending order
   screenVault.sort();
@@ -2597,7 +2651,6 @@ void ui_init(void)
   classScreen &ref = screenVault.add(SCREEN_SETTINGS, 0);
   screenSettings = classScreenSettings(ref.screen, imgOxrsSettings);
   screenSettings.addEventHandler(backLightSliderEventHandler);
-  ref.createHomeButton(footerButtonEventHandler, imgHome);
   ref.adScreenEventHandler(screenEventHandler);
   ref.setLabel("Settings");
 }
@@ -2732,7 +2785,8 @@ void setup()
   // set timings for LongPress ,RepeatTime and gesture detect
   indev_drv.long_press_time = 500;
   indev_drv.long_press_repeat_time = 200;
-  indev_drv.gesture_limit = 40;
+  indev_drv.gesture_limit = 10;   // default 50
+  indev_drv.gesture_min_velocity = 150;   // default 3
   indev_drv.scroll_limit = 3;
 
   // set colors to default, may be updated later from config handler

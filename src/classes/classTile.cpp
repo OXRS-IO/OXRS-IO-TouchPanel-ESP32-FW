@@ -841,8 +841,12 @@ void classTile::setSliderState(int sliderState, lv_point_t point)
   switch (_sliderState)
   {
   case SL_STATE_OFF:
+    lv_obj_clear_state(_sliderHandle, LV_STATE_CHECKED);
+    lv_obj_add_flag(_btn, LV_OBJ_FLAG_GESTURE_BUBBLE);
+    break;
   case SL_STATE_ON:
     lv_obj_clear_state(_sliderHandle, LV_STATE_CHECKED);
+    lv_obj_clear_flag(_btn, LV_OBJ_FLAG_GESTURE_BUBBLE);
     break;
   case SL_STATE_ACTIVE:
     lv_obj_add_state(_sliderHandle, LV_STATE_CHECKED);

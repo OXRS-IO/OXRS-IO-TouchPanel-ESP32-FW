@@ -127,6 +127,37 @@ classScreen *classScreenList::getNextScreen(void)
   }
 }
 
+// return next screen in list
+classScreen* classScreenList::getNextScreen(int screenIdx)
+{
+  it = std::find_if(std::begin(_listScreens), std::end(_listScreens),
+      [&](classScreen const& p)
+      { return p.screenIdx == screenIdx; });
+  it = std::find_if(++it, std::end(_listScreens), _isNotHidden);
+
+  if (it == _listScreens.end())
+    return NULL;
+  else
+    return it.operator->();
+}
+
+// return previous screen in list
+classScreen* classScreenList::getPreviousScreen(int screenIdx)
+{
+  it = std::find_if(std::begin(_listScreens), std::end(_listScreens),
+      [&](classScreen const& p)
+      { return p.screenIdx == screenIdx; });
+
+  if (it == _listScreens.begin())
+    return NULL;
+  it--;
+  while (it->isHidden())
+  {
+    it--;
+  }
+  return it.operator->();
+}
+
 // return size from list
 int classScreenList::getSize(void)
 {

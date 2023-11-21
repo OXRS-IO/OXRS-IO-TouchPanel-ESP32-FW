@@ -196,8 +196,8 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 
   // btn as "clone" from the calling tile
   _btn = lv_btn_create(_ovlPanel);
-  lv_obj_set_size(_btn, 153, 40);
-  lv_obj_align(_btn, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
+  lv_obj_set_size(_btn, SCREEN_WIDTH - 10, 40);
+  lv_obj_align(_btn, LV_ALIGN_BOTTOM_MID , 0, -5);
   lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_opa(_btn, opaBgOff, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_color(_btn, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_CHECKED);
@@ -219,6 +219,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_align(_panelCwFrame, LV_ALIGN_TOP_MID, 0, 25);
   lv_obj_clear_flag(_panelCwFrame, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_bg_opa(_panelCwFrame, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_clear_flag(_panelCwFrame, LV_OBJ_FLAG_GESTURE_BUBBLE);
 
   // cw image
   _imgCw = lv_img_create(_panelCwFrame);
