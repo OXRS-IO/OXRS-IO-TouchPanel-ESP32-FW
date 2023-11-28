@@ -881,7 +881,7 @@ void screenEventHandler(lv_event_t * e)
       break;
     }
 
-    if (newScreen)
+    if (newScreen && newScreen->screenIdx < SCREEN_SETTINGS)
     {
       int currentBackLight = _actBackLight;
       int bl = currentBackLight;
