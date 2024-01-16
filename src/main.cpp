@@ -353,7 +353,7 @@ const char *styleEnum2Str(int styleEnum)
 // {"screen":1, "tile":1, "type":"button", "event":"single" , "state":"on"}
 void publishTileEvent(classTile *tPtr, const char *event)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -370,7 +370,7 @@ void publishTileEvent(classTile *tPtr, const char *event)
 // {"screen":1, "tile":1, "style":remote, "type":"up", "event":"single" }
 void publishRemoteEvent(classTile *tPtr, int btnIndex, const char *event)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -395,7 +395,7 @@ void publishRemoteEvent(classTile *tPtr, int btnIndex, const char *event)
 // {"screen":1, "tile":1, "type":"dropdown", "event":"change" , "state":1}
 void publishDropDownEvent(classTile *tPtr, int listIndex)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -411,7 +411,7 @@ void publishDropDownEvent(classTile *tPtr, int listIndex)
 // {"style":"keyPad", "type":"button", "event":"key", "state":"off", "keycode":"1234" }
 void publishKeyPadEvent(classTile *tPtr, const char *key)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   //keypad has parent tile
   if (tPtr)
   {
@@ -440,7 +440,7 @@ void publishKeyPadEvent(classTile *tPtr, const char *key)
 // {"style":"keyPad" , "state":"locked" | "unlocked"}
 void publishLockStateEvent(const char *state)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["style"] = "keyPad";
   json["state"] = state;
 
@@ -451,7 +451,7 @@ void publishLockStateEvent(const char *state)
 // {"screen":1, "tile":1, "type":"level", "event":"change" , "state":50}
 void publishLevelEvent(classTile *tPtr, const char *event, int value)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -468,7 +468,7 @@ void publishLevelEvent(classTile *tPtr, const char *event, int value)
 
 void publishColorPickerEvent(classTile *tPtr, const char *event, lv_color32_t rgb, int kelvin, int brightness)
 {
-  StaticJsonDocument<256> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -487,7 +487,7 @@ void publishColorPickerEvent(classTile *tPtr, const char *event, lv_color32_t rg
 // {"screen":1, "tile":1, "type":"prev"|"next", "event":"single"|"hold" }
 void publishPrevNextEvent(classTile *tPtr, const char *type, const char *event)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -501,7 +501,7 @@ void publishPrevNextEvent(classTile *tPtr, const char *type, const char *event)
 // {"screen":1, "tile":1, "type":"prev"|"next", "event":"single"|"hold" }
 void publishSelectorEvent(classTile *tPtr, int index)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -516,7 +516,7 @@ void publishSelectorEvent(classTile *tPtr, int index)
 // {"screen":1, "tile":1, "style":"thermostat","type":"thermostat" | "mode", "event":"change" , "state":205}
 void publishThermostatEvent(classTile *tPtr, int mode, int target)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = tPtr->getScreenIdx();
   json["tile"] = tPtr->getTileIdx();
   json["style"] = tPtr->getStyleStr();
@@ -532,7 +532,7 @@ void publishThermostatEvent(classTile *tPtr, int mode, int target)
 // {"screen":1, "type":"screen", "event":"change" , "state":"unloaded"}
 void publishScreenEvent(int screenIdx, const char *state)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["screen"] = screenIdx;
   json["type"] = "screen";
   json["event"] = "change";
@@ -545,7 +545,7 @@ void publishScreenEvent(int screenIdx, const char *state)
 //   “type” : “backlight”, “event” : “change”, “state” : “sleep” |”awake”, “brightness” : <number>
 void publishBacklightEvent(int brightness)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["type"] = "backlight";
   json["event"] = "change";
   json["state"] = (brightness != 0) ? "awake" : "sleep" ;
@@ -558,7 +558,7 @@ void publishBacklightEvent(int brightness)
 // {"screen":0, "type":"message", "event":"open" , "state":"open"}
 void publishMessageBoxEvent(const char *event, const char *state)
 {
-  StaticJsonDocument<128> json;
+  JsonDocument json;
   json["type"] = "messageBox";
   json["event"] = event;
   json["state"] = state;
@@ -1367,7 +1367,7 @@ void createScreen(int screenIdx, int cols, int rows)
 // icon list for config
 void createIconEnum(JsonObject parent)
 {
-  JsonArray styleEnum = parent.createNestedArray("enum");
+  JsonArray styleEnum = parent["enum"].to<JsonArray>();
 
   string iconStr;
   iconVault.setIteratorStart();
@@ -1380,7 +1380,7 @@ void createIconEnum(JsonObject parent)
 // style list for config
 void createInputStyleEnum(JsonObject parent)
 {
-  JsonArray styleEnum = parent.createNestedArray("enum");
+  JsonArray styleEnum = parent["enum"].to<JsonArray>();
 
   for (int i = 1; i < TS_STYLE_COUNT; i++)
   {
@@ -1391,21 +1391,21 @@ void createInputStyleEnum(JsonObject parent)
 // r/g/b color properties for config
 void createRgbProperties(JsonVariant json)
 {
-  JsonObject properties = json.createNestedObject("properties");
+  JsonObject properties = json["properties"].to<JsonObject>();
 
-  JsonObject r = properties.createNestedObject("r");
+  JsonObject r = properties["r"].to<JsonObject>();
   r["title"] = "Red";
   r["type"] = "integer";
   r["minimum"] = 0;
   r["maximum"] = 255;
 
-  JsonObject g = properties.createNestedObject("g");
+  JsonObject g = properties["g"].to<JsonObject>();
   g["title"] = "Green";
   g["type"] = "integer";
   g["minimum"] = 0;
   g["maximum"] = 255;
 
-  JsonObject b = properties.createNestedObject("b");
+  JsonObject b = properties["b"].to<JsonObject>();
   b["title"] = "Blue";
   b["type"] = "integer";
   b["minimum"] = 0;
@@ -1792,139 +1792,139 @@ void jsonConfig(JsonVariant json)
 void jsonConfigSchema(JsonVariant json)
 {
   // screens
-  JsonObject screens = json.createNestedObject("screens");
+  JsonObject screens = json["screens"].to<JsonObject>();
   screens["title"] = "Screens";
   screens["description"] = "Add one or more screens to your panel. Screen 1 is the home screen and is mandatory and can't be hidden. Index must be between 1-32.";
   screens["type"] = "array";
 
-  JsonObject screensItems = screens.createNestedObject("items");
+  JsonObject screensItems = screens["items"].to<JsonObject>();
   screensItems["type"] = "object";
 
-  JsonObject screensProperties = screensItems.createNestedObject("properties");
+  JsonObject screensProperties = screensItems["properties"].to<JsonObject>();
 
-  JsonObject screen = screensProperties.createNestedObject("screen");
+  JsonObject screen = screensProperties["screen"].to<JsonObject>();
   screen["title"] = "Index";
   screen["type"] = "integer";
   screen["minimum"] = SCREEN_START;
   screen["maximum"] = SCREEN_END;
 
-  JsonObject screenLabel = screensProperties.createNestedObject("label");
+  JsonObject screenLabel = screensProperties["label"].to<JsonObject>();
   screenLabel["title"] = "Label";
   screenLabel["type"] = "string";
 
-  JsonObject screenLayout = screensProperties.createNestedObject("screenLayout");
+  JsonObject screenLayout = screensProperties["screenLayout"].to<JsonObject>();
   screenLayout["title"] = "Screen Layout, horizontal and vertical tiles";
   screenLayout["description"] = "Number of tiles per screen in horizontal (columns) and vertical (rows) direction. (defaults to the native layout)";
 
-  JsonObject properties = screenLayout.createNestedObject("properties");
+  JsonObject properties = screenLayout["properties"].to<JsonObject>();
 
-  JsonObject cols = properties.createNestedObject("horizontal");
+  JsonObject cols = properties["horizontal"].to<JsonObject>();
   cols["title"] = "Tiles horizontal";
   cols["type"] = "integer";
   cols["minimum"] = 0;
   cols["maximum"] = SCREEN_COLS_MAX;
 
-  JsonObject rows = properties.createNestedObject("vertical");
+  JsonObject rows = properties["vertical"].to<JsonObject>();
   rows["title"] = "Tiles vertical";
   rows["type"] = "integer";
   rows["minimum"] = 0;
   rows["maximum"] = SCREEN_ROWS_MAX;
 
-  JsonObject screenBackgroundColorRgb = screensProperties.createNestedObject("backgroundColorRgb");
+  JsonObject screenBackgroundColorRgb = screensProperties["backgroundColorRgb"].to<JsonObject>();
   screenBackgroundColorRgb["title"] = "Screen Background Color";
   screenBackgroundColorRgb["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
   createRgbProperties(screenBackgroundColorRgb);
 
-  JsonObject screenHidden = screensProperties.createNestedObject("hidden");
+  JsonObject screenHidden = screensProperties["hidden"].to<JsonObject>();
   screenHidden["title"] = "Hidden";
   screenHidden["type"] = "boolean";
 
-  JsonArray screensRequired = screensItems.createNestedArray("required");
+  JsonArray screensRequired = screensItems["required"].to<JsonArray>();
   screensRequired.add("screen");
   screensRequired.add("label");
 
   // tiles on screen
-  JsonObject tiles = screensProperties.createNestedObject("tiles");
+  JsonObject tiles = screensProperties["tiles"].to<JsonObject>();
   tiles["title"] = "Tiles";
   tiles["description"] = "Add one or more tiles to your screen. Index must be between 1-6. 'Linked Screen Index' required for 'link' tiles. 'Level Bottom/Top' optional for 'buttonUpDownLevel' tiles (defaults to 0/100).";
   tiles["type"] = "array";
 
-  JsonObject tilesItems = tiles.createNestedObject("items");
+  JsonObject tilesItems = tiles["items"].to<JsonObject>();
   tilesItems["type"] = "object";
 
-  JsonObject tilesProperties = tilesItems.createNestedObject("properties");
+  JsonObject tilesProperties = tilesItems["properties"].to<JsonObject>();
 
-  JsonObject tile = tilesProperties.createNestedObject("tile");
+  JsonObject tile = tilesProperties["tile"].to<JsonObject>();
   tile["title"] = "Index";
   tile["type"] = "integer";
 
-  JsonObject style = tilesProperties.createNestedObject("style");
+  JsonObject style = tilesProperties["style"].to<JsonObject>();
   style["title"] = "Style";
   createInputStyleEnum(style);
 
-  JsonObject icon = tilesProperties.createNestedObject("icon");
+  JsonObject icon = tilesProperties["icon"].to<JsonObject>();
   icon["title"] = "Icon";
   createIconEnum(icon);
 
-  JsonObject tileLabel = tilesProperties.createNestedObject("label");
+  JsonObject tileLabel = tilesProperties["label"].to<JsonObject>();
   tileLabel["title"] = "Label";
   tileLabel["type"] = "string";
 
-  JsonObject link = tilesProperties.createNestedObject("link");
+  JsonObject link = tilesProperties["link"].to<JsonObject>();
   link["title"] = "Linked Screen Index";
   link["type"] = "integer";
   link["minimum"] = SCREEN_START;
   link["maximum"] = SCREEN_END;
 
-  JsonObject levelBottom = tilesProperties.createNestedObject("levelBottom");
+  JsonObject levelBottom = tilesProperties["levelBottom"].to<JsonObject>();
   levelBottom["title"] = "Level Bottom";
   levelBottom["type"] = "integer";
 
-  JsonObject levelTop = tilesProperties.createNestedObject("levelTop");
+  JsonObject levelTop = tilesProperties["levelTop"].to<JsonObject>(); 
   levelTop["title"] = "Level Top";
   levelTop["type"] = "integer";
 
-  JsonObject tileBackgroundColorRgb = tilesProperties.createNestedObject("backgroundColorRgb");
+  JsonObject tileBackgroundColorRgb = tilesProperties["backgroundColorRgb"].to<JsonObject>();
   tileBackgroundColorRgb["title"] = "Tile Background Color";
   tileBackgroundColorRgb["description"] = "RGB color of tile background (defaults to black - R0, G0, B0).";
   createRgbProperties(tileBackgroundColorRgb);
 
-  JsonObject tileSpan = tilesProperties.createNestedObject("span");
+  JsonObject tileSpan = tilesProperties["span"].to<JsonObject>();
   tileSpan["title"] = "Span Tile over Tiles right and down";
   tileSpan["description"] = "Number of Tiles to span to the right or down. (defaults to 1, auto clipped to availible space)";
 
-  JsonObject spanProperties = tileSpan.createNestedObject("properties");
+  JsonObject spanProperties = tileSpan["properties"].to<JsonObject>();
 
-  JsonObject right = spanProperties.createNestedObject("right");
+  JsonObject right = spanProperties["right"].to<JsonObject>();
   right["title"] = "span Tiles right";
   right["type"] = "integer";
   right["minimum"] = 0;
   right["maximum"] = SCREEN_COLS_MAX;
 
-  JsonObject down = spanProperties.createNestedObject("down");
+  JsonObject down = spanProperties["down"].to<JsonObject>();
   down["title"] = "span Tiles down";
   down["type"] = "integer";
   down["minimum"] = 0;
   down["maximum"] = SCREEN_ROWS_MAX;
 
-  JsonArray tilesRequired = tilesItems.createNestedArray("required");
+  JsonArray tilesRequired = tilesItems["required"].to<JsonArray>();
   tilesRequired.add("tile");
   tilesRequired.add("style");
 
   // background color
-  JsonObject backgroundColorRgb = json.createNestedObject("backgroundColorRgb");
+  JsonObject backgroundColorRgb = json["backgroundColorRgb"].to<JsonObject>();
   backgroundColorRgb["title"] = "Background Color";
   backgroundColorRgb["description"] = "RGB color of screen background (defaults to black - R0, G0, B0).";
   createRgbProperties(backgroundColorRgb);
 
   // icon 'ON' color
-  JsonObject iconOnColorRgb = json.createNestedObject("iconOnColorRgb");
+  JsonObject iconOnColorRgb = json["iconOnColorRgb"].to<JsonObject>();
   iconOnColorRgb["title"] = "Icon Color";
   iconOnColorRgb["description"] = "RGB color of icon when 'on' (defaults to light green - R91, G190, B91).";
   createRgbProperties(iconOnColorRgb);
 
   // tile brightness off
-  JsonObject tileBrightnessOff = json.createNestedObject("tileBrightnessOff");
+  JsonObject tileBrightnessOff = json["tileBrightnessOff"].to<JsonObject>();
   tileBrightnessOff["title"] = "Tile Brightness OFF state";
   tileBrightnessOff["description"] = "Tile brightness when 'off' (defaults to 10). Must be a number between 0 and 25";
   tileBrightnessOff["type"] = "integer";
@@ -1932,7 +1932,7 @@ void jsonConfigSchema(JsonVariant json)
   tileBrightnessOff["maximum"] = TILE_BRIGHTNESS_OFF_MAX;
 
   // tile brightness on
-  JsonObject tileBrightnessOn = json.createNestedObject("tileBrightnessOn");
+  JsonObject tileBrightnessOn = json["tileBrightnessOn"].to<JsonObject>();
   tileBrightnessOn["title"] = "Tile Brightness ON state";
   tileBrightnessOn["description"] = "Tile brightness when 'on' (defaults to 100). Must be a number between 75 and 100";
   tileBrightnessOn["type"] = "integer";
@@ -1940,7 +1940,7 @@ void jsonConfigSchema(JsonVariant json)
   tileBrightnessOn["maximum"] = TILE_BRIGHTNESS_ON_MAX;
 
   // noActivity timeout
-  JsonObject noActivitySecondsToHome = json.createNestedObject("noActivitySecondsToHome");
+  JsonObject noActivitySecondsToHome = json["noActivitySecondsToHome"].to<JsonObject>();
   noActivitySecondsToHome["title"] = "Home Screen Timeout (seconds)";
   noActivitySecondsToHome["description"] = "Return to home screen after a period of in-activity (defaults to 0 which disables the timeout). Must be a number between 0 and 600 (i.e. 10 minutes).";
   noActivitySecondsToHome["type"] = "integer";
@@ -1948,7 +1948,7 @@ void jsonConfigSchema(JsonVariant json)
   noActivitySecondsToHome["maximum"] = 600;
 
   // noActivity timeout
-  JsonObject noActivitySecondsToSleep = json.createNestedObject("noActivitySecondsToSleep");
+  JsonObject noActivitySecondsToSleep = json["noActivitySecondsToSleep"].to<JsonObject>();
   noActivitySecondsToSleep["title"] = "Screen Sleep Timeout (seconds)";
   noActivitySecondsToSleep["description"] = "Turn off screen backlight after a period of in-activity (defaults to 0 which disables the timeout). Must be a number between 0 and 3600 (i.e. 1 hour).";
   noActivitySecondsToSleep["type"] = "integer";
@@ -1956,7 +1956,7 @@ void jsonConfigSchema(JsonVariant json)
   noActivitySecondsToSleep["maximum"] = 3600;
 
   // noActivity timeout
-  JsonObject noActivitySecondsToLock = json.createNestedObject("noActivitySecondsToLock");
+  JsonObject noActivitySecondsToLock = json["noActivitySecondsToLock"].to<JsonObject>();
   noActivitySecondsToLock["title"] = "Lock Panel Timeout (seconds)";
   noActivitySecondsToLock["description"] = "Lock Panel after a period of in-activity (defaults to 0 which disables the timeout). Must be a number between 0 and 3600 (i.e. 1 hour).";
   noActivitySecondsToLock["type"] = "integer";
@@ -1967,7 +1967,7 @@ void jsonConfigSchema(JsonVariant json)
 void setConfigSchema()
 {
   // Define our config schema
-  StaticJsonDocument<4096> json;
+  JsonDocument json;
   JsonVariant config = json.as<JsonVariant>();
 
   jsonConfigSchema(config);
