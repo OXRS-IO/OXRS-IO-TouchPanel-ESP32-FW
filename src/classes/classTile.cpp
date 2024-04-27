@@ -131,6 +131,9 @@ void classTile::_button(lv_obj_t *parent, tp32Image img)
   lv_obj_set_style_bg_opa(_sliderHandle, 255, LV_PART_MAIN | LV_STATE_CHECKED);
   lv_obj_add_flag(_sliderHandle, LV_OBJ_FLAG_EVENT_BUBBLE);
 
+  // create placeholder for number display
+  _createValueLabels();
+
   // set tile bg, button and label size from grid
   int width = _tileWidth();
   int height = _tileHeight();
@@ -493,9 +496,6 @@ void classTile::setNumber(const char *value, const char *units, const char *subV
 {
   // update number display
   _hideIcon(value || units || subValue || subUnits);
-
-  if (!_valueLabel)
-    _createValueLabels();
 
   lv_label_set_text(_valueLabel, !value ? "" : value);
   lv_label_set_text(_unitLabel, !units ? "" : units);
