@@ -129,6 +129,8 @@ lv_color32_t _HSVtoRGB(hsv_t hsv)
 // build the panels with all widgets
 void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
 {
+  lv_obj_clear_flag(_screen, LV_OBJ_FLAG_SCROLLABLE);
+
   // delete _panel from base class, colorpicker has its own panels
   lv_obj_del(_panel);
 

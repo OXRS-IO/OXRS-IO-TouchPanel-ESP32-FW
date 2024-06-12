@@ -44,4 +44,4 @@ jobs:
         artifacts: .pio/build/**/*_v${{ github.ref_name }}*.bin
         token: ${{ secrets.GITHUB_TOKEN }}
         generateReleaseNotes: true
-        prerelease: false
+        prerelease: true
