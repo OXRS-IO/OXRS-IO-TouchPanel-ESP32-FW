@@ -9,6 +9,8 @@ extern int opaBgOn;
 void classDropDown::_createDropDown(void)
 {
   // configure the drop down 
+  lv_obj_clear_flag(_screen, LV_OBJ_FLAG_SCROLLABLE);
+
   _dropDown = lv_dropdown_create(_panel);
   lv_obj_set_style_text_font(_dropDown, &lv_font_montserrat_20, 0);
   lv_obj_set_style_pad_ver(_dropDown, 18, LV_PART_MAIN);

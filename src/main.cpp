@@ -154,6 +154,9 @@ int opaBgOn;
 int opaBgOff;
 
 /*--------------------------- Global Objects -----------------------------*/
+// actual rotation of screen
+int screenRotation = LV_DISP_ROT_NONE;
+
 // used for small footprint snapshot
 bool      snapShotActive = false;
 lv_area_t snapShotArea;
@@ -607,8 +610,9 @@ void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t *area, lv_color_t *colo
       pixel->full = (pixel->full << 8 | pixel->full >> 8);
     }
   #endif
+
     int rowByteCount = (snapShotArea.x2 - snapShotArea.x1 + 1) * sizeof(color_p->full); 
-    for (int row = area->y1; row <= area->y2; row++, color_p += SCREEN_WIDTH)
+    for (int row = area->y1; row <= area->y2; row++, color_p += lv_obj_get_width(lv_scr_act()))
     {
       if ((row >= snapShotArea.y1) && (row <= snapShotArea.y2))
       {
@@ -670,9 +674,27 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data)
   }
 
   // get coordinates and write into point structure
+  // take care for actual rotation setting
   data->state = LV_INDEV_STATE_PR;
-  data->point.x = touchX;
-  data->point.y = touchY;
+  switch (screenRotation)
+  {
+    case LV_DISP_ROT_NONE:
+      data->point.x = touchX;
+      data->point.y = touchY;
+      break;
+    case LV_DISP_ROT_90:
+      data->point.x = touchY;
+      data->point.y = SCREEN_HEIGHT - 1 - touchX;
+      break;
+    case LV_DISP_ROT_180:
+      data->point.x = SCREEN_WIDTH - 1 - touchX;
+      data->point.y = SCREEN_HEIGHT - 1 - touchY;
+      break;
+    case LV_DISP_ROT_270:
+      data->point.x = SCREEN_WIDTH - 1 - touchY;
+      data->point.y = touchX;
+      break;
+  }
 
 #if defined(DEBUG_TOUCH)
   wt32.print(F("[tp32] touch data (x,y): "));
@@ -1571,11 +1593,15 @@ void getApiSnapshot(Request &req, Response &res)
     uint32_t bdMask[4] = {0x0000F800, 0x000007E0, 0x0000001F, 0x00000000};
   } __attribute__((packed)) bmpHeader;
 
-  // set variables for my_disp_flush snapShotMode to return the image content
+  // update header from variables (includes rotation)
+  bmpHeader.biWidth = lv_obj_get_width(lv_scr_act());
+  bmpHeader.biHeight = -lv_obj_get_height(lv_scr_act());
+
+  // set variables for my_disp_flush snapShotMode to return the full screen
   snapShotArea.x1 = 0;
   snapShotArea.y1 = 0;
-  snapShotArea.x2 = SCREEN_WIDTH - 1;
-  snapShotArea.y2 = SCREEN_HEIGHT - 1;
+  snapShotArea.x2 = lv_obj_get_width(lv_scr_act()) - 1;
+  snapShotArea.y2 = lv_obj_get_height(lv_scr_act()) - 1;
 
   // handle one tile only request (return full screen if tile NA)
   classTile* tile = tileVault.get(_actScreenIdx, tileIdx);
@@ -1715,6 +1741,29 @@ void jsonTileBrightnessOffConfig(int brightness)
 
 void jsonConfig(JsonVariant json)
 {
+  if (json.containsKey("rotation"))
+  {
+    if (strcmp(json["rotation"], "none") == 0)
+    {
+      screenRotation = LV_DISP_ROT_NONE;
+    }
+    else if (strcmp(json["rotation"], "90") == 0)
+    {
+        screenRotation = LV_DISP_ROT_90;
+    }
+    else if (strcmp(json["rotation"], "180") == 0)
+    {
+        screenRotation = LV_DISP_ROT_180;
+    }
+    else if (strcmp(json["rotation"], "270") == 0)
+    {
+        screenRotation = LV_DISP_ROT_270;
+    }
+
+    tft.setRotation(screenRotation);
+    lv_disp_set_rotation(NULL, (lv_disp_rot_t)screenRotation);
+  }
+
   if (json.containsKey("tileBrightnessOn"))
   {
     jsonTileBrightnessOnConfig(json["tileBrightnessOn"]);
@@ -1962,6 +2011,17 @@ void jsonConfigSchema(JsonVariant json)
   noActivitySecondsToLock["type"] = "integer";
   noActivitySecondsToLock["minimum"] = 0;
   noActivitySecondsToLock["maximum"] = 3600;
+
+  // screen rotatiom
+  JsonObject rotation = json["rotation"].to<JsonObject>();
+  rotation["title"] = "Scren Rotation";
+  rotation["description"] = "Select the desired rotation of your panel";
+  rotation["type"] = "string";
+  JsonArray rotationEnum = rotation["enum"].to<JsonArray>();
+  rotationEnum.add("none");
+  rotationEnum.add("90");
+  rotationEnum.add("180");
+  rotationEnum.add("270");
 }
 
 void setConfigSchema()
@@ -2742,7 +2802,9 @@ void setup()
   delay(100);
   #endif
 
+  screenRotation = LV_DISP_ROT_NONE;
   tft.init();
+  tft.setRotation(screenRotation);
   tft.setBrightness(0);
   tft.fillScreen(TFT_BLACK);
 
@@ -2770,6 +2832,8 @@ void setup()
   static lv_disp_drv_t disp_drv;
   lv_disp_drv_init(&disp_drv);
   // settings for display driver
+  disp_drv.rotated = screenRotation;
+
   disp_drv.hor_res = screenWidth;
   disp_drv.ver_res = screenHeight;
   disp_drv.flush_cb = my_disp_flush;
