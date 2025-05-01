@@ -432,11 +432,14 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
   lv_label_set_text(_labelCallingTileRGB, _callingTile->getLabel());
   lv_label_set_text(_labelCallingTileCCT, _callingTile->getLabel());
 
-  updatePanelRGB(_callingTile->getColorPickerRGB(), _callingTile->getColorPickerBrightnessColor());
+  updatePanelRGB(_callingTile->getColorPickerRGB());
+  lv_slider_set_value(_sliderBrightnessColor, _callingTile->getColorPickerBrightness(), LV_ANIM_OFF);
+  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", _callingTile->getColorPickerBrightness());
+
   lv_slider_set_value(_sliderKelvin, _callingTile->getColorPickerKelvin(), LV_ANIM_OFF);
-  lv_slider_set_value(_sliderBrightnessWhite, _callingTile->getColorPickerBrightnessWhite(), LV_ANIM_OFF);
-  lv_label_set_text_fmt(_labelKelvinValue, "%d K", lv_slider_get_value(_sliderKelvin));
-  lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", lv_slider_get_value(_sliderBrightnessWhite));
+  lv_label_set_text_fmt(_labelKelvinValue, "%d K", _callingTile->getColorPickerKelvin());
+  lv_slider_set_value(_sliderBrightnessWhite, _callingTile->getColorPickerBrightness(), LV_ANIM_OFF);
+  lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", _callingTile->getColorPickerBrightness());
 
   // update the button
   setState(_callingTile->getState());
@@ -481,14 +484,30 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 // update variables from ui content
 void classColorPicker::updateAll(void)
 {
-  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", lv_slider_get_value(_sliderBrightnessColor));
-  _callingTile->setColorPickerRGB(_HSVtoRGB(_colorWheelHSV));
-  _callingTile->setColorPickerBrightnessColor(lv_slider_get_value(_sliderBrightnessColor));
+  int cpMode = _callingTile->getColorPickerMode();
+  int brightness = _callingTile->getColorPickerBrightness();
 
-  lv_label_set_text_fmt(_labelKelvinValue, "%d K", lv_slider_get_value(_sliderKelvin));
-  lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", lv_slider_get_value(_sliderBrightnessWhite));
-  _callingTile->setColorPickerKelvin(lv_slider_get_value(_sliderKelvin));
-  _callingTile->setColorPickerBrightnessWhite(lv_slider_get_value(_sliderBrightnessWhite));
+  // get the brightness value from the active slider
+  if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_COLOR)
+    brightness = lv_slider_get_value(_sliderBrightnessColor);
+  else if ((cpMode & (CP_MODE_COLOR | CP_MODE_TEMP)) == CP_MODE_TEMP)
+    brightness = lv_slider_get_value(_sliderBrightnessWhite);
+
+  int color_kelvin = lv_slider_get_value(_sliderKelvin);
+
+  // update the tile with the new values
+  _callingTile->setColorPickerBrightness(brightness);
+  _callingTile->setColorPickerRGB(_HSVtoRGB(_colorWheelHSV));
+  _callingTile->setColorPickerKelvin(color_kelvin);
+
+  // update the ui labels
+  lv_label_set_text_fmt(_labelKelvinValue, "%d K", color_kelvin);
+  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", brightness);
+  lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", brightness);
+
+  // keep the brightness sliders in sync
+  lv_slider_set_value(_sliderBrightnessColor, brightness, LV_ANIM_OFF);
+  lv_slider_set_value(_sliderBrightnessWhite, brightness, LV_ANIM_OFF);
 }
 
 // update color wheel when cursor moved
@@ -520,7 +539,7 @@ void classColorPicker::updateCw(lv_point_t point, int mode)
 }
 
 // update panelRgb from stored values in callingTile
-void classColorPicker::updatePanelRGB(lv_color32_t rgb, int brightness)
+void classColorPicker::updatePanelRGB(lv_color32_t rgb)
 {
   float x, y, alphaRad;
 
@@ -532,8 +551,6 @@ void classColorPicker::updatePanelRGB(lv_color32_t rgb, int brightness)
   lv_color_t color = lv_color_hsv_to_rgb(_colorWheelHSV.h, _colorWheelHSV.s * 100, 100);
   lv_obj_set_style_bg_color(_panelCursor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_grad_color(_barBrightnessColor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_slider_set_value(_sliderBrightnessColor, brightness, LV_ANIM_OFF);
-  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", brightness);
 }
 
 // switch panel between color / Temperature 
