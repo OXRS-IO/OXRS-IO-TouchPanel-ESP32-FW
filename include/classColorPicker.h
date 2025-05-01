@@ -42,7 +42,7 @@ public:
   classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode);
   void updateAll(void);
   void updateCw(lv_point_t point, int mode);
-  void updatePanelRGB(lv_color32_t rgb);
+  void updatePanelRGB(lv_color32_t rgb, int brightness);
   void switchMode(int cpMode);
   void setState(bool state);
 };

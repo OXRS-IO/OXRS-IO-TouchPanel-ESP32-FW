@@ -1041,6 +1041,11 @@ void classTile::setColorPickerRGB(int r, int g, int b)
   _colorPickerRGB32.ch.blue = b;
 }
 
+void classTile::setColorPickerBrightnessColor(int brightness)
+{
+  _colorPickerBrightnessColor = brightness;
+}
+
 void classTile::setColorPickerKelvin(int kelvin)
 {
   _colorPickerKelvin = kelvin;
@@ -1059,6 +1064,11 @@ void classTile::setColorPickerMode(int mode)
 lv_color32_t classTile::getColorPickerRGB(void)
 {
   return _colorPickerRGB32;
+}
+
+int classTile::getColorPickerBrightnessColor(void)
+{
+  return _colorPickerBrightnessColor;
 }
 
 int classTile::getColorPickerKelvin(void)

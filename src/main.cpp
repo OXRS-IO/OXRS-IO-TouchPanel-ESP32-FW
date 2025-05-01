@@ -1087,7 +1087,7 @@ static void colorPickerCwEventHandler(lv_event_t *e)
   {
     classTile *tPtr = (classTile *)lv_event_get_user_data(e);
     lv_color32_t color32 = tPtr->getColorPickerRGB();
-    publishColorPickerEvent(tPtr, "change", color32, 0, 0);
+    publishColorPickerEvent(tPtr, "change", color32, 0, tPtr->getColorPickerBrightnessColor());
   }
 }
 
@@ -1104,7 +1104,7 @@ static void colorPickerEventHandler(lv_event_t *e)
     {
       colorPicker.updateAll();
       color32 = tPtr->getColorPickerRGB();
-      publishColorPickerEvent(tPtr, "change", color32, 0, 0);
+      publishColorPickerEvent(tPtr, "change", color32, 0, tPtr->getColorPickerBrightnessColor());
     }
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_2))
     {
@@ -2393,6 +2393,7 @@ void jsonTileCommand(JsonVariant json)
 
     if (jsonColorPicker.containsKey("brightness"))
     {
+      tile->setColorPickerBrightnessColor(jsonColorPicker["brightness"]);
       tile->setColorPickerBrightnessWhite(jsonColorPicker["brightness"]);
     }
 

@@ -27,12 +27,13 @@ hsv_t _RGBtoHSV(lv_color32_t rgb)
   float r = (float)rgb.ch.red / 255.0;
   float g = (float)rgb.ch.green / 255.0;
   float b = (float)rgb.ch.blue / 255.0;
+
   hsv_t hsv;
+  hsv.v = 1; 
 
   min = r < g ? (r < b ? r : b) : (g < b ? g : b);
   max = r > g ? (r > b ? r : b) : (g > b ? g : b);
 
-  hsv.v = max; 
   delta = max - min;
   if (max != 0)
     hsv.s = delta / max;
@@ -74,7 +75,7 @@ lv_color32_t _HSVtoRGB(hsv_t hsv)
   if (hsv.s == 0)
   // no color -> grey
   {
-    r = g = b = hsv.v;
+    r = g = b = 1;
   }
   else
   {
@@ -83,38 +84,38 @@ lv_color32_t _HSVtoRGB(hsv_t hsv)
     i = floor(hsv.h);
     // factorial part of h
     f = hsv.h - i;
-    p = hsv.v * (1 - hsv.s);
-    q = hsv.v * (1 - hsv.s * f);
-    t = hsv.v * (1 - hsv.s * (1 - f));
+    p = (1 - hsv.s);
+    q = (1 - hsv.s * f);
+    t = (1 - hsv.s * (1 - f));
     switch (i)
     {
     case 0:
-      r = hsv.v;
+      r = 1;
       g = t;
       b = p;
       break;
     case 1:
       r = q;
-      g = hsv.v;
+      g = 1;
       b = p;
       break;
     case 2:
       r = p;
-      g = hsv.v;
+      g = 1;
       b = t;
       break;
     case 3:
       r = p;
       g = q;
-      b = hsv.v;
+      b = 1;
       break;
     case 4:
       r = t;
       g = p;
-      b = hsv.v;
+      b = 1;
       break;
     default: // case 5:
-      r = hsv.v;
+      r = 1;
       g = p;
       b = q;
       break;
@@ -420,7 +421,7 @@ void classColorPicker::_createColorPicker(lv_img_dsc_t *imgCw)
   lv_obj_align_to(_labelKelvin, _panelKelvin, LV_ALIGN_OUT_TOP_LEFT, 0, -7);
 }
 
-classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t ColorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode) : classPopUpContainer(1)
+classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEventHandler, lv_event_cb_t colorPickerCwEventHandler, lv_img_dsc_t *imgCw, int cpMode) : classPopUpContainer(1)
 {
   // layout the color picker pop up
   _createColorPicker(imgCw);
@@ -431,7 +432,7 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
   lv_label_set_text(_labelCallingTileRGB, _callingTile->getLabel());
   lv_label_set_text(_labelCallingTileCCT, _callingTile->getLabel());
 
-  updatePanelRGB(_callingTile->getColorPickerRGB());
+  updatePanelRGB(_callingTile->getColorPickerRGB(), _callingTile->getColorPickerBrightnessColor());
   lv_slider_set_value(_sliderKelvin, _callingTile->getColorPickerKelvin(), LV_ANIM_OFF);
   lv_slider_set_value(_sliderBrightnessWhite, _callingTile->getColorPickerBrightnessWhite(), LV_ANIM_OFF);
   lv_label_set_text_fmt(_labelKelvinValue, "%d K", lv_slider_get_value(_sliderKelvin));
@@ -441,7 +442,7 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
   setState(_callingTile->getState());
 
   // add event handler
-  lv_obj_add_event_cb(_panelCwFrame, ColorPickerCwEventHandler, LV_EVENT_ALL, _callingTile);
+  lv_obj_add_event_cb(_panelCwFrame, colorPickerCwEventHandler, LV_EVENT_ALL, _callingTile);
 
   lv_obj_add_flag(_btnColor, LV_OBJ_FLAG_USER_3);
   lv_obj_add_event_cb(_btnColor, colorPickerEventHandler, LV_EVENT_ALL, _callingTile);
@@ -480,11 +481,9 @@ classColorPicker::classColorPicker(classTile *tile, lv_event_cb_t colorPickerEve
 // update variables from ui content
 void classColorPicker::updateAll(void)
 {
-  int brightnessColor = lv_slider_get_value(_sliderBrightnessColor);
-  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", brightnessColor);
-  _colorWheelHSV.v = brightnessColor / 100.0;
-  lv_color32_t color32 = _HSVtoRGB(_colorWheelHSV);
-  _callingTile->setColorPickerRGB(color32);
+  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", lv_slider_get_value(_sliderBrightnessColor));
+  _callingTile->setColorPickerRGB(_HSVtoRGB(_colorWheelHSV));
+  _callingTile->setColorPickerBrightnessColor(lv_slider_get_value(_sliderBrightnessColor));
 
   lv_label_set_text_fmt(_labelKelvinValue, "%d K", lv_slider_get_value(_sliderKelvin));
   lv_label_set_text_fmt(_labelBrightnessWhiteValue, "%d %%", lv_slider_get_value(_sliderBrightnessWhite));
@@ -521,7 +520,7 @@ void classColorPicker::updateCw(lv_point_t point, int mode)
 }
 
 // update panelRgb from stored values in callingTile
-void classColorPicker::updatePanelRGB(lv_color32_t rgb)
+void classColorPicker::updatePanelRGB(lv_color32_t rgb, int brightness)
 {
   float x, y, alphaRad;
 
@@ -533,8 +532,8 @@ void classColorPicker::updatePanelRGB(lv_color32_t rgb)
   lv_color_t color = lv_color_hsv_to_rgb(_colorWheelHSV.h, _colorWheelHSV.s * 100, 100);
   lv_obj_set_style_bg_color(_panelCursor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_grad_color(_barBrightnessColor, color, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_slider_set_value(_sliderBrightnessColor, (int)(_colorWheelHSV.v * 100.0), LV_ANIM_OFF);
-  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", (int)(_colorWheelHSV.v * 100.0));
+  lv_slider_set_value(_sliderBrightnessColor, brightness, LV_ANIM_OFF);
+  lv_label_set_text_fmt(_labelBrightnessColorValue, "%d %%", brightness);
 }
 
 // switch panel between color / Temperature 

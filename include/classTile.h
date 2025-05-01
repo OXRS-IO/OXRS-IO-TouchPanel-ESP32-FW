@@ -90,6 +90,7 @@ protected:
   string _dropDownList;
   string _dropDownLabel;
   lv_color32_t _colorPickerRGB32 = {255, 255, 255};
+  int _colorPickerBrightnessColor = 50;
   int _colorPickerKelvin = 4000;
   int _colorPickerBrightnessWhite = 50;
   int _colorPickerMode = CP_MODE_COLOR;
@@ -178,10 +179,12 @@ public :
 
   void setColorPickerRGB(int r, int g, int b);
   void setColorPickerRGB(lv_color32_t rgb);
+  void setColorPickerBrightnessColor(int brightness);
   void setColorPickerKelvin(int kelvin);
   void setColorPickerBrightnessWhite(int brightness);
   void setColorPickerMode(int mode);
   lv_color32_t getColorPickerRGB(void);
+  int getColorPickerBrightnessColor(void);
   int getColorPickerKelvin(void);
   int getColorPickerBrightnessWhite(void);
   int getColorPickerMode(void);
