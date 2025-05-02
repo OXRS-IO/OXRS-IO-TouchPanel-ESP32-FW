@@ -89,9 +89,9 @@ protected:
   uint16_t _dropDownIndex = 0;
   string _dropDownList;
   string _dropDownLabel;
+  int _colorPickerBrightness = 50;
   lv_color32_t _colorPickerRGB32 = {255, 255, 255};
   int _colorPickerKelvin = 4000;
-  int _colorPickerBrightnessWhite = 50;
   int _colorPickerMode = CP_MODE_COLOR;
   int _thermostatTarget = 0;
   int _thermostatCurrent = 0;
@@ -176,14 +176,14 @@ public :
   void showSelector(int index);
   bool getSelectorValid(void);
 
+  void setColorPickerBrightness(int brightness);
   void setColorPickerRGB(int r, int g, int b);
   void setColorPickerRGB(lv_color32_t rgb);
   void setColorPickerKelvin(int kelvin);
-  void setColorPickerBrightnessWhite(int brightness);
   void setColorPickerMode(int mode);
+  int getColorPickerBrightness(void);
   lv_color32_t getColorPickerRGB(void);
   int getColorPickerKelvin(void);
-  int getColorPickerBrightnessWhite(void);
   int getColorPickerMode(void);
 
   void setThermostatTarget(int target);

@@ -1029,6 +1029,11 @@ bool classTile::getSelectorValid(void)
 
 // additional methods for color picker (interface)
 
+void classTile::setColorPickerBrightness(int brightness)
+{
+  _colorPickerBrightness = brightness;
+}
+
 void classTile::setColorPickerRGB(lv_color32_t rgb)
 {
   _colorPickerRGB32 = rgb;
@@ -1046,14 +1051,14 @@ void classTile::setColorPickerKelvin(int kelvin)
   _colorPickerKelvin = kelvin;
 }
 
-void classTile::setColorPickerBrightnessWhite(int brightness)
-{
-  _colorPickerBrightnessWhite = brightness;
-}
-
 void classTile::setColorPickerMode(int mode)
 {
   _colorPickerMode = mode;
+}
+
+int classTile::getColorPickerBrightness(void)
+{
+  return _colorPickerBrightness;
 }
 
 lv_color32_t classTile::getColorPickerRGB(void)
@@ -1064,11 +1069,6 @@ lv_color32_t classTile::getColorPickerRGB(void)
 int classTile::getColorPickerKelvin(void)
 {
   return _colorPickerKelvin;
-}
-
-int classTile::getColorPickerBrightnessWhite(void)
-{
-  return _colorPickerBrightnessWhite;
 }
 
 int classTile::getColorPickerMode(void)
